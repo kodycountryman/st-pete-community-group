@@ -196,12 +196,27 @@ const db = {
         cta: prep.cta || '',
         icebreaker: prep.icebreaker || '',
         questions: prep.questions || [],
-        is_current: true
+        message_notes: prep.message_notes || '',
+        is_current: true,
+        is_published: prep.is_published || false
       },
       headers: prep.id
         ? { 'Prefer': 'return=representation,resolution=merge-duplicates' }
         : { 'Prefer': 'return=representation' }
     });
+  },
+
+  async updateWeeklyPrepPublished(id, isPublished) {
+    return await this._fetch('weekly_prep', {
+      method: 'PATCH',
+      query: `?id=eq.${id}`,
+      body: { is_published: isPublished }
+    });
+  },
+
+  async getPublishedWeeklyPrep() {
+    const rows = await this._fetch('weekly_prep', { query: '?is_published=eq.true&is_current=eq.true&limit=1' });
+    return rows && rows.length > 0 ? rows[0] : null;
   },
 
   async getPastWeeks() {

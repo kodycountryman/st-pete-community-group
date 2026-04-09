@@ -263,6 +263,17 @@
             </div>
           </div>
         </div>
+
+        <!-- Attendance Report -->
+        <div class="card" id="attendanceReportCard" style="display:none;">
+          <div class="card-header">
+            <h3>Attendance Report</h3>
+            <span style="font-size:0.75rem; color:var(--gray-500);">Based on last 6 meetings</span>
+          </div>
+          <div class="card-body">
+            <div id="attendanceReport" class="attendance-report-grid"></div>
+          </div>
+        </div>
       </div>
 
       <!-- ==================== PEOPLE PAGE ==================== -->
@@ -449,6 +460,13 @@
 
       <!-- ==================== LEADERSHIP PIPELINE PAGE ==================== -->
       <div class="page" id="page-pipeline">
+        <div class="page-actions" style="margin-bottom:16px;">
+          <div></div>
+          <button class="btn-ghost" onclick="app.removeInactivePipeline()" style="color:var(--pink); border-color:var(--pink);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            Remove 4+ Week Inactive
+          </button>
+        </div>
         <div class="pipeline-board">
           <div class="pipeline-col" data-stage="attending">
             <div class="pipeline-header">
@@ -556,6 +574,10 @@
                 <label>Ownership Moment / Call to Action</label>
                 <input type="text" id="weekCTA" placeholder="What's the next step you're inviting people into?" oninput="app.saveWeeklyPrep()">
               </div>
+              <div class="form-group">
+                <label>Message Notes</label>
+                <textarea id="weekMessageNotes" rows="5" placeholder="Outline, illustrations, personal stories, key points from your message..." oninput="app.saveWeeklyPrep()" style="resize:vertical;"></textarea>
+              </div>
             </div>
           </div>
 
@@ -616,8 +638,36 @@
               </button>
             </div>
             <div class="card-body">
-              <div class="generated-content" id="questionsOutput">
-                <p class="placeholder-text">Click Generate to create 5 table discussion questions</p>
+              <textarea id="questionsTextarea" class="questions-editor" rows="8" placeholder="Generate questions above, or paste your own here..." oninput="app.saveWeeklyPrep()"></textarea>
+              <p style="font-size:0.72rem; color:var(--gray-500); margin-top:6px;">Edit freely — one question per line. Changes auto-save.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Publish Section -->
+        <div class="card publish-card">
+          <div class="card-header">
+            <h3>Publish This Week</h3>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <a href="leader-guide.html" class="btn-ghost" target="_blank" style="font-size:0.8rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Leader Guide
+              </a>
+              <button class="btn-primary-sm" id="publishBtn" onclick="app.publishWeeklyPrep()">Publish to Public Site</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.85rem; color:var(--gray-600); margin-bottom:16px;">Publishes this week's topic, discussion questions, and icebreaker to the public landing page. Share the link below with your group.</p>
+            <div id="publishedLinks" class="published-links">
+              <div class="published-link-item">
+                <span class="published-link-label">Attendee Page</span>
+                <a href="weekly.html" target="_blank" class="published-link-url">weekly.html</a>
+                <button class="btn-ghost" onclick="navigator.clipboard.writeText(window.location.origin + '/weekly.html').then(()=>app.toast('Link copied!'))" style="padding:4px 10px; font-size:0.75rem;">Copy</button>
+              </div>
+              <div class="published-link-item">
+                <span class="published-link-label">Leader Guide</span>
+                <a href="leader-guide.html" target="_blank" class="published-link-url">leader-guide.html</a>
+                <button class="btn-ghost" onclick="navigator.clipboard.writeText(window.location.origin + '/leader-guide.html').then(()=>app.toast('Link copied!'))" style="padding:4px 10px; font-size:0.75rem;">Copy</button>
               </div>
             </div>
           </div>
@@ -664,6 +714,29 @@
 
       <!-- ==================== TIMELINE PAGE ==================== -->
       <div class="page" id="page-timeline">
+
+        <!-- Priority Goals -->
+        <div class="two-col" style="margin-bottom:24px;">
+          <div class="card">
+            <div class="card-header">
+              <h3>High Priority Right Now</h3>
+              <button class="btn-ghost" onclick="app.editPriorityGoals()" style="font-size:0.75rem;">Edit</button>
+            </div>
+            <div class="card-body">
+              <div id="priorityGoalsList" class="priority-list"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3>Next Steps</h3>
+              <button class="btn-ghost" onclick="app.editNextSteps()" style="font-size:0.75rem;">Edit</button>
+            </div>
+            <div class="card-body">
+              <div id="nextStepsList" class="priority-list"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="timeline">
           <div class="timeline-phase active">
             <div class="timeline-marker current"></div>
@@ -901,6 +974,24 @@
       <div class="modal-body" style="padding:0;">
         <div class="attendance-detail-stats" id="attendanceDetailStats"></div>
         <div class="attendance-detail-list" id="attendanceDetailList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Priority Goals Modal -->
+  <div class="modal-overlay" id="priorityModal">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-header">
+        <h3 id="priorityModalTitle">Edit Priorities</h3>
+        <button class="modal-close" onclick="app.closeModal('priorityModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.8rem; color:var(--gray-500); margin-bottom:12px;">One item per line.</p>
+        <textarea id="priorityModalText" rows="8" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:12px; font-family:inherit; font-size:0.9rem; resize:vertical;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="app.closeModal('priorityModal')">Cancel</button>
+        <button class="btn-primary-sm" onclick="app.savePriorityEdit()">Save</button>
       </div>
     </div>
   </div>

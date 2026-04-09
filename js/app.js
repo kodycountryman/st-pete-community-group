@@ -23,6 +23,7 @@ const app = {
   // ---- INIT ----
   async init() {
     if (!this.checkAuth()) return;
+    this._reachedOut = JSON.parse(localStorage.getItem('stpete_reached_out') || '{}');
     await this.loadData();
     this.setupNavigation();
     this.setupMobileMenu();
@@ -166,6 +167,8 @@ const app = {
     this.renderPastWeeks();
     this.renderCheckin();
     this.renderAttendanceHistory();
+    this.renderPriorityGoals();
+    this.renderAttendanceReport();
   },
 
   // ---- METRICS ----
@@ -281,7 +284,14 @@ const app = {
     tbody.innerHTML = people.map(p => `
       <tr>
         <td><strong>${p.firstName} ${p.lastName || ''}</strong></td>
-        <td>${p.phone || '—'}</td>
+        <td>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span>${p.phone || '—'}</span>
+            ${p.phone ? `<a class="sms-btn" href="sms:${p.phone.replace(/\D/g,'')}" title="Text ${p.firstName}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </a>` : ''}
+          </div>
+        </td>
         <td><span class="status-badge status-${p.status}">${this.capitalize(p.status)}</span></td>
         <td><span class="stage-badge">${this.capitalize(p.stage)}</span></td>
         <td>${p.connector || '—'}</td>
@@ -470,6 +480,13 @@ const app = {
   },
 
   async _doSaveWeeklyPrep() {
+    // Collect editable questions from textarea
+    const questionsTA = document.getElementById('questionsTextarea');
+    let questions = this.data.weeklyPrep?.questions || [];
+    if (questionsTA && questionsTA.value.trim()) {
+      questions = questionsTA.value.trim().split('\n').map(q => q.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+    }
+
     const prep = {
       id: this.data.weeklyPrep?.id || undefined,
       topic: document.getElementById('weekTopic')?.value || '',
@@ -477,7 +494,9 @@ const app = {
       takeaway: document.getElementById('weekTakeaway')?.value || '',
       cta: document.getElementById('weekCTA')?.value || '',
       icebreaker: this.data.weeklyPrep?.icebreaker || '',
-      questions: this.data.weeklyPrep?.questions || []
+      questions,
+      message_notes: document.getElementById('weekMessageNotes')?.value || '',
+      is_published: this.data.weeklyPrep?.is_published || false
     };
 
     const result = await db.upsertWeeklyPrep(prep);
@@ -499,10 +518,36 @@ const app = {
     if (takeInput) takeInput.value = wp.takeaway || '';
     const ctaInput = document.getElementById('weekCTA');
     if (ctaInput) ctaInput.value = wp.cta || '';
+    const notesInput = document.getElementById('weekMessageNotes');
+    if (notesInput) notesInput.value = wp.message_notes || '';
+
+    // Restore saved questions into textarea
+    const qTA = document.getElementById('questionsTextarea');
+    if (qTA && wp.questions && wp.questions.length > 0 && !qTA.dataset.userEdited) {
+      qTA.value = wp.questions.map((q, i) => `${i+1}. ${q}`).join('\n');
+    }
+
+    // Restore saved icebreaker
+    const ibOutput = document.getElementById('icebreakerOutput');
+    if (ibOutput && wp.icebreaker && ibOutput.querySelector('.placeholder-text')) {
+      ibOutput.innerHTML = `<p style="font-size:1rem; font-weight:500; color:var(--slate);">"${wp.icebreaker}"</p>`;
+    }
 
     const topicEl = document.getElementById('weeklyTopic');
     if (topicEl) {
       topicEl.textContent = wp.topic || 'Set this week\'s topic in Weekly Prep';
+    }
+
+    // Update publish button state
+    const pubBtn = document.getElementById('publishBtn');
+    if (pubBtn) {
+      if (wp.is_published) {
+        pubBtn.textContent = 'Published ✓ — Update';
+        pubBtn.classList.add('published');
+      } else {
+        pubBtn.textContent = 'Publish to Public Site';
+        pubBtn.classList.remove('published');
+      }
     }
   },
 
@@ -523,14 +568,38 @@ const app = {
     }
 
     const questions = Generators.getQuestions(theme, 5);
-    const output = document.getElementById('questionsOutput');
-    output.innerHTML = '<ol>' + questions.map(q => `<li>${q}</li>`).join('') + '</ol>';
+    const qTA = document.getElementById('questionsTextarea');
+    if (qTA) {
+      qTA.value = questions.map((q, i) => `${i+1}. ${q}`).join('\n');
+      qTA.dataset.userEdited = '';
+    }
 
     if (this.data.weeklyPrep) this.data.weeklyPrep.questions = questions;
     this._doSaveWeeklyPrep();
 
     const qCount = document.getElementById('weeklyQCount');
     if (qCount) qCount.textContent = `${questions.length} questions ready`;
+  },
+
+  async publishWeeklyPrep() {
+    const topic = document.getElementById('weekTopic')?.value || '';
+    if (!topic) { this.toast('Add a topic before publishing'); return; }
+
+    // Save first to capture any unsaved edits
+    await this._doSaveWeeklyPrep();
+
+    // Set is_published = true
+    if (this.data.weeklyPrep?.id) {
+      await db.updateWeeklyPrepPublished(this.data.weeklyPrep.id, true);
+      this.data.weeklyPrep.is_published = true;
+    }
+
+    this.renderWeeklyPrep();
+    this.toast('Published! Share the link below.');
+
+    // Show the share section
+    const shareSection = document.getElementById('publishedLinks');
+    if (shareSection) shareSection.classList.add('show');
   },
 
   // ---- TEXT GENERATOR ----
@@ -741,25 +810,40 @@ const app = {
       );
     }
 
-    list.innerHTML = filtered.map(p => {
+    // Split into unchecked and checked
+    const unchecked = filtered.filter(p => !this.data.checkinState[p.id]);
+    const checked = filtered.filter(p => this.data.checkinState[p.id]);
+
+    const renderRow = (p) => {
       const isChecked = this.data.checkinState[p.id] || false;
       const streak = this.getAttendanceStreak(p.id);
-      const streakClass = streak >= 4 ? 'streak-hot' : streak >= 2 ? 'streak-warm' : streak === 0 ? 'streak-cold' : '';
-      const streakLabel = streak >= 4 ? `${streak} weeks straight` : streak >= 2 ? `${streak} week streak` : streak === 0 && this.data.attendance.length > 0 ? 'Hasn\'t been recently' : '';
+      const streakClass = streak >= 4 ? 'streak-hot' : streak >= 2 ? 'streak-warm' : streak === 0 && this.data.attendance.length > 0 ? 'streak-cold' : '';
+      const streakLabel = streak >= 4 ? `${streak}🔥` : streak >= 2 ? `${streak} wks` : streak === 0 && this.data.attendance.length > 0 ? 'Not recent' : '';
 
       return `
-        <div class="checkin-row ${isChecked ? 'checked' : ''}" onclick="app.toggleCheckin('${p.id}')">
-          <div class="checkin-checkbox">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-          </div>
-          <div class="checkin-info">
+        <div class="checkin-row ${isChecked ? 'checked' : ''}">
+          <div class="checkin-info" onclick="app.toggleCheckin('${p.id}')">
             <span class="checkin-name">${p.firstName} ${p.lastName || ''}</span>
-            <span class="checkin-meta">${this.capitalize(p.status)}${p.connector ? ' · via ' + p.connector : ''}</span>
+            <span class="checkin-meta">${this.capitalize(p.status)}${p.connector ? ' · via ' + p.connector : ''}${streakLabel ? ' · ' + streakLabel : ''}</span>
           </div>
-          ${streakLabel ? `<span class="checkin-streak ${streakClass}">${streakLabel}</span>` : ''}
+          <button class="checkin-btn ${isChecked ? 'checkin-btn-done' : 'checkin-btn-go'}" onclick="app.toggleCheckin('${p.id}')">
+            ${isChecked
+              ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Here'
+              : 'Check In'}
+          </button>
         </div>
       `;
-    }).join('');
+    };
+
+    let html = '';
+    if (unchecked.length > 0) {
+      html += unchecked.map(renderRow).join('');
+    }
+    if (checked.length > 0) {
+      html += `<div class="checkin-section-divider">Checked In (${checked.length})</div>`;
+      html += checked.map(renderRow).join('');
+    }
+    list.innerHTML = html || '<p class="empty-state" style="padding:40px;">No people match your search.</p>';
 
     this.updateCheckinStats();
 
@@ -1246,6 +1330,178 @@ const app = {
     document.getElementById('csvUploadArea').classList.remove('show');
     await this.refresh();
     this.toast(`Imported ${toInsert.length} people${skipped > 0 ? ` (${skipped} duplicates skipped)` : ''}`);
+  },
+
+  // ---- PRIORITY GOALS (Timeline) ----
+  _priorityDefaults: {
+    goals: [
+      'Grow consistent attendance to 40+ people',
+      'Identify and develop 3 table leaders by June',
+      'Launch first microgroup (men\'s or women\'s)',
+      'Every new person followed up within 24 hours'
+    ],
+    steps: [
+      'Meet 1-on-1 with a potential leader this week',
+      'Assign someone to own Thursday food/hospitality',
+      'Follow up with anyone who missed last two weeks',
+      'Plan next month\'s teaching series'
+    ]
+  },
+
+  renderPriorityGoals() {
+    const goalsEl = document.getElementById('priorityGoalsList');
+    const stepsEl = document.getElementById('nextStepsList');
+    if (!goalsEl || !stepsEl) return;
+
+    const saved = JSON.parse(localStorage.getItem('stpete_priorities') || 'null') || this._priorityDefaults;
+
+    goalsEl.innerHTML = saved.goals.map((g, i) => `
+      <div class="priority-item">
+        <span class="priority-num">${i + 1}</span>
+        <span>${g}</span>
+      </div>
+    `).join('');
+
+    stepsEl.innerHTML = saved.steps.map((s, i) => `
+      <div class="priority-item">
+        <span class="priority-step-dot"></span>
+        <span>${s}</span>
+      </div>
+    `).join('');
+  },
+
+  _editingPriorityKey: null,
+
+  editPriorityGoals() {
+    this._editingPriorityKey = 'goals';
+    const saved = JSON.parse(localStorage.getItem('stpete_priorities') || 'null') || this._priorityDefaults;
+    document.getElementById('priorityModalTitle').textContent = 'Edit High Priority Goals';
+    document.getElementById('priorityModalText').value = saved.goals.join('\n');
+    document.getElementById('priorityModal').classList.add('show');
+  },
+
+  editNextSteps() {
+    this._editingPriorityKey = 'steps';
+    const saved = JSON.parse(localStorage.getItem('stpete_priorities') || 'null') || this._priorityDefaults;
+    document.getElementById('priorityModalTitle').textContent = 'Edit Next Steps';
+    document.getElementById('priorityModalText').value = saved.steps.join('\n');
+    document.getElementById('priorityModal').classList.add('show');
+  },
+
+  savePriorityEdit() {
+    const text = document.getElementById('priorityModalText').value;
+    const items = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const saved = JSON.parse(localStorage.getItem('stpete_priorities') || 'null') || this._priorityDefaults;
+    saved[this._editingPriorityKey] = items;
+    localStorage.setItem('stpete_priorities', JSON.stringify(saved));
+    this.closeModal('priorityModal');
+    this.renderPriorityGoals();
+    this.toast('Saved!');
+  },
+
+  // ---- ATTENDANCE REPORT ----
+  renderAttendanceReport() {
+    const container = document.getElementById('attendanceReport');
+    const card = document.getElementById('attendanceReportCard');
+    if (!container || !card) return;
+
+    // Need at least 3 meetings worth of data
+    const meetings = [...this.data.attendance].sort((a, b) => b.date.localeCompare(a.date));
+    if (meetings.length < 3) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = '';
+
+    // For each person, count how many of the last 6 meetings they missed (consecutively from most recent)
+    const recentMeetings = meetings.slice(0, 6);
+
+    const missedOne = [];
+    const missedTwo = [];
+    const missedThree = [];
+
+    this.data.people.forEach(p => {
+      // Count consecutive misses from most recent
+      let consecutive = 0;
+      for (const m of recentMeetings) {
+        if (!m.checkedIn.includes(p.id)) {
+          consecutive++;
+        } else {
+          break;
+        }
+      }
+
+      if (consecutive === 0 || consecutive > 3) return; // Attended recently OR missed so many they're inactive
+
+      const entry = { id: p.id, name: `${p.firstName} ${p.lastName || ''}`, consecutive };
+      if (consecutive >= 3) missedThree.push(entry);
+      else if (consecutive >= 2) missedTwo.push(entry);
+      else missedOne.push(entry);
+    });
+
+    if (missedOne.length === 0 && missedTwo.length === 0 && missedThree.length === 0) {
+      container.innerHTML = '<p class="empty-state">Great attendance! No one missed more than one meeting in a row.</p>';
+      return;
+    }
+
+    const renderGroup = (title, color, list) => {
+      if (list.length === 0) return '';
+      return `
+        <div class="report-group">
+          <div class="report-group-header" style="color:${color};">${title} <span class="report-count">${list.length}</span></div>
+          ${list.map(p => `
+            <div class="report-row">
+              <span class="report-name">${p.name}</span>
+              <label class="report-reached-label">
+                <input type="checkbox" onchange="app.markReportReachedOut('${p.id}', this.checked)" ${this._reachedOut[p.id] ? 'checked' : ''}>
+                Reached out
+              </label>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    };
+
+    container.innerHTML =
+      renderGroup('Missed Last 3 Meetings', 'var(--pink)', missedThree) +
+      renderGroup('Missed Last 2 Meetings', 'var(--gold)', missedTwo) +
+      renderGroup('Missed This Week', 'var(--gray-600)', missedOne);
+  },
+
+  _reachedOut: {},
+
+  markReportReachedOut(id, checked) {
+    this._reachedOut[id] = checked;
+    // Persist in localStorage for this session
+    localStorage.setItem('stpete_reached_out', JSON.stringify(this._reachedOut));
+  },
+
+  // ---- PIPELINE: REMOVE INACTIVE ----
+  async removeInactivePipeline() {
+    const meetings = [...this.data.attendance].sort((a, b) => b.date.localeCompare(a.date));
+    if (meetings.length < 4) {
+      this.toast('Need at least 4 meeting records to check inactivity');
+      return;
+    }
+
+    const recentFour = meetings.slice(0, 4);
+    const toRemove = this.data.people.filter(p => {
+      // Missed all of the last 4 meetings
+      return recentFour.every(m => !m.checkedIn.includes(p.id));
+    });
+
+    if (toRemove.length === 0) {
+      this.toast('No one has missed 4+ meetings in a row');
+      return;
+    }
+
+    const names = toRemove.map(p => `${p.firstName} ${p.lastName || ''}`).join(', ');
+    if (!confirm(`Remove from pipeline (${toRemove.length} people who missed last 4+ meetings)?\n\n${names}\n\nNote: This removes them from the pipeline stage only — they stay in your people list.`)) return;
+
+    await Promise.all(toRemove.map(p => db.updatePerson(p.id, { stage: 'attending' })));
+    await this.refresh();
+    this.toast(`Moved ${toRemove.length} inactive people back to Attending`);
   },
 
   // ---- MODALS ----

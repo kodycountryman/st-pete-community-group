@@ -1261,70 +1261,23 @@ h1, h2, h3, .page-title, .metric-number {
   max-height: 600px;
   overflow-y: auto;
 }
-.checkin-row {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--gray-100);
-  transition: background 0.15s ease;
-  cursor: pointer;
-  user-select: none;
-}
-.checkin-row:last-child { border-bottom: none; }
-.checkin-row:hover { background: var(--gray-100); }
-.checkin-row.checked { background: rgba(42,171,179,0.04); }
-.checkin-row.checked .checkin-name { color: var(--teal-dark); }
-
-.checkin-checkbox {
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--gray-300);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16px;
-  flex-shrink: 0;
-  transition: var(--transition);
-}
-.checkin-row.checked .checkin-checkbox {
-  background: var(--teal);
-  border-color: var(--teal);
-}
-.checkin-checkbox svg {
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-.checkin-row.checked .checkin-checkbox svg { opacity: 1; }
-
+/* checkin-row, checkin-btn styles now defined in CHECK-IN BUTTONS section above */
 .checkin-info {
   flex: 1;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 2px;
 }
 .checkin-name {
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--slate);
-  min-width: 160px;
 }
+.checkin-row.checked .checkin-name { color: var(--teal-dark); }
 .checkin-meta {
   font-size: 0.75rem;
   color: var(--gray-500);
 }
-.checkin-streak {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 100px;
-}
-.streak-hot { background: #FEF3C7; color: #92400E; }
-.streak-warm { background: var(--teal-light); color: var(--teal-dark); }
-.streak-cold { background: var(--pink-soft); color: #C0506A; }
 
 /* Attendance History */
 .attendance-history { display: flex; flex-direction: column; gap: 12px; }
@@ -1451,6 +1404,240 @@ h1, h2, h3, .page-title, .metric-number {
   color: var(--teal-dark) !important;
 }
 .action-btn-highlight svg { color: var(--teal) !important; }
+
+/* ============ CHECK-IN BUTTONS ============ */
+.checkin-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--gray-100);
+  transition: background 0.15s ease;
+  gap: 12px;
+}
+.checkin-row:last-child { border-bottom: none; }
+.checkin-row:hover { background: var(--gray-100); }
+.checkin-row.checked { background: rgba(42,171,179,0.04); }
+.checkin-row .checkin-info {
+  flex: 1;
+  cursor: pointer;
+}
+.checkin-btn {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.checkin-btn-go {
+  background: white;
+  border-color: var(--teal);
+  color: var(--teal-dark);
+}
+.checkin-btn-go:hover {
+  background: var(--teal);
+  color: white;
+}
+.checkin-btn-done {
+  background: var(--teal);
+  color: white;
+  border-color: var(--teal);
+}
+.checkin-btn-done:hover {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+}
+.checkin-section-divider {
+  padding: 8px 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--teal-dark);
+  background: var(--teal-light);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+/* ============ SMS BUTTON ============ */
+.sms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  text-decoration: none;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.sms-btn:hover {
+  background: var(--teal);
+  color: white;
+}
+
+/* ============ PRIORITY GOALS (Timeline) ============ */
+.priority-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.priority-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: var(--slate);
+  line-height: 1.4;
+}
+.priority-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.priority-step-dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-top: 5px;
+  margin-left: 7px;
+}
+
+/* ============ WEEKLY PREP ENHANCEMENTS ============ */
+.questions-editor {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--slate);
+  line-height: 1.6;
+  resize: vertical;
+  transition: var(--transition);
+}
+.questions-editor:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(42,171,179,0.1);
+}
+
+.publish-card { border: 2px solid var(--teal-light); }
+
+.published-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.published-link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+.published-link-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 100px;
+}
+.published-link-url {
+  font-size: 0.82rem;
+  color: var(--teal-dark);
+  font-weight: 500;
+  text-decoration: none;
+  flex: 1;
+}
+.published-link-url:hover { text-decoration: underline; }
+
+#publishBtn.published {
+  background: var(--teal-dark);
+}
+
+/* ============ ATTENDANCE REPORT ============ */
+.attendance-report-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.report-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.report-group-header {
+  padding: 10px 16px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--gray-100);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.report-count {
+  background: currentColor;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.report-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--gray-100);
+}
+.report-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--slate);
+}
+.report-reached-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  cursor: pointer;
+}
+.report-reached-label input {
+  accent-color: var(--teal);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 1024px) {

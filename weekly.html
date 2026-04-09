@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>This Week | St. Pete Bible Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #2AABB3;
+      --teal-dark: #1B7A80;
+      --teal-deep: #145A5E;
+      --gold: #E8B84B;
+      --sand: #FDF6EE;
+      --slate: #2D3436;
+      --gray-500: #8E99A4;
+      --gray-100: #F1F4F8;
+      --white: #FFFFFF;
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Karla', -apple-system, sans-serif;
+      background: var(--sand);
+      color: var(--slate);
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { font-family: 'Rubik', sans-serif; }
+
+    /* ---- HERO ---- */
+    .hero {
+      background: linear-gradient(160deg, var(--teal-deep) 0%, var(--teal-dark) 50%, var(--teal) 80%, var(--gold) 100%);
+      color: white;
+      padding: 60px 24px 80px;
+      text-align: center;
+      position: relative;
+    }
+    .hero-eyebrow {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      margin-bottom: 12px;
+    }
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero-scripture {
+      font-size: 1rem;
+      opacity: 0.8;
+      font-style: italic;
+    }
+    .hero-wave {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+    }
+
+    /* ---- CONTAINER ---- */
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    /* ---- CARD ---- */
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .card-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--teal-dark);
+      margin-bottom: 8px;
+    }
+    .card h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--slate);
+      margin-bottom: 0;
+      line-height: 1.3;
+    }
+    .card p {
+      font-size: 1rem;
+      color: var(--slate);
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    /* ---- QUESTIONS ---- */
+    .questions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .question-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .question-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--teal);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .question-text {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--slate);
+      flex: 1;
+    }
+
+    /* ---- ICEBREAKER ---- */
+    .icebreaker-card {
+      background: linear-gradient(135deg, var(--teal-deep), var(--teal-dark));
+      color: white;
+    }
+    .icebreaker-card .card-label { color: rgba(255,255,255,0.6); }
+    .icebreaker-card p { color: rgba(255,255,255,0.9); font-size: 1.05rem; font-style: italic; }
+
+    /* ---- SCHEDULE ---- */
+    .schedule {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .schedule-row {
+      display: flex;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .schedule-row:last-child { border-bottom: none; }
+    .schedule-time {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--teal-dark);
+      min-width: 72px;
+      padding-top: 2px;
+    }
+    .schedule-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--slate);
+    }
+    .schedule-desc {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+
+    /* ---- CTA ---- */
+    .cta-card {
+      background: linear-gradient(135deg, var(--gold), #d4a030);
+      border-radius: var(--radius);
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .cta-card .card-label { color: rgba(0,0,0,0.45); margin-bottom: 10px; }
+    .cta-card h2 { font-size: 1.4rem; color: var(--slate); }
+    .cta-card p { font-size: 0.95rem; color: rgba(45,52,54,0.8); margin-top: 6px; }
+
+    /* ---- FOOTER ---- */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.78rem;
+      color: var(--gray-500);
+    }
+
+    /* ---- LOADING / EMPTY ---- */
+    .loading { text-align: center; padding: 60px 24px; color: var(--gray-500); }
+    .empty { text-align: center; padding: 60px 24px; }
+    .empty h2 { font-size: 1.4rem; color: var(--slate); margin-bottom: 8px; }
+    .empty p { color: var(--gray-500); }
+  </style>
+</head>
+<body>
+
+  <div id="loading" class="loading">
+    <p>Loading this week...</p>
+  </div>
+
+  <div id="content" style="display:none;">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">St. Pete Bible Study · This Thursday</div>
+      <h1 class="hero-title" id="heroTitle">Loading...</h1>
+      <p class="hero-scripture" id="heroScripture"></p>
+      <svg class="hero-wave" viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 40L1440 40L1440 10C1200 40 960 0 720 20C480 40 240 5 0 20L0 40Z" fill="#FDF6EE"/>
+      </svg>
+    </div>
+
+    <!-- Main content -->
+    <div class="container">
+
+      <!-- Takeaway -->
+      <div class="card" id="takeawayCard" style="display:none;">
+        <div class="card-label">Key Takeaway</div>
+        <h2 id="takeawayText"></h2>
+      </div>
+
+      <!-- Icebreaker -->
+      <div class="card icebreaker-card" id="icebreakerCard" style="display:none;">
+        <div class="card-label">Icebreaker</div>
+        <p id="icebreakerText"></p>
+      </div>
+
+      <!-- Discussion Questions -->
+      <div class="card" id="questionsCard" style="display:none;">
+        <div class="card-label">Table Discussion Questions</div>
+        <div class="questions-list" id="questionsList"></div>
+      </div>
+
+      <!-- Tonight's Schedule -->
+      <div class="card">
+        <div class="card-label">Tonight's Schedule</div>
+        <div class="schedule">
+          <div class="schedule-row">
+            <div class="schedule-time">6:30</div>
+            <div>
+              <div class="schedule-label">Connection Time</div>
+              <div class="schedule-desc">Food + icebreaker</div>
+            </div>
+          </div>
+          <div class="schedule-row">
+            <div class="schedule-time">6:50</div>
+            <div>
+              <div class="schedule-label">Teaching</div>
+              <div class="schedule-desc" id="scheduleTeaching">This week's topic</div>
+            </div>
+          </div>
+          <div class="schedule-row">
+            <div class="schedule-time">7:05</div>
+            <div>
+              <div class="schedule-label">Table Discussion</div>
+              <div class="schedule-desc">Small group questions</div>
+            </div>
+          </div>
+          <div class="schedule-row">
+            <div class="schedule-time">7:45</div>
+            <div>
+              <div class="schedule-label">Ownership Moment</div>
+              <div class="schedule-desc" id="scheduleCTA">Next step</div>
+            </div>
+          </div>
+          <div class="schedule-row">
+            <div class="schedule-time">8:00</div>
+            <div>
+              <div class="schedule-label">Hang Around</div>
+              <div class="schedule-desc">Stick around, connect</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-card" id="ctaCard" style="display:none;">
+        <div class="card-label">This Week's Next Step</div>
+        <h2 id="ctaText"></h2>
+      </div>
+
+      <!-- Address -->
+      <div class="card" style="text-align:center;">
+        <div class="card-label">Location</div>
+        <h2 style="font-size:1.1rem;">3845 Gateway Centre Blvd</h2>
+        <p style="font-size:0.88rem; color:var(--gray-500);">Pinellas Park, FL 33782 · Thursdays 6:30pm</p>
+      </div>
+
+    </div>
+
+    <footer>St. Pete Bible Study &mdash; Grace Family Church Campus Launch</footer>
+  </div>
+
+  <div id="empty" class="empty" style="display:none;">
+    <h2>Nothing published yet</h2>
+    <p>Check back soon &mdash; this week's content is coming.</p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://itgyatshpvwxqmfhxgra.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk';
+
+    async function load() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/weekly_prep?is_published=eq.true&is_current=eq.true&limit=1`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        const rows = await res.json();
+        const wp = rows && rows.length > 0 ? rows[0] : null;
+
+        document.getElementById('loading').style.display = 'none';
+
+        if (!wp || !wp.topic) {
+          document.getElementById('empty').style.display = '';
+          return;
+        }
+
+        document.getElementById('content').style.display = '';
+
+        // Hero
+        document.getElementById('heroTitle').textContent = wp.topic;
+        if (wp.scripture) document.getElementById('heroScripture').textContent = wp.scripture;
+
+        // Takeaway
+        if (wp.takeaway) {
+          document.getElementById('takeawayText').textContent = wp.takeaway;
+          document.getElementById('takeawayCard').style.display = '';
+        }
+
+        // Icebreaker
+        if (wp.icebreaker) {
+          document.getElementById('icebreakerText').textContent = `"${wp.icebreaker}"`;
+          document.getElementById('icebreakerCard').style.display = '';
+        }
+
+        // Questions
+        const questions = wp.questions || [];
+        if (questions.length > 0) {
+          document.getElementById('questionsList').innerHTML = questions.map((q, i) => `
+            <div class="question-item">
+              <div class="question-num">${i + 1}</div>
+              <div class="question-text">${q}</div>
+            </div>
+          `).join('');
+          document.getElementById('questionsCard').style.display = '';
+        }
+
+        // Schedule details
+        if (wp.topic) document.getElementById('scheduleTeaching').textContent = wp.topic;
+        if (wp.cta) document.getElementById('scheduleCTA').textContent = wp.cta;
+
+        // CTA card
+        if (wp.cta) {
+          document.getElementById('ctaText').textContent = wp.cta;
+          document.getElementById('ctaCard').style.display = '';
+        }
+
+        // Page title
+        document.title = `${wp.topic} | St. Pete Bible Study`;
+
+      } catch (err) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('empty').style.display = '';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
