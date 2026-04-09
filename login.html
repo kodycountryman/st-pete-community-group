@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Login | St. Pete Bible Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #2AABB3;
+      --teal-dark: #1B7A80;
+      --teal-deep: #145A5E;
+      --pink: #E88CA0;
+      --gold: #E8B84B;
+      --sand: #FDF6EE;
+      --slate: #2D3436;
+      --gray-500: #8E99A4;
+      --gray-600: #636E72;
+      --border: #E2E8F0;
+      --white: #FFFFFF;
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(160deg, var(--teal-deep) 0%, var(--teal-dark) 40%, var(--teal) 70%, var(--gold) 100%);
+      -webkit-font-smoothing: antialiased;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      animation: slideUp 0.4s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: none; }
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-logo .logo-mark {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1rem;
+      color: white;
+      margin-bottom: 12px;
+    }
+    .login-logo h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--slate);
+    }
+    .login-logo p {
+      font-size: 0.85rem;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+    }
+    .form-group select,
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--slate);
+      transition: all 0.2s ease;
+      background: var(--white);
+    }
+    .form-group select:focus,
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(42,171,179,0.1);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 8px;
+    }
+    .login-btn:hover {
+      background: var(--teal-dark);
+      transform: translateY(-1px);
+    }
+    .login-error {
+      display: none;
+      padding: 10px 14px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      color: #DC2626;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .login-error.show { display: block; }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--teal); }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-mark">SP</div>
+      <h1>Team Dashboard</h1>
+      <p>St. Pete Bible Study</p>
+    </div>
+
+    <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>Who are you?</label>
+        <select id="loginUser" required>
+          <option value="">Select your name...</option>
+          <option value="kody">Kody</option>
+          <option value="dewayne">Dewayne</option>
+          <option value="elizabeth">Elizabeth</option>
+          <option value="james">James</option>
+          <option value="ashley">Ashley</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter team password" required>
+      </div>
+      <button type="submit" class="login-btn">Sign In</button>
+    </form>
+
+    <a href="index.html" class="back-link">&larr; Back to public site</a>
+  </div>
+
+  <script>
+    const TEAM_PASSWORD = 'stpete2026';
+    const TEAM_MEMBERS = {
+      kody: { name: 'Kody', role: 'Lead' },
+      dewayne: { name: 'Dewayne', role: 'Relational Connector' },
+      elizabeth: { name: 'Elizabeth', role: 'Women\'s Connector' },
+      james: { name: 'James', role: 'Team Member' },
+      ashley: { name: 'Ashley', role: 'Team Member' }
+    };
+
+    // Check if already logged in
+    const session = JSON.parse(localStorage.getItem('stpete_session') || 'null');
+    if (session && session.loggedIn) {
+      window.location.href = 'dashboard.html';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const user = document.getElementById('loginUser').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (password === TEAM_PASSWORD && TEAM_MEMBERS[user]) {
+        localStorage.setItem('stpete_session', JSON.stringify({
+          loggedIn: true,
+          userId: user,
+          name: TEAM_MEMBERS[user].name,
+          role: TEAM_MEMBERS[user].role,
+          loginTime: new Date().toISOString()
+        }));
+        window.location.href = 'dashboard.html';
+      } else {
+        document.getElementById('loginError').classList.add('show');
+        document.getElementById('loginPassword').value = '';
+      }
+    }
+  </script>
+</body>
+</html>

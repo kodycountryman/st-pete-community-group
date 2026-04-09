@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>St. Pete Launch Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-mark">SP</div>
+        <div class="logo-text">
+          <span class="logo-title">St. Pete</span>
+          <span class="logo-sub">Launch Dashboard</span>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">OVERVIEW</div>
+        <a href="#" class="nav-item active" data-page="overview">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Dashboard</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">PEOPLE</div>
+        <a href="#" class="nav-item" data-page="people">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>People Tracker</span>
+          <span class="nav-badge" id="peopleBadge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-page="pipeline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Leadership Pipeline</span>
+        </a>
+        <a href="#" class="nav-item" data-page="followup">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Follow-Up</span>
+          <span class="nav-badge urgent" id="followupBadge">0</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">THURSDAY</div>
+        <a href="#" class="nav-item" data-page="checkin">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span>Check-In</span>
+        </a>
+        <a href="#" class="nav-item" data-page="weekly">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Weekly Prep</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">STRUCTURE</div>
+        <a href="#" class="nav-item" data-page="teams">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <span>Teams</span>
+        </a>
+        <a href="#" class="nav-item" data-page="groups">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Microgroups</span>
+        </a>
+        <a href="#" class="nav-item" data-page="timeline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+          <span>Launch Timeline</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="index.html" class="nav-item" target="_blank">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <span>Public Site</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main" id="main">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu" id="mobileMenu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <h1 class="page-title" id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="phase-indicator">
+          <span class="phase-dot"></span>
+          Phase 1: Build Core
+        </div>
+        <div class="user-menu" id="userMenu">
+          <span id="userName">Team</span>
+          <button class="btn-ghost" onclick="app.logout()" style="padding:6px 12px; font-size:0.75rem;">Sign Out</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Container -->
+    <div class="page-container">
+
+      <!-- ==================== OVERVIEW PAGE ==================== -->
+      <div class="page active" id="page-overview">
+        <!-- Key Metrics -->
+        <div class="metrics-row">
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(42,171,179,0.1); color: var(--teal);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="metric-data">
+              <span class="metric-number" id="metricTotal">0</span>
+              <span class="metric-label">Total People</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(232,140,160,0.1); color: var(--pink);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <div class="metric-data">
+              <span class="metric-number" id="metricConsistent">0</span>
+              <span class="metric-label">Consistent</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(232,184,75,0.1); color: var(--gold);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="metric-data">
+              <span class="metric-number" id="metricLeaders">0</span>
+              <span class="metric-label">Leaders</span>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(42,171,179,0.1); color: var(--teal-dark);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </div>
+            <div class="metric-data">
+              <span class="metric-number" id="metricGroups">0</span>
+              <span class="metric-label">Microgroups</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions + This Thursday -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>This Thursday</h3>
+              <span class="card-date" id="nextThursday"></span>
+            </div>
+            <div class="card-body">
+              <div class="thursday-flow">
+                <div class="flow-step">
+                  <div class="flow-time">6:30</div>
+                  <div class="flow-content">
+                    <strong>Connection Time</strong>
+                    <p>Food + guided icebreaker</p>
+                  </div>
+                </div>
+                <div class="flow-step">
+                  <div class="flow-time">6:50</div>
+                  <div class="flow-content">
+                    <strong>Teaching</strong>
+                    <p id="weeklyTopic">Set this week's topic in Weekly Prep</p>
+                  </div>
+                </div>
+                <div class="flow-step">
+                  <div class="flow-time">7:05</div>
+                  <div class="flow-content">
+                    <strong>Table Discussion</strong>
+                    <p id="weeklyQCount">Generate questions in Weekly Prep</p>
+                  </div>
+                </div>
+                <div class="flow-step">
+                  <div class="flow-time">7:45</div>
+                  <div class="flow-content">
+                    <strong>Ownership Moment</strong>
+                    <p>Call to action / next step</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Quick Actions</h3>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions">
+                <button class="action-btn action-btn-highlight" onclick="app.navigate('checkin')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Thursday Check-In
+                </button>
+                <button class="action-btn" onclick="app.navigate('weekly')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Prep Thursday
+                </button>
+                <button class="action-btn" onclick="app.navigate('followup')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Send Follow-Ups
+                </button>
+                <button class="action-btn" onclick="app.navigate('pipeline')">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Review Pipeline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategic Focus + Follow-up Needed -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>Weekly Focus Questions</h3>
+            </div>
+            <div class="card-body">
+              <div class="focus-list">
+                <div class="focus-item">
+                  <div class="focus-num">1</div>
+                  <p>Who is owning something yet?</p>
+                </div>
+                <div class="focus-item">
+                  <div class="focus-num">2</div>
+                  <p>Who connected + took a step this week?</p>
+                </div>
+                <div class="focus-item">
+                  <div class="focus-num">3</div>
+                  <p>Who could carry something without me?</p>
+                </div>
+                <div class="focus-item">
+                  <div class="focus-num">4</div>
+                  <p>Did every new person get followed up within 24 hours?</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Needs Follow-Up</h3>
+              <span class="card-badge" id="followupCount">0</span>
+            </div>
+            <div class="card-body">
+              <div id="overviewFollowups" class="followup-preview">
+                <p class="empty-state">No follow-ups needed right now.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PEOPLE PAGE ==================== -->
+      <div class="page" id="page-people">
+        <div class="page-actions">
+          <div class="search-bar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="peopleSearch" placeholder="Search people..." oninput="app.filterPeople(this.value)">
+          </div>
+          <div class="filter-group">
+            <select id="statusFilter" onchange="app.filterPeople()">
+              <option value="">All Statuses</option>
+              <option value="new">New</option>
+              <option value="returning">Returning</option>
+              <option value="consistent">Consistent</option>
+              <option value="core">Core Team</option>
+              <option value="leader">Leader</option>
+            </select>
+          </div>
+          <button class="btn-primary-sm" id="addPersonBtn" onclick="app.openPersonModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Person
+          </button>
+          <button class="btn-ghost" onclick="document.getElementById('csvUploadArea').classList.toggle('show')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import CSV
+          </button>
+        </div>
+
+        <!-- CSV Upload Area -->
+        <div class="csv-upload-area" id="csvUploadArea">
+          <div class="card">
+            <div class="card-header">
+              <h3>Bulk Import from CSV</h3>
+              <button class="modal-close" onclick="document.getElementById('csvUploadArea').classList.remove('show')">&times;</button>
+            </div>
+            <div class="card-body">
+              <div class="csv-drop-zone" id="csvDropZone">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <p><strong>Drop your CSV here</strong> or click to browse</p>
+                <p class="csv-hint">Expected columns: First Name, Last Name, Phone, Email, Status, Connected To</p>
+                <input type="file" id="csvFileInput" accept=".csv,.tsv,.txt" onchange="app.handleCSVFile(this.files[0])" style="display:none;">
+              </div>
+              <div class="csv-preview" id="csvPreview" style="display:none;">
+                <div class="csv-preview-header">
+                  <span id="csvPreviewCount">0 people found</span>
+                  <div class="csv-preview-actions">
+                    <button class="btn-ghost" onclick="app.cancelCSV()">Cancel</button>
+                    <button class="btn-primary-sm" onclick="app.confirmCSVImport()">Import All</button>
+                  </div>
+                </div>
+                <div class="csv-preview-table" id="csvPreviewTable"></div>
+              </div>
+              <div class="csv-format-help">
+                <details>
+                  <summary>CSV Format Guide</summary>
+                  <p>Your CSV should have headers in the first row. We'll try to match these columns:</p>
+                  <table class="format-table">
+                    <tr><td><strong>First Name</strong> *</td><td>first_name, firstName, first, name</td></tr>
+                    <tr><td><strong>Last Name</strong></td><td>last_name, lastName, last</td></tr>
+                    <tr><td><strong>Phone</strong></td><td>phone, mobile, cell, number</td></tr>
+                    <tr><td><strong>Email</strong></td><td>email, e-mail</td></tr>
+                    <tr><td><strong>Status</strong></td><td>status (new, returning, consistent, core, leader)</td></tr>
+                    <tr><td><strong>Connected To</strong></td><td>connected_to, connector, invited_by</td></tr>
+                    <tr><td><strong>Notes</strong></td><td>notes, note, comments</td></tr>
+                  </table>
+                </details>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="people-table-wrap">
+          <table class="people-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Pipeline Stage</th>
+                <th>Connected To</th>
+                <th>Last Attended</th>
+                <th>Follow-Up</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="peopleTableBody">
+              <tr class="empty-row">
+                <td colspan="8">
+                  <div class="empty-state-large">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                    <p>No people added yet</p>
+                    <button class="btn-primary-sm" onclick="app.openPersonModal()">Add Your First Person</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== CHECK-IN PAGE ==================== -->
+      <div class="page" id="page-checkin">
+        <!-- Check-In Header -->
+        <div class="checkin-header-bar">
+          <div class="checkin-date-info">
+            <h2 id="checkinDate">Thursday Check-In</h2>
+            <p class="checkin-subtitle" id="checkinSubtitle">Mark who's here tonight</p>
+          </div>
+          <div class="checkin-stats">
+            <div class="checkin-stat">
+              <span class="checkin-stat-num" id="checkinPresent">0</span>
+              <span class="checkin-stat-label">Checked In</span>
+            </div>
+            <div class="checkin-stat">
+              <span class="checkin-stat-num" id="checkinNew">0</span>
+              <span class="checkin-stat-label">New Tonight</span>
+            </div>
+            <div class="checkin-stat">
+              <span class="checkin-stat-num" id="checkinTotal">0</span>
+              <span class="checkin-stat-label">Total People</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Add New Person (inline) -->
+        <div class="card checkin-quick-add">
+          <div class="card-header">
+            <h3>New Face Tonight?</h3>
+          </div>
+          <div class="card-body">
+            <div class="quick-add-row">
+              <input type="text" id="quickFirst" placeholder="First Name *" class="quick-input">
+              <input type="text" id="quickLast" placeholder="Last Name" class="quick-input">
+              <input type="tel" id="quickPhone" placeholder="Phone" class="quick-input">
+              <input type="text" id="quickConnector" placeholder="Who brought them?" class="quick-input">
+              <button class="btn-primary-sm" onclick="app.quickAddPerson()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add & Check In
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance List -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Attendance</h3>
+            <div class="checkin-actions">
+              <div class="search-bar" style="max-width:240px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="checkinSearch" placeholder="Search..." oninput="app.renderCheckin()">
+              </div>
+              <button class="btn-ghost" onclick="app.uncheckAll()">Reset All</button>
+              <button class="btn-primary-sm" onclick="app.saveAttendance()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Attendance
+              </button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="checkinList" class="checkin-list">
+              <p class="empty-state" style="padding:40px;">Add people first to start checking in.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance History -->
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header">
+            <h3>Attendance History</h3>
+          </div>
+          <div class="card-body">
+            <div id="attendanceHistory" class="attendance-history">
+              <p class="empty-state">No attendance records yet. Save your first check-in above.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== LEADERSHIP PIPELINE PAGE ==================== -->
+      <div class="page" id="page-pipeline">
+        <div class="pipeline-board">
+          <div class="pipeline-col" data-stage="attending">
+            <div class="pipeline-header">
+              <h3>Attending</h3>
+              <span class="pipeline-count" id="pipeAttending">0</span>
+            </div>
+            <div class="pipeline-cards" id="pipeCardsAttending"></div>
+          </div>
+          <div class="pipeline-col" data-stage="connecting">
+            <div class="pipeline-header">
+              <h3>Connecting</h3>
+              <span class="pipeline-count" id="pipeConnecting">0</span>
+            </div>
+            <div class="pipeline-cards" id="pipeCardsConnecting"></div>
+          </div>
+          <div class="pipeline-col" data-stage="serving">
+            <div class="pipeline-header">
+              <h3>Serving</h3>
+              <span class="pipeline-count" id="pipeServing">0</span>
+            </div>
+            <div class="pipeline-cards" id="pipeCardsServing"></div>
+          </div>
+          <div class="pipeline-col" data-stage="leading">
+            <div class="pipeline-header">
+              <h3>Leading</h3>
+              <span class="pipeline-count" id="pipeLeading">0</span>
+            </div>
+            <div class="pipeline-cards" id="pipeCardsLeading"></div>
+          </div>
+          <div class="pipeline-col" data-stage="multiplying">
+            <div class="pipeline-header">
+              <h3>Multiplying</h3>
+              <span class="pipeline-count" id="pipeMultiplying">0</span>
+            </div>
+            <div class="pipeline-cards" id="pipeCardsMultiplying"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== FOLLOW-UP PAGE ==================== -->
+      <div class="page" id="page-followup">
+        <div class="two-col">
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>Needs Follow-Up</h3>
+              <button class="btn-ghost" onclick="app.markAllFollowedUp()">Mark All Done</button>
+            </div>
+            <div class="card-body">
+              <div id="followupList" class="followup-list">
+                <p class="empty-state">Everyone is followed up! Nice work.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>Text Message Generator</h3>
+            </div>
+            <div class="card-body">
+              <div class="generator-section">
+                <label>Type:</label>
+                <select id="textType" onchange="app.generateText()">
+                  <option value="new">New Person Welcome</option>
+                  <option value="missed">Missed You This Week</option>
+                  <option value="checkin">Mid-Week Check-In</option>
+                  <option value="invite">Invite to Thursday</option>
+                  <option value="nextStep">Next Step Nudge</option>
+                </select>
+                <label>Person's Name:</label>
+                <input type="text" id="textName" placeholder="Their first name" oninput="app.generateText()">
+                <div class="generated-output" id="generatedText">
+                  <p class="placeholder-text">Select a type and enter a name to generate...</p>
+                </div>
+                <button class="btn-primary-sm" onclick="app.copyText()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  Copy to Clipboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== WEEKLY PREP PAGE ==================== -->
+      <div class="page" id="page-weekly">
+        <div class="two-col">
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>This Week's Setup</h3>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Topic / Theme</label>
+                <input type="text" id="weekTopic" placeholder="e.g., Identity in Christ, Forgiveness, Community..." oninput="app.saveWeeklyPrep()">
+              </div>
+              <div class="form-group">
+                <label>Scripture Reference (optional)</label>
+                <input type="text" id="weekScripture" placeholder="e.g., Romans 8:1-11" oninput="app.saveWeeklyPrep()">
+              </div>
+              <div class="form-group">
+                <label>Key Takeaway (one sentence)</label>
+                <input type="text" id="weekTakeaway" placeholder="What's the ONE thing you want people to walk away with?" oninput="app.saveWeeklyPrep()">
+              </div>
+              <div class="form-group">
+                <label>Ownership Moment / Call to Action</label>
+                <input type="text" id="weekCTA" placeholder="What's the next step you're inviting people into?" oninput="app.saveWeeklyPrep()">
+              </div>
+            </div>
+          </div>
+
+          <div class="card full-width">
+            <div class="card-header">
+              <h3>90-Minute Flow</h3>
+            </div>
+            <div class="card-body">
+              <div class="flow-builder">
+                <div class="flow-block" style="--accent: var(--teal);">
+                  <div class="flow-block-time">6:30 - 6:50</div>
+                  <div class="flow-block-title">Connection Time (20 min)</div>
+                  <div class="flow-block-desc">Food ready. Music playing. Guided icebreaker.</div>
+                </div>
+                <div class="flow-block" style="--accent: var(--gold);">
+                  <div class="flow-block-time">6:50 - 7:05</div>
+                  <div class="flow-block-title">Directional Teaching (15 min)</div>
+                  <div class="flow-block-desc">Clear, simple, applicable. Vision sprinkled in.</div>
+                </div>
+                <div class="flow-block" style="--accent: var(--pink);">
+                  <div class="flow-block-time">7:05 - 7:45</div>
+                  <div class="flow-block-title">Table Discussion (40 min)</div>
+                  <div class="flow-block-desc">5-6 questions max. Story-based, not knowledge-based.</div>
+                </div>
+                <div class="flow-block" style="--accent: var(--teal-dark);">
+                  <div class="flow-block-time">7:45 - 8:00</div>
+                  <div class="flow-block-title">Ownership Moment (15 min)</div>
+                  <div class="flow-block-desc">Call people into something: group, serving, leading, inviting.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Generators Row -->
+        <div class="generators-row">
+          <div class="card">
+            <div class="card-header">
+              <h3>Icebreaker Generator</h3>
+              <button class="btn-generate" onclick="app.generateIcebreaker()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Generate
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="generated-content" id="icebreakerOutput">
+                <p class="placeholder-text">Click Generate for a connection-building icebreaker</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Discussion Questions</h3>
+              <button class="btn-generate" onclick="app.generateQuestions()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Generate 5
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="generated-content" id="questionsOutput">
+                <p class="placeholder-text">Click Generate to create 5 table discussion questions</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Past Weeks Archive -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Past Weeks</h3>
+          </div>
+          <div class="card-body">
+            <div id="pastWeeks" class="past-weeks">
+              <p class="empty-state">Past week preps will appear here after you save them.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TEAMS PAGE ==================== -->
+      <div class="page" id="page-teams">
+        <div class="teams-grid" id="teamsGrid">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- ==================== MICROGROUPS PAGE ==================== -->
+      <div class="page" id="page-groups">
+        <div class="page-actions">
+          <div></div>
+          <button class="btn-primary-sm" onclick="app.openGroupModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Microgroup
+          </button>
+        </div>
+        <div class="groups-grid" id="groupsGrid">
+          <div class="empty-state-large">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/></svg>
+            <p>No microgroups yet</p>
+            <p class="sub">Break the 40-person ceiling by moving relationships into the week.</p>
+            <button class="btn-primary-sm" onclick="app.openGroupModal()">Create First Group</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TIMELINE PAGE ==================== -->
+      <div class="page" id="page-timeline">
+        <div class="timeline">
+          <div class="timeline-phase active">
+            <div class="timeline-marker current"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">CURRENT</div>
+              <h3>Phase 1: Build Core</h3>
+              <ul>
+                <li>Build core team of 15-20 committed leaders</li>
+                <li>Identify and develop key leaders weekly</li>
+                <li>Fix retention — connection > content</li>
+                <li>Create ONE clear next step every week</li>
+                <li>Follow up with new people within 24 hours</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">PHASE 2</div>
+              <h3>Launch Microgroups</h3>
+              <ul>
+                <li>Launch men's, women's, young adult groups</li>
+                <li>Build hospitality, table leaders, follow-up teams</li>
+                <li>Increase ownership — people carrying things</li>
+                <li>Relationships move into the week</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">PHASE 3</div>
+              <h3>Secure Venue</h3>
+              <ul>
+                <li>Identify school or venue for Sundays</li>
+                <li>Begin Sunday rhythm prep</li>
+                <li>Connect with Clearwater + South Tampa campuses</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">PHASE 4</div>
+              <h3>Soft Launch</h3>
+              <ul>
+                <li>Soft launch Sunday gatherings</li>
+                <li>Build full serve teams</li>
+                <li>Test systems and flow</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-phase">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+              <div class="timeline-label">PHASE 5</div>
+              <h3>Public Launch</h3>
+              <ul>
+                <li>Official campus launch</li>
+                <li>Full Sunday experience</li>
+                <li>Grace Family Church — St. Pete Campus</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-container -->
+  </main>
+
+  <!-- ==================== MODALS ==================== -->
+  <!-- Add/Edit Person Modal -->
+  <div class="modal-overlay" id="personModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="personModalTitle">Add Person</h3>
+        <button class="modal-close" onclick="app.closeModal('personModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="personId">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name *</label>
+            <input type="text" id="personFirst" placeholder="First name" required>
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" id="personLast" placeholder="Last name">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="personPhone" placeholder="(555) 123-4567">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="personEmail" placeholder="email@example.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="personStatus">
+              <option value="new">New</option>
+              <option value="returning">Returning</option>
+              <option value="consistent">Consistent</option>
+              <option value="core">Core Team</option>
+              <option value="leader">Leader</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Pipeline Stage</label>
+            <select id="personStage">
+              <option value="attending">Attending</option>
+              <option value="connecting">Connecting</option>
+              <option value="serving">Serving</option>
+              <option value="leading">Leading</option>
+              <option value="multiplying">Multiplying</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Connected To (who knows them / invited them)</label>
+          <input type="text" id="personConnector" placeholder="e.g., Dewayne, Tom">
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="personNotes" rows="3" placeholder="Anything to remember..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="app.closeModal('personModal')">Cancel</button>
+        <button class="btn-primary-sm" onclick="app.savePerson()">Save Person</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Group Modal -->
+  <div class="modal-overlay" id="groupModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>New Microgroup</h3>
+        <button class="modal-close" onclick="app.closeModal('groupModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Group Name *</label>
+          <input type="text" id="groupName" placeholder="e.g., Men's Morning Group">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type</label>
+            <select id="groupType">
+              <option value="mens">Men's</option>
+              <option value="womens">Women's</option>
+              <option value="youngadults">Young Adults</option>
+              <option value="interest">Interest-Based</option>
+              <option value="neighborhood">Neighborhood</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Leader</label>
+            <input type="text" id="groupLeader" placeholder="Leader name">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Day</label>
+            <select id="groupDay">
+              <option value="">Not set</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="groupLocation" placeholder="Where they meet">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="groupDesc" rows="2" placeholder="What's this group about?"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="app.closeModal('groupModal')">Cancel</button>
+        <button class="btn-primary-sm" onclick="app.saveGroup()">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Detail Modal -->
+  <div class="modal-overlay" id="attendanceModal">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 id="attendanceModalTitle">Attendance Details</h3>
+        <button class="modal-close" onclick="app.closeModal('attendanceModal')">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:0;">
+        <div class="attendance-detail-stats" id="attendanceDetailStats"></div>
+        <div class="attendance-detail-list" id="attendanceDetailList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="js/generators.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
