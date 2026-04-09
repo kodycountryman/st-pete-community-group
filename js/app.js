@@ -1110,10 +1110,240 @@ const app = {
 
   openPastCheckinModal() {
     this.pastCheckinState = {};
+    this._scanImages = [];
     document.getElementById('pastCheckinDate').value = '';
     document.getElementById('pastCheckinSearch').value = '';
+    // Reset scan zone
+    const scanZone = document.getElementById('scanZone');
+    if (scanZone) scanZone.style.display = 'none';
+    const scanPreviews = document.getElementById('scanPreviews');
+    if (scanPreviews) scanPreviews.innerHTML = '';
+    const extractBtn = document.getElementById('extractBtn');
+    if (extractBtn) extractBtn.style.display = 'none';
+    const scanStatus = document.getElementById('scanStatus');
+    if (scanStatus) scanStatus.textContent = '';
     this.renderPastCheckinList();
     document.getElementById('pastCheckinModal').classList.add('show');
+  },
+
+  // ---- SCAN PAPER SHEET ----
+  _scanImages: [],
+
+  toggleScanZone() {
+    const zone = document.getElementById('scanZone');
+    if (!zone) return;
+    const isOpen = zone.style.display !== 'none';
+    zone.style.display = isOpen ? 'none' : '';
+    document.getElementById('scanToggleBtn').style.background = isOpen ? '' : 'rgba(42,171,179,0.1)';
+  },
+
+  addScanImages(files) {
+    if (!files || files.length === 0) return;
+    const previews = document.getElementById('scanPreviews');
+    const extractBtn = document.getElementById('extractBtn');
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        const base64 = dataUrl.split(',')[1];
+        const mimeType = file.type || 'image/jpeg';
+        const idx = this._scanImages.length;
+        this._scanImages.push({ data: base64, type: mimeType });
+
+        // Thumbnail
+        const thumb = document.createElement('div');
+        thumb.className = 'scan-thumb';
+        thumb.innerHTML = `
+          <img src="${dataUrl}" alt="scan ${idx + 1}">
+          <button class="scan-thumb-remove" onclick="app.removeScanImage(${idx}, this.parentNode)" title="Remove">&times;</button>
+        `;
+        previews.appendChild(thumb);
+
+        if (extractBtn) extractBtn.style.display = '';
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  removeScanImage(idx, thumbEl) {
+    this._scanImages[idx] = null; // mark removed (keep array indices stable)
+    thumbEl.remove();
+    const remaining = this._scanImages.filter(Boolean).length;
+    if (remaining === 0) {
+      const extractBtn = document.getElementById('extractBtn');
+      if (extractBtn) extractBtn.style.display = 'none';
+    }
+  },
+
+  async extractNamesFromScan() {
+    const apiKey = this._getClaudeKey();
+    if (!apiKey) return;
+
+    const images = this._scanImages.filter(Boolean);
+    if (images.length === 0) { this.toast('Add at least one image first'); return; }
+
+    const btn = document.getElementById('extractBtn');
+    const statusEl = document.getElementById('scanStatus');
+    btn.textContent = 'Extracting...';
+    btn.disabled = true;
+    statusEl.innerHTML = '<em>Reading names from image(s)...</em>';
+
+    try {
+      const content = [
+        ...images.map(img => ({
+          type: 'image',
+          source: { type: 'base64', media_type: img.type, data: img.data }
+        })),
+        {
+          type: 'text',
+          text: 'These are photos of paper attendance sheets from a church gathering. Extract every person name you can see written down. Return ONLY a valid JSON array of strings with no extra explanation. Example: ["John Smith", "Sarah Jones", "Mike"]'
+        }
+      ];
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          messages: [{ role: 'user', content }]
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        if (res.status === 401) {
+          localStorage.removeItem('stpete_claude_key');
+          throw new Error('Invalid API key — cleared. Try again.');
+        }
+        throw new Error(errText);
+      }
+
+      const data = await res.json();
+      const rawText = data.content?.[0]?.text || '[]';
+
+      // Parse JSON array from response
+      let names = [];
+      try {
+        const match = rawText.match(/\[[\s\S]*?\]/);
+        names = match ? JSON.parse(match[0]) : [];
+      } catch {
+        // Fallback: treat each line as a name
+        names = rawText.split('\n')
+          .map(l => l.replace(/^[-*•·\d.)\s]+/, '').trim())
+          .filter(l => l.length > 1);
+      }
+
+      if (names.length === 0) {
+        statusEl.textContent = 'No names found — try a clearer photo.';
+        return;
+      }
+
+      const { matched, unmatched } = this._matchNamesToDatabase(names);
+      matched.forEach(id => { this.pastCheckinState[id] = true; });
+      this.renderPastCheckinList();
+
+      statusEl.innerHTML =
+        `<span style="color:var(--teal-dark); font-weight:700;">${matched.length} matched</span> of ${names.length} names found.` +
+        (unmatched.length > 0
+          ? `<br><span style="color:var(--gray-500); font-size:0.78rem;">Not matched: ${unmatched.map(n => `"${n}"`).join(', ')}</span>`
+          : '');
+
+      this.toast(`Auto-selected ${matched.length} people from scan`);
+
+    } catch (err) {
+      console.error('Scan error:', err);
+      statusEl.innerHTML = `<span style="color:#DC2626;">${err.message || 'Scan failed — check API key'}</span>`;
+    } finally {
+      btn.textContent = 'Extract Names';
+      btn.disabled = false;
+    }
+  },
+
+  _matchNamesToDatabase(names) {
+    const matched = [];
+    const unmatched = [];
+    const usedIds = new Set();
+
+    names.forEach(rawName => {
+      const norm = rawName.toLowerCase().trim().replace(/[^a-z\s]/g, '');
+      const parts = norm.split(/\s+/).filter(Boolean);
+      if (parts.length === 0) return;
+
+      const firstName = parts[0];
+      const lastName = parts.length > 1 ? parts[parts.length - 1] : '';
+
+      let found = null;
+
+      // 1. Full name exact match
+      found = this.data.people.find(p =>
+        !usedIds.has(p.id) &&
+        `${p.firstName} ${p.lastName}`.toLowerCase() === norm
+      );
+
+      // 2. First + last initial
+      if (!found && lastName.length > 0) {
+        found = this.data.people.find(p =>
+          !usedIds.has(p.id) &&
+          p.firstName.toLowerCase() === firstName &&
+          (p.lastName || '').toLowerCase().startsWith(lastName[0])
+        );
+      }
+
+      // 3. First name only (unambiguous)
+      if (!found) {
+        const candidates = this.data.people.filter(p =>
+          !usedIds.has(p.id) && p.firstName.toLowerCase() === firstName
+        );
+        if (candidates.length === 1) found = candidates[0];
+      }
+
+      // 4. Last name only (unambiguous)
+      if (!found && lastName.length > 1) {
+        const candidates = this.data.people.filter(p =>
+          !usedIds.has(p.id) && (p.lastName || '').toLowerCase() === lastName
+        );
+        if (candidates.length === 1) found = candidates[0];
+      }
+
+      // 5. Substring match on full name
+      if (!found) {
+        found = this.data.people.find(p => {
+          if (usedIds.has(p.id)) return false;
+          const full = `${p.firstName} ${p.lastName}`.toLowerCase();
+          return full.includes(norm) || norm.includes(p.firstName.toLowerCase());
+        });
+      }
+
+      if (found) {
+        usedIds.add(found.id);
+        matched.push(found.id);
+      } else {
+        unmatched.push(rawName);
+      }
+    });
+
+    return { matched, unmatched };
+  },
+
+  _getClaudeKey() {
+    let key = localStorage.getItem('stpete_claude_key');
+    if (!key) {
+      key = prompt(
+        'Enter your Anthropic API key to use image scanning.\n' +
+        'It will be saved in your browser for future use.\n\n' +
+        '(Get one at console.anthropic.com)'
+      );
+      if (!key) return null;
+      localStorage.setItem('stpete_claude_key', key.trim());
+    }
+    return key;
   },
 
   renderPastCheckinList() {

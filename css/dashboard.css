@@ -1660,6 +1660,74 @@ h1, h2, h3, .page-title, .metric-number {
   cursor: pointer;
 }
 
+/* ============ SCAN ZONE ============ */
+.scan-drop-zone {
+  border: 2px dashed var(--teal);
+  border-radius: 12px;
+  padding: 20px;
+  background: rgba(42,171,179,0.04);
+  transition: background 0.2s, border-color 0.2s;
+}
+.scan-drop-zone.drag-over {
+  background: rgba(42,171,179,0.1);
+  border-color: var(--teal-dark);
+}
+.scan-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.scan-previews:empty { display: none; }
+.scan-thumb {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.scan-thumb img {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--teal);
+}
+.scan-thumb-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  background: var(--slate);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+.scan-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.scan-file-btn {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.scan-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
 /* ============ ROLE BADGES ============ */
 .role-badge {
   display: inline-block;
