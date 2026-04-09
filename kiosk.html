@@ -451,9 +451,19 @@
       if (method === 'PATCH') h['Prefer'] = 'return=representation';
       const o = { method, headers: h };
       if (body) o.body = JSON.stringify(body);
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, o);
-      const text = await res.text();
-      return text ? JSON.parse(text) : null;
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, o);
+        if (!res.ok) {
+          const err = await res.text();
+          console.error(`DB error [${method} ${table}]:`, res.status, err);
+          return null;
+        }
+        const text = await res.text();
+        return text ? JSON.parse(text) : null;
+      } catch (err) {
+        console.error(`Network error [${method} ${table}]:`, err);
+        return null;
+      }
     }
 
     async function init() {
@@ -553,18 +563,40 @@
       await saveAttendance();
     }
 
+    let _saveDebounce = null;
     async function saveAttendance() {
+      // Debounce rapid taps to avoid race conditions
+      clearTimeout(_saveDebounce);
+      _saveDebounce = setTimeout(_doSave, 300);
+    }
+
+    async function _doSave() {
       const checkedArray = Array.from(checkedIn);
-      await apiFetch('attendance', {
-        method: 'POST',
+      const newCount = people.filter(p => checkedIn.has(p.id) && p.status === 'new').length;
+
+      // Try PATCH first (update existing record for today)
+      const patched = await apiFetch('attendance', {
+        method: 'PATCH',
+        query: `?date=eq.${today}`,
         body: {
-          date: today,
           checked_in: checkedArray,
           total: people.length,
-          new_people: people.filter(p => checkedIn.has(p.id) && p.status === 'new').length
-        },
-        headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' }
+          new_people: newCount
+        }
       });
+
+      // If PATCH returned empty (no row for today), create one
+      if (!patched || patched.length === 0) {
+        await apiFetch('attendance', {
+          method: 'POST',
+          body: {
+            date: today,
+            checked_in: checkedArray,
+            total: people.length,
+            new_people: newCount
+          }
+        });
+      }
     }
 
     function updateCount() {
