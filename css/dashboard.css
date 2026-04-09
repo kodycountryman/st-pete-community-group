@@ -66,7 +66,7 @@ h1, h2, h3, .page-title, .metric-number {
   flex-direction: column;
   z-index: 50;
   transition: transform 0.3s ease;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .sidebar-header {
@@ -110,6 +110,7 @@ h1, h2, h3, .page-title, .metric-number {
 .sidebar-nav {
   flex: 1;
   padding: 12px 8px;
+  overflow-y: auto;
 }
 .nav-section { margin-bottom: 8px; }
 .nav-section-label {
