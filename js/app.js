@@ -20,6 +20,24 @@ const app = {
   teamMembers: ['Kody', 'Dewayne', 'Elizabeth', 'James', 'Ashley', 'Madison'],
   currentUser: null,
 
+  // ---- ROLE SYSTEM ----
+  ROLE_LEVELS: { owner: 4, admin: 3, editor: 2, leader: 1 },
+
+  hasMinRole(minRole) {
+    const myLevel = this.ROLE_LEVELS[this.currentUser?.dbRole] || 0;
+    const reqLevel = this.ROLE_LEVELS[minRole] || 0;
+    return myLevel >= reqLevel;
+  },
+
+  applyRoleRestrictions() {
+    // Hide Launch Timeline nav for editor/leader
+    if (!this.hasMinRole('admin')) {
+      document.querySelectorAll('.nav-item[data-page="timeline"]').forEach(el => {
+        el.style.display = 'none';
+      });
+    }
+  },
+
   // ---- INIT ----
   async init() {
     if (!this.checkAuth()) return;
@@ -35,7 +53,6 @@ const app = {
   checkAuth() {
     const session = JSON.parse(localStorage.getItem('stpete_session') || 'null');
     if (!session || !session.loggedIn) {
-      // Only redirect if we're not already on the login page
       if (!window.location.pathname.includes('login')) {
         window.location.href = 'login.html';
       }
@@ -44,6 +61,7 @@ const app = {
     this.currentUser = session;
     const nameEl = document.getElementById('userName');
     if (nameEl) nameEl.textContent = session.name;
+    this.applyRoleRestrictions();
     return true;
   },
 
@@ -97,6 +115,12 @@ const app = {
   },
 
   navigate(page) {
+    // Block restricted pages based on role
+    if (page === 'timeline' && !this.hasMinRole('admin')) {
+      this.toast('Access restricted — contact your admin');
+      return;
+    }
+
     // Update nav
     document.querySelectorAll('.nav-item[data-page]').forEach(el => el.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
@@ -691,7 +715,7 @@ const app = {
     const teams = this.data.teams;
     const members = this.data.teamMembersData;
 
-    grid.innerHTML = teams.map(team => {
+    let html = teams.map(team => {
       const teamMembers = members.filter(m => m.team_id === team.id);
       return `
         <div class="team-card">
@@ -712,6 +736,66 @@ const app = {
         </div>
       `;
     }).join('');
+
+    grid.innerHTML = html;
+
+    // Render Team Roles card (admin/owner only)
+    this.renderTeamRoles();
+  },
+
+  async renderTeamRoles() {
+    const container = document.getElementById('teamRolesCard');
+    if (!container) return;
+
+    if (!this.hasMinRole('admin')) {
+      container.style.display = 'none';
+      return;
+    }
+    container.style.display = '';
+
+    const roles = await db.getTeamRoles();
+    const ROLE_OPTIONS = ['leader', 'editor', 'admin', 'owner'];
+    const myRole = this.currentUser?.dbRole || 'editor';
+    const isOwner = myRole === 'owner';
+
+    container.innerHTML = `
+      <div class="card" style="margin-top:24px;">
+        <div class="card-header">
+          <h3>Team Roles</h3>
+          <span style="font-size:0.75rem; color:var(--gray-500); font-weight:500;">Manage access levels</span>
+        </div>
+        <div class="card-body">
+          ${roles.map(r => {
+            const isSelf = r.user_id === this.currentUser?.userId;
+            const isTargetOwner = r.role === 'owner';
+            // Admins cannot change owners or themselves; owners can change anyone except themselves
+            const canEdit = isOwner ? !isSelf : (!isTargetOwner && !isSelf);
+            return `
+              <div class="team-member" style="padding:10px 0; border-bottom:1px solid var(--gray-100);">
+                <div>
+                  <span class="team-member-name">${r.full_name}</span>
+                  ${isSelf ? '<span style="font-size:0.7rem; color:var(--teal-dark); font-weight:700; margin-left:6px;">YOU</span>' : ''}
+                </div>
+                ${canEdit ? `
+                  <select class="role-select" onchange="app.updateMemberRole('${r.user_id}', this.value)"
+                    style="padding:4px 8px; border:1px solid var(--border); border-radius:6px; font-size:0.8rem; color:var(--slate); background:white; cursor:pointer;">
+                    ${ROLE_OPTIONS.filter(opt => isOwner || opt !== 'owner').map(opt =>
+                      `<option value="${opt}" ${r.role === opt ? 'selected' : ''}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`
+                    ).join('')}
+                  </select>
+                ` : `<span class="role-badge role-badge-${r.role}">${r.role}</span>`}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  },
+
+  async updateMemberRole(userId, newRole) {
+    await db.updateTeamRole(userId, newRole);
+    this.toast(`Role updated`);
+    this.renderTeamRoles();
   },
 
   async addTeamMember(teamKey) {

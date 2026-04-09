@@ -175,14 +175,17 @@
   </div>
 
   <script>
-    const TEAM_PASSWORD = 'stpete2026';
-    const TEAM_MEMBERS = {
-      kody: { name: 'Kody', role: 'Lead' },
-      dewayne: { name: 'Dewayne', role: 'Relational Connector' },
-      elizabeth: { name: 'Elizabeth', role: 'Women\'s Connector' },
-      james: { name: 'James', role: 'Team Member' },
-      ashley: { name: 'Ashley', role: 'Team Member' },
-      madison: { name: 'Madison', role: 'Team Member' }
+    const SUPABASE_URL = 'https://itgyatshpvwxqmfhxgra.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk';
+
+    // Per-user passwords — Kody has a unique owner password
+    const PASSWORDS = {
+      kody:      'StPete#Owner26',
+      dewayne:   'stpete2026',
+      elizabeth: 'stpete2026',
+      james:     'stpete2026',
+      ashley:    'stpete2026',
+      madison:   'stpete2026'
     };
 
     // Check if already logged in
@@ -191,24 +194,50 @@
       window.location.href = 'dashboard.html';
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
       const user = document.getElementById('loginUser').value;
       const password = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
 
-      if (password === TEAM_PASSWORD && TEAM_MEMBERS[user]) {
-        localStorage.setItem('stpete_session', JSON.stringify({
-          loggedIn: true,
-          userId: user,
-          name: TEAM_MEMBERS[user].name,
-          role: TEAM_MEMBERS[user].role,
-          loginTime: new Date().toISOString()
-        }));
-        window.location.href = 'dashboard.html';
-      } else {
-        document.getElementById('loginError').classList.add('show');
+      if (!PASSWORDS[user] || password !== PASSWORDS[user]) {
+        errorEl.classList.add('show');
         document.getElementById('loginPassword').value = '';
+        return;
       }
+
+      // Show loading state
+      const btn = e.target.querySelector('.login-btn');
+      btn.textContent = 'Signing in...';
+      btn.disabled = true;
+      errorEl.classList.remove('show');
+
+      // Fetch role from Supabase team_roles table
+      let dbRole = 'editor';
+      let fullName = user;
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/team_roles?user_id=eq.${user}&limit=1`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        const rows = await res.json();
+        if (rows && rows.length > 0) {
+          dbRole = rows[0].role;
+          fullName = rows[0].full_name;
+        }
+      } catch (err) {
+        console.error('Role fetch failed, using default:', err);
+      }
+
+      localStorage.setItem('stpete_session', JSON.stringify({
+        loggedIn: true,
+        userId: user,
+        name: fullName.split(' ')[0],
+        fullName: fullName,
+        dbRole: dbRole,
+        loginTime: new Date().toISOString()
+      }));
+      window.location.href = 'dashboard.html';
     }
   </script>
 </body>

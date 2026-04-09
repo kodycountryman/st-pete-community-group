@@ -235,6 +235,19 @@ const db = {
     });
   },
 
+  // ---- TEAM ROLES ----
+  async getTeamRoles() {
+    return await this._fetch('team_roles', { query: '?order=full_name.asc' }) || [];
+  },
+
+  async updateTeamRole(userId, role) {
+    return await this._fetch('team_roles', {
+      method: 'PATCH',
+      query: `?user_id=eq.${userId}`,
+      body: { role }
+    });
+  },
+
   // ---- TEAM USERS ----
   async getTeamUsers() {
     return await this._fetch('team_users') || [];
