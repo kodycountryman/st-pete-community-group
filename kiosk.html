@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Check In | St. Pete Bible Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #2AABB3;
+      --teal-dark: #1B7A80;
+      --teal-deep: #145A5E;
+      --pink: #E88CA0;
+      --gold: #E8B84B;
+      --sand: #FDF6EE;
+      --slate: #2D3436;
+      --gray-100: #F1F4F8;
+      --gray-300: #D1D8E0;
+      --gray-500: #8E99A4;
+      --gray-600: #636E72;
+      --white: #FFFFFF;
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Karla', -apple-system, sans-serif;
+      background: var(--sand);
+      color: var(--slate);
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+    }
+    h1, h2, h3 { font-family: 'Rubik', sans-serif; }
+
+    /* ---- AUTH GATE ---- */
+    .auth-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      padding: 40px;
+    }
+    .auth-gate h1 { font-size: 2rem; margin-bottom: 8px; }
+    .auth-gate p { font-size: 1.1rem; color: var(--gray-500); margin-bottom: 32px; }
+    .auth-gate a {
+      padding: 16px 32px;
+      background: var(--teal);
+      color: white;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    /* ---- HEADER ---- */
+    .kiosk-header {
+      background: linear-gradient(135deg, var(--teal-deep), var(--teal-dark));
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .kiosk-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .kiosk-logo {
+      width: 44px;
+      height: 44px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: white;
+    }
+    .kiosk-title { color: white; font-size: 1.4rem; font-weight: 700; }
+    .kiosk-subtitle { color: rgba(255,255,255,0.6); font-size: 0.85rem; font-weight: 500; }
+    .kiosk-count {
+      background: rgba(255,255,255,0.15);
+      padding: 10px 20px;
+      border-radius: 100px;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .kiosk-count-num {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+    .kiosk-exit {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: rgba(255,255,255,0.6);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 16px;
+      font-family: inherit;
+    }
+    .kiosk-exit:hover { background: rgba(255,255,255,0.2); color: white; }
+
+    /* ---- SEARCH ---- */
+    .kiosk-search {
+      padding: 20px 32px;
+      background: white;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .kiosk-search-input {
+      flex: 1;
+      padding: 16px 20px;
+      font-size: 1.2rem;
+      border: 2px solid var(--gray-100);
+      border-radius: 14px;
+      font-family: inherit;
+      color: var(--slate);
+      background: var(--gray-100);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .kiosk-search-input:focus {
+      outline: none;
+      border-color: var(--teal);
+      background: white;
+    }
+    .kiosk-search-input::placeholder { color: var(--gray-500); }
+    .kiosk-new-btn {
+      padding: 16px 28px;
+      background: var(--gold);
+      color: var(--slate);
+      border: none;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .kiosk-new-btn:active { transform: scale(0.97); }
+
+    /* ---- PEOPLE LIST ---- */
+    .kiosk-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 32px 32px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .kiosk-section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--gray-500);
+      padding: 12px 4px 8px;
+    }
+    .kiosk-person {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: white;
+      border-radius: 14px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .kiosk-person:active { transform: scale(0.985); }
+    .kiosk-person:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .kiosk-person.checked {
+      border-color: var(--teal);
+      background: linear-gradient(135deg, rgba(42,171,179,0.06), rgba(42,171,179,0.02));
+    }
+    .kiosk-person-info { display: flex; align-items: center; gap: 14px; }
+    .kiosk-person-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--teal-dark);
+      flex-shrink: 0;
+    }
+    .kiosk-person.checked .kiosk-person-avatar {
+      background: var(--teal);
+      color: white;
+    }
+    .kiosk-person-name {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--slate);
+    }
+    .kiosk-person-meta {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+    .kiosk-check {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--gray-300);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .kiosk-person.checked .kiosk-check {
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+    .kiosk-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray-500);
+      font-size: 1.1rem;
+    }
+
+    /* ---- SUCCESS FLASH ---- */
+    .kiosk-flash {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: var(--teal);
+      color: white;
+      padding: 32px 48px;
+      border-radius: 20px;
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-family: 'Rubik', sans-serif;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 100;
+      text-align: center;
+    }
+    .kiosk-flash.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    /* ---- NEW PERSON MODAL ---- */
+    .kiosk-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .kiosk-modal-overlay.show { opacity: 1; pointer-events: all; }
+    .kiosk-modal {
+      background: white;
+      border-radius: 20px;
+      padding: 36px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      transform: translateY(20px);
+      transition: transform 0.25s;
+    }
+    .kiosk-modal-overlay.show .kiosk-modal { transform: translateY(0); }
+    .kiosk-modal h2 {
+      font-size: 1.5rem;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .kiosk-form-group { margin-bottom: 16px; }
+    .kiosk-form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+    }
+    .kiosk-form-group input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--gray-100);
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      color: var(--slate);
+      background: var(--gray-100);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .kiosk-form-group input:focus {
+      outline: none;
+      border-color: var(--teal);
+      background: white;
+    }
+    .kiosk-form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .kiosk-btn-cancel {
+      flex: 1;
+      padding: 16px;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .kiosk-btn-submit {
+      flex: 2;
+      padding: 16px;
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ---- SCROLLBAR ---- */
+    .kiosk-list::-webkit-scrollbar { width: 6px; }
+    .kiosk-list::-webkit-scrollbar-track { background: transparent; }
+    .kiosk-list::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Gate -->
+  <div id="authGate" class="auth-gate">
+    <h1>Team Access Required</h1>
+    <p>Sign in from the dashboard to use kiosk check-in.</p>
+    <a href="login.html">Go to Login</a>
+  </div>
+
+  <!-- Kiosk App (hidden until auth) -->
+  <div id="kioskApp" style="display:none; flex:1; display:none; flex-direction:column; height:100%;">
+    <div class="kiosk-header">
+      <div class="kiosk-brand">
+        <div class="kiosk-logo">SP</div>
+        <div>
+          <div class="kiosk-title">Thursday Check-In</div>
+          <div class="kiosk-subtitle" id="kioskDate"></div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center;">
+        <div class="kiosk-count">
+          <span class="kiosk-count-num" id="kioskCount">0</span>
+          <span>checked in</span>
+        </div>
+        <button class="kiosk-exit" onclick="window.close(); window.location.href='dashboard.html';">Exit Kiosk</button>
+      </div>
+    </div>
+
+    <div class="kiosk-search">
+      <input type="text" class="kiosk-search-input" id="kioskSearch" placeholder="Search your name..." oninput="renderList()" autofocus>
+      <button class="kiosk-new-btn" onclick="openNewModal()">I'm New Here</button>
+    </div>
+
+    <div class="kiosk-list" id="kioskList"></div>
+  </div>
+
+  <!-- Success Flash -->
+  <div class="kiosk-flash" id="kioskFlash"></div>
+
+  <!-- New Person Modal -->
+  <div class="kiosk-modal-overlay" id="newModal">
+    <div class="kiosk-modal">
+      <h2>Welcome! Tell us about yourself</h2>
+      <div class="kiosk-form-group">
+        <label>First Name *</label>
+        <input type="text" id="newFirst" placeholder="Your first name" autofocus>
+      </div>
+      <div class="kiosk-form-group">
+        <label>Last Name</label>
+        <input type="text" id="newLast" placeholder="Your last name">
+      </div>
+      <div class="kiosk-form-group">
+        <label>Phone (optional)</label>
+        <input type="tel" id="newPhone" placeholder="Your phone number">
+      </div>
+      <div class="kiosk-form-group">
+        <label>Who invited you?</label>
+        <input type="text" id="newConnector" placeholder="A friend's name (optional)">
+      </div>
+      <div class="kiosk-form-actions">
+        <button class="kiosk-btn-cancel" onclick="closeNewModal()">Cancel</button>
+        <button class="kiosk-btn-submit" onclick="submitNewPerson()">Check Me In</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://itgyatshpvwxqmfhxgra.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk';
+
+    let people = [];
+    let checkedIn = new Set();
+    let today = '';
+
+    // ---- AUTH CHECK ----
+    const session = JSON.parse(localStorage.getItem('stpete_session') || 'null');
+    if (session && session.loggedIn) {
+      document.getElementById('authGate').style.display = 'none';
+      const app = document.getElementById('kioskApp');
+      app.style.display = 'flex';
+      init();
+    }
+
+    async function apiFetch(table, opts = {}) {
+      const { method = 'GET', body, query = '', headers = {} } = opts;
+      const h = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        ...headers
+      };
+      if (body) h['Content-Type'] = 'application/json';
+      if (method === 'POST' && !h['Prefer']) h['Prefer'] = 'return=representation';
+      if (method === 'PATCH') h['Prefer'] = 'return=representation';
+      const o = { method, headers: h };
+      if (body) o.body = JSON.stringify(body);
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, o);
+      const text = await res.text();
+      return text ? JSON.parse(text) : null;
+    }
+
+    async function init() {
+      // Set today's date
+      const now = new Date();
+      today = now.toISOString().split('T')[0];
+      document.getElementById('kioskDate').textContent =
+        now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+      // Load people
+      const rows = await apiFetch('people', { query: '?order=first_name.asc' });
+      people = (rows || []).map(r => ({
+        id: r.id,
+        firstName: r.first_name,
+        lastName: r.last_name || '',
+        phone: r.phone || '',
+        status: r.status || 'new'
+      }));
+
+      // Load today's attendance (if any)
+      const att = await apiFetch('attendance', { query: `?date=eq.${today}&limit=1` });
+      if (att && att.length > 0 && att[0].checked_in) {
+        att[0].checked_in.forEach(id => checkedIn.add(id));
+      }
+
+      renderList();
+      updateCount();
+    }
+
+    function renderList() {
+      const container = document.getElementById('kioskList');
+      const search = (document.getElementById('kioskSearch').value || '').toLowerCase().trim();
+
+      let filtered = people.filter(p => {
+        const name = `${p.firstName} ${p.lastName}`.toLowerCase();
+        return name.includes(search);
+      });
+
+      if (filtered.length === 0 && search) {
+        container.innerHTML = `<div class="kiosk-empty">No one found for "${search}"<br><br>Tap <strong>I'm New Here</strong> to add yourself!</div>`;
+        return;
+      }
+
+      // Split: unchecked first, checked second
+      const unchecked = filtered.filter(p => !checkedIn.has(p.id));
+      const checked = filtered.filter(p => checkedIn.has(p.id));
+
+      let html = '';
+
+      if (unchecked.length > 0) {
+        html += `<div class="kiosk-section-label">Tap your name to check in</div>`;
+        html += unchecked.map(p => personCard(p, false)).join('');
+      }
+
+      if (checked.length > 0) {
+        html += `<div class="kiosk-section-label" style="color:var(--teal-dark);">Checked In</div>`;
+        html += checked.map(p => personCard(p, true)).join('');
+      }
+
+      if (filtered.length === 0) {
+        html = '<div class="kiosk-empty">Loading people...</div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function personCard(p, isChecked) {
+      const initials = (p.firstName[0] || '') + (p.lastName[0] || '');
+      const meta = p.status === 'new' ? 'New' : '';
+      return `
+        <div class="kiosk-person ${isChecked ? 'checked' : ''}" onclick="toggleCheckin('${p.id}', '${p.firstName}')">
+          <div class="kiosk-person-info">
+            <div class="kiosk-person-avatar">
+              ${isChecked ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : initials.toUpperCase()}
+            </div>
+            <div>
+              <div class="kiosk-person-name">${p.firstName} ${p.lastName}</div>
+              ${meta ? `<div class="kiosk-person-meta">${meta}</div>` : ''}
+            </div>
+          </div>
+          <div class="kiosk-check">
+            ${isChecked ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    async function toggleCheckin(id, firstName) {
+      if (checkedIn.has(id)) {
+        checkedIn.delete(id);
+      } else {
+        checkedIn.add(id);
+        showFlash(`Welcome, ${firstName}!`);
+      }
+      renderList();
+      updateCount();
+      await saveAttendance();
+    }
+
+    async function saveAttendance() {
+      const checkedArray = Array.from(checkedIn);
+      await apiFetch('attendance', {
+        method: 'POST',
+        body: {
+          date: today,
+          checked_in: checkedArray,
+          total: people.length,
+          new_people: people.filter(p => checkedIn.has(p.id) && p.status === 'new').length
+        },
+        headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' }
+      });
+    }
+
+    function updateCount() {
+      document.getElementById('kioskCount').textContent = checkedIn.size;
+    }
+
+    function showFlash(msg) {
+      const el = document.getElementById('kioskFlash');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 1400);
+    }
+
+    // ---- NEW PERSON ----
+    function openNewModal() {
+      document.getElementById('newFirst').value = '';
+      document.getElementById('newLast').value = '';
+      document.getElementById('newPhone').value = '';
+      document.getElementById('newConnector').value = '';
+      document.getElementById('newModal').classList.add('show');
+      setTimeout(() => document.getElementById('newFirst').focus(), 200);
+    }
+
+    function closeNewModal() {
+      document.getElementById('newModal').classList.remove('show');
+    }
+
+    async function submitNewPerson() {
+      const firstName = document.getElementById('newFirst').value.trim();
+      if (!firstName) { document.getElementById('newFirst').focus(); return; }
+
+      const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+      const person = {
+        id,
+        first_name: firstName,
+        last_name: document.getElementById('newLast').value.trim(),
+        phone: document.getElementById('newPhone').value.trim(),
+        email: '',
+        status: 'new',
+        stage: 'attending',
+        connector: document.getElementById('newConnector').value.trim(),
+        notes: 'Added via kiosk check-in',
+        needs_followup: true,
+        followup_done: false,
+        attendance_count: 1
+      };
+
+      await apiFetch('people', { method: 'POST', body: person });
+
+      // Add to local state
+      people.push({
+        id,
+        firstName,
+        lastName: person.last_name,
+        phone: person.phone,
+        status: 'new'
+      });
+      people.sort((a, b) => a.firstName.localeCompare(b.firstName));
+
+      // Auto check in
+      checkedIn.add(id);
+      closeNewModal();
+      renderList();
+      updateCount();
+      await saveAttendance();
+      showFlash(`Welcome, ${firstName}!`);
+
+      // Clear search to show them
+      document.getElementById('kioskSearch').value = '';
+      renderList();
+    }
+  </script>
+</body>
+</html>
