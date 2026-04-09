@@ -160,6 +160,97 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
 }
 .nav-btn:hover { background: rgba(255,255,255,0.25) !important; }
 
+/* ---- MOBILE NAV ---- */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.mobile-menu-btn:hover { background: rgba(255,255,255,0.25); }
+
+.mobile-nav-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s;
+}
+.mobile-nav-overlay.show { opacity: 1; pointer-events: all; }
+
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100%;
+  background: white;
+  z-index: 200;
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+}
+.mobile-nav-drawer.open { transform: translateX(0); }
+
+.mobile-nav-header {
+  padding: 20px;
+  border-bottom: 1px solid #f1f4f8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mobile-nav-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2D3436;
+}
+.mobile-nav-close {
+  background: none;
+  border: none;
+  font-size: 1.6rem;
+  color: #8E99A4;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.mobile-nav-items {
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mobile-nav-items a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #2D3436;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: 'Karla', -apple-system, sans-serif;
+  transition: background 0.15s;
+}
+.mobile-nav-items a:hover { background: #f1f4f8; }
+.mobile-nav-team {
+  margin-top: 16px;
+  background: linear-gradient(135deg, #145A5E, #1B7A80);
+  color: white !important;
+  border-radius: 10px;
+}
+.mobile-nav-team:hover { opacity: 0.92; background: linear-gradient(135deg, #145A5E, #1B7A80) !important; }
+
 .hero-content {
   position: relative;
   z-index: 2;
@@ -611,8 +702,8 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
   .brand-subtitle { font-size: 1.6rem; letter-spacing: 6px; }
   .section { padding: 72px 0; }
   .nav-brand { display: none; }
-  .nav-links { gap: 20px; }
-  .nav-links a:not(.nav-btn) { display: none; }
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: flex; }
   .location-details { flex-direction: column; text-align: center; }
   .about-layout { grid-template-columns: 1fr; gap: 32px; }
   .about-highlights { padding-top: 0; }
