@@ -872,9 +872,11 @@ const app = {
     const checkinPresent = document.getElementById('checkinPresent');
     const checkinNew = document.getElementById('checkinNew');
     const checkinTotal = document.getElementById('checkinTotal');
+    const badge = document.getElementById('checkinCountBadge');
 
     if (checkinPresent) checkinPresent.textContent = checked;
     if (checkinTotal) checkinTotal.textContent = this.data.people.length;
+    if (badge) badge.textContent = `${checked} checked in`;
 
     // Count new people checked in
     if (checkinNew) {
