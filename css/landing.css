@@ -165,15 +165,15 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
   display: none;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 10px;
+  background: none;
+  border: none;
   width: 42px;
   height: 42px;
   cursor: pointer;
-  transition: background 0.2s;
+  opacity: 0.85;
+  transition: opacity 0.2s;
 }
-.mobile-menu-btn:hover { background: rgba(255,255,255,0.25); }
+.mobile-menu-btn:hover { opacity: 1; }
 
 .mobile-nav-overlay {
   position: fixed;
@@ -692,7 +692,7 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
   .hero { justify-content: space-between; flex-direction: column; padding: 0; }
   .hero-content {
     width: 100%;
-    padding: 75px 24px 48px;
+    padding: 90px 24px 48px;
     display: flex;
     flex-direction: column;
     flex: 1;
