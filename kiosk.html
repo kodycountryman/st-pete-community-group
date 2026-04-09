@@ -58,10 +58,17 @@
       font-size: 1.1rem;
     }
 
+    /* ---- KIOSK APP ---- */
+    .kiosk-app {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
     /* ---- HEADER ---- */
     .kiosk-header {
       background: linear-gradient(135deg, var(--teal-deep), var(--teal-dark));
-      padding: 24px 32px;
+      padding: 20px 32px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -70,106 +77,139 @@
     .kiosk-brand {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
     .kiosk-logo {
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       background: rgba(255,255,255,0.15);
-      border-radius: 12px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: white;
     }
-    .kiosk-title { color: white; font-size: 1.4rem; font-weight: 700; }
-    .kiosk-subtitle { color: rgba(255,255,255,0.6); font-size: 0.85rem; font-weight: 500; }
+    .kiosk-title { color: white; font-size: 1.2rem; font-weight: 700; }
+    .kiosk-subtitle { color: rgba(255,255,255,0.6); font-size: 0.8rem; font-weight: 500; }
+    .kiosk-header-right { display: flex; align-items: center; gap: 12px; }
     .kiosk-count {
       background: rgba(255,255,255,0.15);
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 100px;
       color: white;
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
-    .kiosk-count-num {
-      font-size: 1.6rem;
-      line-height: 1;
-    }
+    .kiosk-count-num { font-size: 1.4rem; line-height: 1; }
     .kiosk-exit {
       background: rgba(255,255,255,0.1);
       border: none;
       color: rgba(255,255,255,0.6);
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 8px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 600;
       cursor: pointer;
-      margin-left: 16px;
       font-family: inherit;
     }
     .kiosk-exit:hover { background: rgba(255,255,255,0.2); color: white; }
 
-    /* ---- SEARCH ---- */
-    .kiosk-search {
-      padding: 20px 32px;
-      background: white;
-      border-bottom: 1px solid var(--gray-100);
+    /* ---- WELCOME + SEARCH (center of screen) ---- */
+    .kiosk-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .kiosk-welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 32px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .kiosk-welcome.has-results {
+      flex: 0;
+      padding: 24px 32px 0;
+      justify-content: flex-start;
+    }
+    .kiosk-welcome-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      color: var(--teal-deep);
+      margin-bottom: 8px;
+    }
+    .kiosk-welcome.has-results .kiosk-welcome-title { display: none; }
+    .kiosk-welcome-sub {
+      font-size: 1.1rem;
+      color: var(--gray-500);
+      margin-bottom: 32px;
+      max-width: 400px;
+    }
+    .kiosk-welcome.has-results .kiosk-welcome-sub { display: none; }
+    .kiosk-search-wrap {
+      width: 100%;
+      max-width: 560px;
       display: flex;
       gap: 12px;
-      flex-shrink: 0;
     }
     .kiosk-search-input {
       flex: 1;
-      padding: 16px 20px;
-      font-size: 1.2rem;
+      padding: 18px 24px;
+      font-size: 1.3rem;
       border: 2px solid var(--gray-100);
-      border-radius: 14px;
+      border-radius: 16px;
       font-family: inherit;
       color: var(--slate);
-      background: var(--gray-100);
-      transition: border-color 0.2s, background 0.2s;
+      background: white;
+      transition: border-color 0.2s;
     }
     .kiosk-search-input:focus {
       outline: none;
       border-color: var(--teal);
-      background: white;
     }
-    .kiosk-search-input::placeholder { color: var(--gray-500); }
+    .kiosk-search-input::placeholder { color: var(--gray-300); }
     .kiosk-new-btn {
-      padding: 16px 28px;
+      padding: 18px 28px;
       background: var(--gold);
       color: var(--slate);
       border: none;
-      border-radius: 14px;
+      border-radius: 16px;
       font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
       white-space: nowrap;
-      transition: transform 0.1s, opacity 0.2s;
+      transition: transform 0.1s;
     }
     .kiosk-new-btn:active { transform: scale(0.97); }
 
-    /* ---- PEOPLE LIST ---- */
-    .kiosk-list {
+    /* ---- RESULTS LIST ---- */
+    .kiosk-results {
       flex: 1;
       overflow-y: auto;
       padding: 16px 32px 32px;
       -webkit-overflow-scrolling: touch;
+      max-width: 620px;
+      width: 100%;
+      margin: 0 auto;
     }
-    .kiosk-section-label {
-      font-size: 0.75rem;
+    .kiosk-results:empty { display: none; }
+    .kiosk-results-label {
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--gray-500);
-      padding: 12px 4px 8px;
+      padding: 8px 4px 10px;
     }
     .kiosk-person {
       display: flex;
@@ -187,10 +227,6 @@
     }
     .kiosk-person:active { transform: scale(0.985); }
     .kiosk-person:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
-    .kiosk-person.checked {
-      border-color: var(--teal);
-      background: linear-gradient(135deg, rgba(42,171,179,0.06), rgba(42,171,179,0.02));
-    }
     .kiosk-person-info { display: flex; align-items: center; gap: 14px; }
     .kiosk-person-avatar {
       width: 48px;
@@ -205,21 +241,8 @@
       color: var(--teal-dark);
       flex-shrink: 0;
     }
-    .kiosk-person.checked .kiosk-person-avatar {
-      background: var(--teal);
-      color: white;
-    }
-    .kiosk-person-name {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: var(--slate);
-    }
-    .kiosk-person-meta {
-      font-size: 0.8rem;
-      color: var(--gray-500);
-      margin-top: 2px;
-    }
-    .kiosk-check {
+    .kiosk-person-name { font-size: 1.15rem; font-weight: 600; }
+    .kiosk-person-check {
       width: 36px;
       height: 36px;
       border-radius: 50%;
@@ -228,17 +251,48 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: all 0.2s;
     }
-    .kiosk-person.checked .kiosk-check {
+    .kiosk-no-results {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray-500);
+      font-size: 1.05rem;
+    }
+
+    /* ---- VIEW CHECKED-IN TOGGLE ---- */
+    .kiosk-view-checked-btn {
+      margin-top: 20px;
+      background: none;
+      border: none;
+      color: var(--teal-dark);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.8;
+      transition: opacity 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .kiosk-view-checked-btn:hover { opacity: 1; }
+    .kiosk-welcome.has-results .kiosk-view-checked-btn { display: none; }
+
+    .kiosk-person.is-checked {
+      border-color: var(--teal);
+      background: rgba(42, 171, 179, 0.06);
+    }
+    .kiosk-person.is-checked .kiosk-person-check {
       background: var(--teal);
       border-color: var(--teal);
     }
-    .kiosk-empty {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--gray-500);
-      font-size: 1.1rem;
+    .kiosk-person-undo {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--pink);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     /* ---- SUCCESS FLASH ---- */
@@ -249,21 +303,26 @@
       transform: translate(-50%, -50%) scale(0.8);
       background: var(--teal);
       color: white;
-      padding: 32px 48px;
-      border-radius: 20px;
-      font-size: 1.6rem;
+      padding: 40px 56px;
+      border-radius: 24px;
+      font-size: 1.8rem;
       font-weight: 700;
       font-family: 'Rubik', sans-serif;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s, transform 0.2s;
       z-index: 100;
       text-align: center;
+      line-height: 1.3;
     }
     .kiosk-flash.show {
       opacity: 1;
       transform: translate(-50%, -50%) scale(1);
+    }
+    .kiosk-flash-check {
+      display: block;
+      margin: 0 auto 12px;
     }
 
     /* ---- NEW PERSON MODAL ---- */
@@ -282,8 +341,8 @@
     .kiosk-modal-overlay.show { opacity: 1; pointer-events: all; }
     .kiosk-modal {
       background: white;
-      border-radius: 20px;
-      padding: 36px;
+      border-radius: 24px;
+      padding: 40px;
       width: 90%;
       max-width: 480px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
@@ -306,10 +365,10 @@
     }
     .kiosk-form-group input {
       width: 100%;
-      padding: 14px 18px;
+      padding: 16px 20px;
       border: 2px solid var(--gray-100);
-      border-radius: 12px;
-      font-size: 1.1rem;
+      border-radius: 14px;
+      font-size: 1.15rem;
       font-family: inherit;
       color: var(--slate);
       background: var(--gray-100);
@@ -323,37 +382,37 @@
     .kiosk-form-actions {
       display: flex;
       gap: 12px;
-      margin-top: 24px;
+      margin-top: 28px;
     }
     .kiosk-btn-cancel {
       flex: 1;
-      padding: 16px;
+      padding: 18px;
       background: var(--gray-100);
       color: var(--gray-600);
       border: none;
-      border-radius: 12px;
-      font-size: 1.05rem;
+      border-radius: 14px;
+      font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
     }
     .kiosk-btn-submit {
       flex: 2;
-      padding: 16px;
+      padding: 18px;
       background: var(--teal);
       color: white;
       border: none;
-      border-radius: 12px;
-      font-size: 1.05rem;
+      border-radius: 14px;
+      font-size: 1.1rem;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
     }
 
     /* ---- SCROLLBAR ---- */
-    .kiosk-list::-webkit-scrollbar { width: 6px; }
-    .kiosk-list::-webkit-scrollbar-track { background: transparent; }
-    .kiosk-list::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+    .kiosk-results::-webkit-scrollbar { width: 6px; }
+    .kiosk-results::-webkit-scrollbar-track { background: transparent; }
+    .kiosk-results::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -365,35 +424,47 @@
     <a href="login.html">Go to Login</a>
   </div>
 
-  <!-- Kiosk App (hidden until auth) -->
-  <div id="kioskApp" style="display:none; flex:1; display:none; flex-direction:column; height:100%;">
+  <!-- Kiosk App -->
+  <div id="kioskApp" class="kiosk-app">
     <div class="kiosk-header">
       <div class="kiosk-brand">
         <div class="kiosk-logo">SP</div>
         <div>
-          <div class="kiosk-title">Thursday Check-In</div>
+          <div class="kiosk-title">St. Pete Bible Study</div>
           <div class="kiosk-subtitle" id="kioskDate"></div>
         </div>
       </div>
-      <div style="display:flex; align-items:center;">
+      <div class="kiosk-header-right">
         <div class="kiosk-count">
           <span class="kiosk-count-num" id="kioskCount">0</span>
-          <span>checked in</span>
+          <span>here tonight</span>
         </div>
-        <button class="kiosk-exit" onclick="window.close(); window.location.href='dashboard.html';">Exit Kiosk</button>
+        <button class="kiosk-exit" onclick="window.location.href='dashboard.html';">Exit</button>
       </div>
     </div>
 
-    <div class="kiosk-search">
-      <input type="text" class="kiosk-search-input" id="kioskSearch" placeholder="Search your name..." oninput="renderList()" autofocus>
-      <button class="kiosk-new-btn" onclick="openNewModal()">I'm New Here</button>
+    <div class="kiosk-body">
+      <div class="kiosk-welcome" id="kioskWelcome">
+        <h1 class="kiosk-welcome-title">Welcome! Check In Below</h1>
+        <p class="kiosk-welcome-sub">Start typing your name to find yourself</p>
+        <div class="kiosk-search-wrap">
+          <input type="text" class="kiosk-search-input" id="kioskSearch" placeholder="Type your name..." oninput="onSearch()" autocomplete="off">
+          <button class="kiosk-new-btn" onclick="openNewModal()">I'm New!</button>
+        </div>
+        <button class="kiosk-view-checked-btn" id="viewCheckedBtn" onclick="toggleCheckedInView()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+          <span id="viewCheckedLabel">View Checked In</span>
+        </button>
+      </div>
+      <div class="kiosk-results" id="kioskResults"></div>
     </div>
-
-    <div class="kiosk-list" id="kioskList"></div>
   </div>
 
   <!-- Success Flash -->
-  <div class="kiosk-flash" id="kioskFlash"></div>
+  <div class="kiosk-flash" id="kioskFlash">
+    <svg class="kiosk-flash-check" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="16 8.5 10.5 15 8 12"/></svg>
+    <span id="kioskFlashText"></span>
+  </div>
 
   <!-- New Person Modal -->
   <div class="kiosk-modal-overlay" id="newModal">
@@ -401,7 +472,7 @@
       <h2>Welcome! Tell us about yourself</h2>
       <div class="kiosk-form-group">
         <label>First Name *</label>
-        <input type="text" id="newFirst" placeholder="Your first name" autofocus>
+        <input type="text" id="newFirst" placeholder="Your first name">
       </div>
       <div class="kiosk-form-group">
         <label>Last Name</label>
@@ -429,13 +500,13 @@
     let people = [];
     let checkedIn = new Set();
     let today = '';
+    let showingCheckedIn = false;
 
     // ---- AUTH CHECK ----
     const session = JSON.parse(localStorage.getItem('stpete_session') || 'null');
     if (session && session.loggedIn) {
       document.getElementById('authGate').style.display = 'none';
-      const app = document.getElementById('kioskApp');
-      app.style.display = 'flex';
+      document.getElementById('kioskApp').style.display = 'flex';
       init();
     }
 
@@ -467,7 +538,6 @@
     }
 
     async function init() {
-      // Set today's date
       const now = new Date();
       today = now.toISOString().split('T')[0];
       document.getElementById('kioskDate').textContent =
@@ -483,91 +553,165 @@
         status: r.status || 'new'
       }));
 
-      // Load today's attendance (if any)
+      // Load today's attendance
       const att = await apiFetch('attendance', { query: `?date=eq.${today}&limit=1` });
       if (att && att.length > 0 && att[0].checked_in) {
         att[0].checked_in.forEach(id => checkedIn.add(id));
       }
 
-      renderList();
       updateCount();
+      document.getElementById('kioskSearch').focus();
     }
 
-    function renderList() {
-      const container = document.getElementById('kioskList');
-      const search = (document.getElementById('kioskSearch').value || '').toLowerCase().trim();
+    // ---- SEARCH & RENDER ----
+    function onSearch() {
+      const q = document.getElementById('kioskSearch').value.trim();
+      const welcome = document.getElementById('kioskWelcome');
+      const results = document.getElementById('kioskResults');
 
-      let filtered = people.filter(p => {
+      // If user starts typing, close checked-in view
+      if (showingCheckedIn && q.length > 0) {
+        showingCheckedIn = false;
+        document.getElementById('viewCheckedLabel').textContent = 'View Checked In';
+      }
+
+      if (q.length === 0) {
+        // Back to welcome state (unless showing checked-in list)
+        if (!showingCheckedIn) {
+          welcome.classList.remove('has-results');
+          results.innerHTML = '';
+        }
+        return;
+      }
+
+      welcome.classList.add('has-results');
+
+      const search = q.toLowerCase();
+      const matched = people.filter(p => {
         const name = `${p.firstName} ${p.lastName}`.toLowerCase();
         return name.includes(search);
       });
 
-      if (filtered.length === 0 && search) {
-        container.innerHTML = `<div class="kiosk-empty">No one found for "${search}"<br><br>Tap <strong>I'm New Here</strong> to add yourself!</div>`;
+      // Only show unchecked matches (already checked-in people don't need to search again)
+      const unchecked = matched.filter(p => !checkedIn.has(p.id));
+
+      if (unchecked.length === 0) {
+        results.innerHTML = `<div class="kiosk-no-results">No matches found for "${q}"<br><br>If you're new, tap <strong>I'm New!</strong></div>`;
         return;
       }
 
-      // Split: unchecked first, checked second
-      const unchecked = filtered.filter(p => !checkedIn.has(p.id));
-      const checked = filtered.filter(p => checkedIn.has(p.id));
-
-      let html = '';
-
-      if (unchecked.length > 0) {
-        html += `<div class="kiosk-section-label">Tap your name to check in</div>`;
-        html += unchecked.map(p => personCard(p, false)).join('');
-      }
-
-      if (checked.length > 0) {
-        html += `<div class="kiosk-section-label" style="color:var(--teal-dark);">Checked In</div>`;
-        html += checked.map(p => personCard(p, true)).join('');
-      }
-
-      if (filtered.length === 0) {
-        html = '<div class="kiosk-empty">Loading people...</div>';
-      }
-
-      container.innerHTML = html;
+      results.innerHTML =
+        `<div class="kiosk-results-label">${unchecked.length} result${unchecked.length !== 1 ? 's' : ''}</div>` +
+        unchecked.map(p => {
+          const initials = (p.firstName[0] || '') + (p.lastName[0] || '');
+          return `
+            <div class="kiosk-person" onclick="checkInPerson('${p.id}', '${p.firstName.replace(/'/g, "\\'")}')">
+              <div class="kiosk-person-info">
+                <div class="kiosk-person-avatar">${initials.toUpperCase()}</div>
+                <div class="kiosk-person-name">${p.firstName} ${p.lastName}</div>
+              </div>
+              <div class="kiosk-person-check">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+          `;
+        }).join('');
     }
 
-    function personCard(p, isChecked) {
-      const initials = (p.firstName[0] || '') + (p.lastName[0] || '');
-      const meta = p.status === 'new' ? 'New' : '';
-      return `
-        <div class="kiosk-person ${isChecked ? 'checked' : ''}" onclick="toggleCheckin('${p.id}', '${p.firstName}')">
-          <div class="kiosk-person-info">
-            <div class="kiosk-person-avatar">
-              ${isChecked ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : initials.toUpperCase()}
-            </div>
-            <div>
-              <div class="kiosk-person-name">${p.firstName} ${p.lastName}</div>
-              ${meta ? `<div class="kiosk-person-meta">${meta}</div>` : ''}
-            </div>
-          </div>
-          <div class="kiosk-check">
-            ${isChecked ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
-          </div>
-        </div>
-      `;
-    }
+    // ---- VIEW / UNCHECK CHECKED-IN PEOPLE ----
+    function toggleCheckedInView() {
+      showingCheckedIn = !showingCheckedIn;
+      const welcome = document.getElementById('kioskWelcome');
+      const results = document.getElementById('kioskResults');
+      const label = document.getElementById('viewCheckedLabel');
 
-    async function toggleCheckin(id, firstName) {
-      if (checkedIn.has(id)) {
-        checkedIn.delete(id);
+      if (showingCheckedIn) {
+        label.textContent = 'Hide Checked In';
+        document.getElementById('kioskSearch').value = '';
+        welcome.classList.add('has-results');
+        renderCheckedInList();
       } else {
-        checkedIn.add(id);
-        showFlash(`Welcome, ${firstName}!`);
+        label.textContent = 'View Checked In';
+        welcome.classList.remove('has-results');
+        results.innerHTML = '';
       }
-      renderList();
+    }
+
+    function renderCheckedInList() {
+      const results = document.getElementById('kioskResults');
+      const checkedPeople = people.filter(p => checkedIn.has(p.id));
+
+      if (checkedPeople.length === 0) {
+        results.innerHTML = `<div class="kiosk-no-results">No one has checked in yet</div>`;
+        return;
+      }
+
+      results.innerHTML =
+        `<div class="kiosk-results-label">Checked In · ${checkedPeople.length} ${checkedPeople.length === 1 ? 'person' : 'people'}</div>` +
+        checkedPeople.map(p => {
+          const initials = (p.firstName[0] || '') + (p.lastName[0] || '');
+          return `
+            <div class="kiosk-person is-checked" onclick="uncheckPerson('${p.id}', '${p.firstName.replace(/'/g, "\\'")}')">
+              <div class="kiosk-person-info">
+                <div class="kiosk-person-avatar">${initials.toUpperCase()}</div>
+                <div class="kiosk-person-name">${p.firstName} ${p.lastName}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="kiosk-person-undo">Tap to undo</span>
+                <div class="kiosk-person-check">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+    }
+
+    async function uncheckPerson(id, firstName) {
+      checkedIn.delete(id);
       updateCount();
+
+      // If no one left, close the checked-in view
+      if (checkedIn.size === 0) {
+        showingCheckedIn = false;
+        document.getElementById('viewCheckedLabel').textContent = 'View Checked In';
+        document.getElementById('kioskWelcome').classList.remove('has-results');
+        document.getElementById('kioskResults').innerHTML = '';
+      } else {
+        renderCheckedInList();
+      }
+
       await saveAttendance();
     }
 
+    // ---- CHECK IN (tap name) ----
+    async function checkInPerson(id, firstName) {
+      checkedIn.add(id);
+      updateCount();
+      showFlash(`Welcome, ${firstName}!`);
+      await saveAttendance();
+
+      // Reset to welcome screen after a short pause
+      setTimeout(resetToWelcome, 1600);
+    }
+
+    function resetToWelcome() {
+      document.getElementById('kioskSearch').value = '';
+      document.getElementById('kioskWelcome').classList.remove('has-results');
+      document.getElementById('kioskResults').innerHTML = '';
+      document.getElementById('kioskSearch').focus();
+    }
+
+    // ---- SAVE ATTENDANCE ----
     let _saveDebounce = null;
-    async function saveAttendance() {
-      // Debounce rapid taps to avoid race conditions
+    function saveAttendance() {
       clearTimeout(_saveDebounce);
-      _saveDebounce = setTimeout(_doSave, 300);
+      return new Promise(resolve => {
+        _saveDebounce = setTimeout(async () => {
+          await _doSave();
+          resolve();
+        }, 300);
+      });
     }
 
     async function _doSave() {
@@ -601,13 +745,15 @@
 
     function updateCount() {
       document.getElementById('kioskCount').textContent = checkedIn.size;
+      const viewBtn = document.getElementById('viewCheckedBtn');
+      if (viewBtn) viewBtn.style.display = checkedIn.size > 0 ? 'flex' : 'none';
     }
 
     function showFlash(msg) {
       const el = document.getElementById('kioskFlash');
-      el.textContent = msg;
+      document.getElementById('kioskFlashText').textContent = msg;
       el.classList.add('show');
-      setTimeout(() => el.classList.remove('show'), 1400);
+      setTimeout(() => el.classList.remove('show'), 1500);
     }
 
     // ---- NEW PERSON ----
@@ -626,47 +772,71 @@
 
     async function submitNewPerson() {
       const firstName = document.getElementById('newFirst').value.trim();
-      if (!firstName) { document.getElementById('newFirst').focus(); return; }
+      if (!firstName) {
+        document.getElementById('newFirst').style.borderColor = 'var(--pink)';
+        document.getElementById('newFirst').focus();
+        return;
+      }
+
+      // Disable button to prevent double-tap
+      const btn = document.querySelector('.kiosk-btn-submit');
+      btn.textContent = 'Saving...';
+      btn.disabled = true;
 
       const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-      const person = {
+      const lastName = document.getElementById('newLast').value.trim();
+      const phone = document.getElementById('newPhone').value.trim();
+      const connector = document.getElementById('newConnector').value.trim();
+
+      const dbRow = {
         id,
         first_name: firstName,
-        last_name: document.getElementById('newLast').value.trim(),
-        phone: document.getElementById('newPhone').value.trim(),
+        last_name: lastName,
+        phone: phone,
         email: '',
         status: 'new',
         stage: 'attending',
-        connector: document.getElementById('newConnector').value.trim(),
+        connector: connector,
         notes: 'Added via kiosk check-in',
+        last_attended: today,
         needs_followup: true,
         followup_done: false,
+        followup_assigned_to: '',
         attendance_count: 1
       };
 
-      await apiFetch('people', { method: 'POST', body: person });
+      const result = await apiFetch('people', { method: 'POST', body: dbRow });
+
+      if (!result) {
+        btn.textContent = 'Try Again';
+        btn.disabled = false;
+        console.error('Failed to save new person');
+        return;
+      }
 
       // Add to local state
       people.push({
         id,
         firstName,
-        lastName: person.last_name,
-        phone: person.phone,
+        lastName,
+        phone,
         status: 'new'
       });
       people.sort((a, b) => a.firstName.localeCompare(b.firstName));
 
       // Auto check in
       checkedIn.add(id);
-      closeNewModal();
-      renderList();
       updateCount();
+      closeNewModal();
       await saveAttendance();
       showFlash(`Welcome, ${firstName}!`);
 
-      // Clear search to show them
-      document.getElementById('kioskSearch').value = '';
-      renderList();
+      // Reset button
+      btn.textContent = 'Check Me In';
+      btn.disabled = false;
+
+      // Reset to welcome
+      setTimeout(resetToWelcome, 1600);
     }
   </script>
 </body>
