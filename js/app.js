@@ -87,6 +87,16 @@ const app = {
 
       this.data.people = (val(0) || []).map(r => db.personFromRow(r));
       this.data.attendance = (val(1) || []).map(r => db.attendanceFromRow(r));
+
+      // Sync today's attendance into checkinState so kiosk check-ins show up
+      const today = new Date().toISOString().split('T')[0];
+      const todayRecord = this.data.attendance.find(a => a.date === today);
+      if (todayRecord && todayRecord.checkedIn && todayRecord.checkedIn.length > 0) {
+        todayRecord.checkedIn.forEach(id => {
+          this.data.checkinState[id] = true;
+        });
+      }
+
       this.data.teams = val(2) || [];
       this.data.teamMembersData = val(3) || [];
       this.data.groups = val(4) || [];
@@ -943,6 +953,29 @@ const app = {
   toggleCheckin(id) {
     this.data.checkinState[id] = !this.data.checkinState[id];
     this.renderCheckin();
+    this._autoSaveCheckin();
+  },
+
+  _autoSaveTimer: null,
+  _autoSaveCheckin() {
+    clearTimeout(this._autoSaveTimer);
+    this._autoSaveTimer = setTimeout(() => this._doAutoSave(), 500);
+  },
+
+  async _doAutoSave() {
+    const checkedIds = Object.entries(this.data.checkinState)
+      .filter(([, v]) => v)
+      .map(([id]) => id);
+    const today = new Date().toISOString().split('T')[0];
+    const newCount = this.data.people.filter(p =>
+      checkedIds.includes(p.id) && p.status === 'new'
+    ).length;
+    await db.upsertAttendance({
+      date: today,
+      checkedIn: checkedIds,
+      total: this.data.people.length,
+      newPeople: newCount
+    });
   },
 
   uncheckAll() {
