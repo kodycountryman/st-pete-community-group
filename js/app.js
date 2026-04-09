@@ -128,12 +128,29 @@ const app = {
   },
 
   setupMobileMenu() {
-    document.getElementById('mobileMenu').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('open');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.createElement('div');
+    overlay.className = 'sidebar-overlay';
+    document.body.appendChild(overlay);
+
+    document.getElementById('mobileMenu').addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('show');
     });
-    // Close sidebar when clicking outside
-    document.getElementById('main').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.remove('open');
+
+    // Close sidebar when tapping overlay
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    });
+
+    // Close sidebar when navigating
+    sidebar.querySelectorAll('.nav-item[data-page]').forEach(item => {
+      item.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      });
     });
   },
 
