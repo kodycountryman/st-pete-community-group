@@ -1,49 +1,29 @@
 /* ============================================
    ST. PETE LAUNCH DASHBOARD — Main App
-   localStorage-based, Supabase-ready architecture
+   Supabase-backed, syncs across all devices
    ============================================ */
 
 const app = {
-  // ---- DATA LAYER ----
-  // All data in localStorage, structured for easy Supabase migration
+  // ---- DATA (in-memory cache, loaded from Supabase) ----
   data: {
     people: [],
     groups: [],
-    teams: {
-      hospitality: { name: 'Hospitality', desc: 'Food, welcome, vibe', members: [] },
-      tableLeaders: { name: 'Table Leaders', desc: 'Guide table discussions', members: [] },
-      followUp: { name: 'Follow-Up / Connection', desc: 'New person outreach & check-ins', members: [] },
-      groupLeaders: { name: 'Group Leaders', desc: 'Microgroup leaders', members: [] },
-      outreach: { name: 'Outreach / Invite', desc: 'Bring new people in', members: [] },
-      setup: { name: 'Setup / Environment', desc: 'Music, seating, atmosphere', members: [] }
-    },
-    weeklyPrep: {
-      topic: '',
-      scripture: '',
-      takeaway: '',
-      cta: '',
-      icebreaker: '',
-      questions: [],
-      date: ''
-    },
+    teams: [],
+    teamMembersData: [],
+    weeklyPrep: null,
     pastWeeks: [],
-    attendance: [],   // Array of { date, checkedIn: [personId, ...], newPeople: count }
-    checkinState: {},  // Temporary: { personId: true/false } for current session
-    settings: {
-      currentPhase: 1
-    }
+    attendance: [],
+    checkinState: {},  // Session-only, not persisted to DB
+    settings: { currentPhase: 1 }
   },
 
-  // Team members for assignment
-  teamMembers: ['Kody', 'Dewayne', 'Elizabeth', 'James', 'Ashley'],
-
-  // Current user session
+  teamMembers: ['Kody', 'Dewayne', 'Elizabeth', 'James', 'Ashley', 'Madison'],
   currentUser: null,
 
   // ---- INIT ----
-  init() {
-    this.checkAuth();
-    this.loadData();
+  async init() {
+    if (!this.checkAuth()) return;
+    await this.loadData();
     this.setupNavigation();
     this.setupMobileMenu();
     this.setupCSVDrop();
@@ -54,12 +34,16 @@ const app = {
   checkAuth() {
     const session = JSON.parse(localStorage.getItem('stpete_session') || 'null');
     if (!session || !session.loggedIn) {
-      window.location.href = 'login.html';
-      return;
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.includes('login')) {
+        window.location.href = 'login.html';
+      }
+      return false;
     }
     this.currentUser = session;
     const nameEl = document.getElementById('userName');
     if (nameEl) nameEl.textContent = session.name;
+    return true;
   },
 
   logout() {
@@ -67,32 +51,38 @@ const app = {
     window.location.href = 'login.html';
   },
 
-  // ---- STORAGE ----
-  loadData() {
-    const saved = localStorage.getItem('stpete_dashboard');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Merge with defaults to handle new fields
-      this.data = { ...this.data, ...parsed };
-      this.data.teams = { ...this.getDefaultTeams(), ...parsed.teams };
-      if (!this.data.attendance) this.data.attendance = [];
-      if (!this.data.checkinState) this.data.checkinState = {};
+  // ---- LOAD FROM SUPABASE ----
+  async loadData() {
+    try {
+      const results = await Promise.allSettled([
+        db.getPeople(),
+        db.getAttendance(),
+        db.getTeams(),
+        db.getTeamMembers(),
+        db.getGroups(),
+        db.getCurrentWeeklyPrep(),
+        db.getPastWeeks()
+      ]);
+
+      const val = (i) => results[i].status === 'fulfilled' ? results[i].value : null;
+
+      this.data.people = (val(0) || []).map(r => db.personFromRow(r));
+      this.data.attendance = (val(1) || []).map(r => db.attendanceFromRow(r));
+      this.data.teams = val(2) || [];
+      this.data.teamMembersData = val(3) || [];
+      this.data.groups = val(4) || [];
+      this.data.weeklyPrep = val(5) || { topic: '', scripture: '', takeaway: '', cta: '', icebreaker: '', questions: [] };
+      this.data.pastWeeks = val(6) || [];
+    } catch (err) {
+      console.error('Failed to load from Supabase:', err);
+      this.toast('Connection error — check your internet');
     }
   },
 
-  saveData() {
-    localStorage.setItem('stpete_dashboard', JSON.stringify(this.data));
-  },
-
-  getDefaultTeams() {
-    return {
-      hospitality: { name: 'Hospitality', desc: 'Food, welcome, vibe', members: [] },
-      tableLeaders: { name: 'Table Leaders', desc: 'Guide table discussions', members: [] },
-      followUp: { name: 'Follow-Up / Connection', desc: 'New person outreach & check-ins', members: [] },
-      groupLeaders: { name: 'Group Leaders', desc: 'Microgroup leaders', members: [] },
-      outreach: { name: 'Outreach / Invite', desc: 'Bring new people in', members: [] },
-      setup: { name: 'Setup / Environment', desc: 'Music, seating, atmosphere', members: [] }
-    };
+  // Refresh data from server (call after any mutation)
+  async refresh() {
+    await this.loadData();
+    this.renderAll();
   },
 
   // ---- NAVIGATION ----
@@ -221,7 +211,7 @@ const app = {
     modal.classList.add('show');
   },
 
-  savePerson() {
+  async savePerson() {
     const firstName = document.getElementById('personFirst').value.trim();
     if (!firstName) { this.toast('First name is required'); return; }
 
@@ -239,28 +229,19 @@ const app = {
       lastAttended: id ? (this.data.people.find(p => p.id === id)?.lastAttended || '') : new Date().toISOString().split('T')[0],
       needsFollowup: id ? (this.data.people.find(p => p.id === id)?.needsFollowup || false) : true,
       followupDone: false,
-      attendanceCount: id ? (this.data.people.find(p => p.id === id)?.attendanceCount || 0) : 0,
-      createdAt: id ? (this.data.people.find(p => p.id === id)?.createdAt || new Date().toISOString()) : new Date().toISOString()
+      attendanceCount: id ? (this.data.people.find(p => p.id === id)?.attendanceCount || 0) : 0
     };
 
-    if (id) {
-      const idx = this.data.people.findIndex(p => p.id === id);
-      if (idx !== -1) this.data.people[idx] = personData;
-    } else {
-      this.data.people.push(personData);
-    }
-
-    this.saveData();
+    await db.upsertPerson(personData);
     this.closeModal('personModal');
-    this.renderAll();
+    await this.refresh();
     this.toast(id ? 'Person updated' : 'Person added');
   },
 
-  deletePerson(id) {
+  async deletePerson(id) {
     if (!confirm('Remove this person?')) return;
-    this.data.people = this.data.people.filter(p => p.id !== id);
-    this.saveData();
-    this.renderAll();
+    await db.deletePerson(id);
+    await this.refresh();
     this.toast('Person removed');
   },
 
@@ -362,11 +343,11 @@ const app = {
     });
   },
 
-  movePipeline(id, newStage) {
+  async movePipeline(id, newStage) {
     const person = this.data.people.find(p => p.id === id);
     if (person) {
+      await db.updatePerson(id, { stage: newStage });
       person.stage = newStage;
-      this.saveData();
       this.renderPipeline();
       this.toast(`Moved ${person.firstName} to ${this.capitalize(newStage)}`);
     }
@@ -434,55 +415,65 @@ const app = {
     }
   },
 
-  assignFollowup(personId, assignee) {
+  async assignFollowup(personId, assignee) {
     const person = this.data.people.find(p => p.id === personId);
     if (person) {
+      await db.updatePerson(personId, { followupAssignedTo: assignee });
       person.followupAssignedTo = assignee;
-      this.saveData();
       this.toast(assignee ? `Assigned ${person.firstName} to ${assignee}` : `Unassigned ${person.firstName}`);
     }
   },
 
-  markFollowedUp(id) {
+  async markFollowedUp(id) {
     const person = this.data.people.find(p => p.id === id);
     if (person) {
+      await db.updatePerson(id, { followupDone: true, needsFollowup: false });
       person.followupDone = true;
       person.needsFollowup = false;
-      this.saveData();
       this.renderAll();
       this.toast(`Followed up with ${person.firstName}`);
     }
   },
 
-  markAllFollowedUp() {
-    this.data.people.forEach(p => {
-      if (p.needsFollowup) {
-        p.followupDone = true;
-        p.needsFollowup = false;
-      }
-    });
-    this.saveData();
-    this.renderAll();
+  async markAllFollowedUp() {
+    const promises = this.data.people
+      .filter(p => p.needsFollowup)
+      .map(p => db.updatePerson(p.id, { followupDone: true, needsFollowup: false }));
+    await Promise.all(promises);
+    await this.refresh();
     this.toast('All follow-ups marked done');
   },
 
   // ---- WEEKLY PREP ----
+  _saveTimeout: null,
   saveWeeklyPrep() {
-    this.data.weeklyPrep.topic = document.getElementById('weekTopic')?.value || '';
-    this.data.weeklyPrep.scripture = document.getElementById('weekScripture')?.value || '';
-    this.data.weeklyPrep.takeaway = document.getElementById('weekTakeaway')?.value || '';
-    this.data.weeklyPrep.cta = document.getElementById('weekCTA')?.value || '';
-    this.saveData();
+    // Debounce saves to avoid hammering the DB on every keystroke
+    clearTimeout(this._saveTimeout);
+    this._saveTimeout = setTimeout(() => this._doSaveWeeklyPrep(), 800);
+  },
 
-    // Update overview
-    const topicEl = document.getElementById('weeklyTopic');
-    if (topicEl && this.data.weeklyPrep.topic) {
-      topicEl.textContent = this.data.weeklyPrep.topic;
+  async _doSaveWeeklyPrep() {
+    const prep = {
+      id: this.data.weeklyPrep?.id || undefined,
+      topic: document.getElementById('weekTopic')?.value || '',
+      scripture: document.getElementById('weekScripture')?.value || '',
+      takeaway: document.getElementById('weekTakeaway')?.value || '',
+      cta: document.getElementById('weekCTA')?.value || '',
+      icebreaker: this.data.weeklyPrep?.icebreaker || '',
+      questions: this.data.weeklyPrep?.questions || []
+    };
+
+    const result = await db.upsertWeeklyPrep(prep);
+    if (result && result[0]) {
+      this.data.weeklyPrep = result[0];
     }
+
+    const topicEl = document.getElementById('weeklyTopic');
+    if (topicEl && prep.topic) topicEl.textContent = prep.topic;
   },
 
   renderWeeklyPrep() {
-    const wp = this.data.weeklyPrep;
+    const wp = this.data.weeklyPrep || {};
     const topicInput = document.getElementById('weekTopic');
     if (topicInput) topicInput.value = wp.topic || '';
     const scriptInput = document.getElementById('weekScripture');
@@ -492,24 +483,22 @@ const app = {
     const ctaInput = document.getElementById('weekCTA');
     if (ctaInput) ctaInput.value = wp.cta || '';
 
-    // Overview topic
     const topicEl = document.getElementById('weeklyTopic');
     if (topicEl) {
       topicEl.textContent = wp.topic || 'Set this week\'s topic in Weekly Prep';
     }
   },
 
-  generateIcebreaker() {
+  async generateIcebreaker() {
     const icebreaker = Generators.getIcebreaker();
     const output = document.getElementById('icebreakerOutput');
     output.innerHTML = `<p style="font-size:1rem; font-weight:500; color:var(--slate);">"${icebreaker}"</p>`;
-    this.data.weeklyPrep.icebreaker = icebreaker;
-    this.saveData();
+    if (this.data.weeklyPrep) this.data.weeklyPrep.icebreaker = icebreaker;
+    this._doSaveWeeklyPrep();
   },
 
-  generateQuestions() {
-    const topic = this.data.weeklyPrep.topic?.toLowerCase() || '';
-    // Try to match a theme
+  async generateQuestions() {
+    const topic = (this.data.weeklyPrep?.topic || document.getElementById('weekTopic')?.value || '').toLowerCase();
     let theme = 'general';
     const themes = Generators.getThemes();
     for (const t of themes) {
@@ -520,10 +509,9 @@ const app = {
     const output = document.getElementById('questionsOutput');
     output.innerHTML = '<ol>' + questions.map(q => `<li>${q}</li>`).join('') + '</ol>';
 
-    this.data.weeklyPrep.questions = questions;
-    this.saveData();
+    if (this.data.weeklyPrep) this.data.weeklyPrep.questions = questions;
+    this._doSaveWeeklyPrep();
 
-    // Update overview
     const qCount = document.getElementById('weeklyQCount');
     if (qCount) qCount.textContent = `${questions.length} questions ready`;
   },
@@ -595,15 +583,15 @@ const app = {
     if (!container) return;
 
     if (this.data.pastWeeks.length === 0) {
-      container.innerHTML = '<p class="empty-state">Past week preps will appear here after you archive them.</p>';
+      container.innerHTML = '<p class="empty-state">Past week preps will appear here as you use Weekly Prep.</p>';
       return;
     }
 
     container.innerHTML = this.data.pastWeeks.map(w => `
       <div class="past-week-item">
         <div class="past-week-item-info">
-          <span class="past-week-item-topic">${w.topic}</span>
-          <span class="past-week-item-date">${w.date} · ${w.scripture || 'No scripture'}</span>
+          <span class="past-week-item-topic">${w.topic || 'Untitled'}</span>
+          <span class="past-week-item-date">${w.date || w.created_at?.split('T')[0] || ''} · ${w.scripture || 'No scripture'}</span>
         </div>
       </div>
     `).join('');
@@ -614,38 +602,41 @@ const app = {
     const grid = document.getElementById('teamsGrid');
     if (!grid) return;
 
-    grid.innerHTML = Object.entries(this.data.teams).map(([key, team]) => `
-      <div class="team-card">
-        <div class="team-card-header">
-          <h3>${team.name}</h3>
-          <span class="team-card-count">${team.members.length}</span>
-        </div>
-        <div class="team-card-body">
-          <p style="font-size:0.8rem; color:var(--gray-500); margin-bottom:12px;">${team.desc}</p>
-          ${team.members.length > 0
-            ? team.members.map(m => `
+    const teams = this.data.teams;
+    const members = this.data.teamMembersData;
+
+    grid.innerHTML = teams.map(team => {
+      const teamMembers = members.filter(m => m.team_id === team.id);
+      return `
+        <div class="team-card">
+          <div class="team-card-header">
+            <h3>${team.name}</h3>
+            <span class="team-card-count">${teamMembers.length}</span>
+          </div>
+          <div class="team-card-body">
+            <p style="font-size:0.8rem; color:var(--gray-500); margin-bottom:12px;">${team.description}</p>
+            ${teamMembers.map(m => `
               <div class="team-member">
                 <span class="team-member-name">${m.name}</span>
                 <span class="team-member-role">${m.role || 'Member'}</span>
               </div>
-            `).join('')
-            : ''
-          }
-          <button class="team-add-btn" onclick="app.addTeamMember('${key}')">+ Add Member</button>
+            `).join('')}
+            <button class="team-add-btn" onclick="app.addTeamMember('${team.id}')">+ Add Member</button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   },
 
-  addTeamMember(teamKey) {
+  async addTeamMember(teamKey) {
     const name = prompt('Person\'s name:');
     if (!name) return;
     const role = prompt('Role (optional):') || 'Member';
 
-    this.data.teams[teamKey].members.push({ name: name.trim(), role: role.trim() });
-    this.saveData();
-    this.renderTeams();
-    this.toast(`Added ${name.trim()} to ${this.data.teams[teamKey].name}`);
+    await db.addTeamMember(teamKey, name.trim(), role.trim());
+    const team = this.data.teams.find(t => t.id === teamKey);
+    await this.refresh();
+    this.toast(`Added ${name.trim()} to ${team?.name || teamKey}`);
   },
 
   // ---- MICROGROUPS ----
@@ -659,25 +650,22 @@ const app = {
     document.getElementById('groupModal').classList.add('show');
   },
 
-  saveGroup() {
+  async saveGroup() {
     const name = document.getElementById('groupName').value.trim();
     if (!name) { this.toast('Group name is required'); return; }
 
-    this.data.groups.push({
+    await db.createGroup({
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
       name,
       type: document.getElementById('groupType').value,
       leader: document.getElementById('groupLeader').value.trim(),
       day: document.getElementById('groupDay').value,
       location: document.getElementById('groupLocation').value.trim(),
-      description: document.getElementById('groupDesc').value.trim(),
-      members: [],
-      createdAt: new Date().toISOString()
+      description: document.getElementById('groupDesc').value.trim()
     });
 
-    this.saveData();
     this.closeModal('groupModal');
-    this.renderAll();
+    await this.refresh();
     this.toast('Microgroup created');
   },
 
@@ -796,7 +784,7 @@ const app = {
     }
   },
 
-  saveAttendance() {
+  async saveAttendance() {
     const checkedIds = Object.entries(this.data.checkinState)
       .filter(([, v]) => v)
       .map(([id]) => id);
@@ -807,46 +795,36 @@ const app = {
     }
 
     const today = new Date().toISOString().split('T')[0];
-
-    // Check if we already have a record for today
-    const existing = this.data.attendance.findIndex(a => a.date === today);
-
     const newCount = this.data.people.filter(p =>
       checkedIds.includes(p.id) && p.status === 'new'
     ).length;
 
-    const record = {
+    // Save attendance record
+    await db.upsertAttendance({
       date: today,
       checkedIn: checkedIds,
       total: this.data.people.length,
       newPeople: newCount
-    };
+    });
 
-    if (existing >= 0) {
-      this.data.attendance[existing] = record;
-    } else {
-      this.data.attendance.unshift(record);
-    }
-
-    // Update people's lastAttended and attendance count
-    checkedIds.forEach(id => {
+    // Update people who were checked in
+    const updatePromises = checkedIds.map(id => {
       const person = this.data.people.find(p => p.id === id);
       if (person) {
-        person.lastAttended = today;
-        person.attendanceCount = (person.attendanceCount || 0) + 1;
+        return db.updatePerson(id, {
+          lastAttended: today,
+          attendanceCount: (person.attendanceCount || 0) + 1
+        });
       }
-    });
+    }).filter(Boolean);
 
-    // Auto-flag people who were NOT checked in for follow-up if they're usually consistent
-    this.data.people.forEach(p => {
-      if (!checkedIds.includes(p.id) && ['consistent', 'core', 'leader'].includes(p.status)) {
-        p.needsFollowup = true;
-        p.followupDone = false;
-      }
-    });
+    // Auto-flag absent consistent people
+    const flagPromises = this.data.people
+      .filter(p => !checkedIds.includes(p.id) && ['consistent', 'core', 'leader'].includes(p.status))
+      .map(p => db.updatePerson(p.id, { needsFollowup: true, followupDone: false }));
 
-    this.saveData();
-    this.renderAll();
+    await Promise.all([...updatePromises, ...flagPromises]);
+    await this.refresh();
     this.toast(`Saved! ${checkedIds.length} people checked in`);
   },
 
@@ -940,8 +918,81 @@ const app = {
     document.getElementById('attendanceModal').classList.add('show');
   },
 
+  // ---- PAST CHECK-IN ----
+  pastCheckinState: {},
+
+  openPastCheckinModal() {
+    this.pastCheckinState = {};
+    document.getElementById('pastCheckinDate').value = '';
+    document.getElementById('pastCheckinSearch').value = '';
+    this.renderPastCheckinList();
+    document.getElementById('pastCheckinModal').classList.add('show');
+  },
+
+  renderPastCheckinList() {
+    const list = document.getElementById('pastCheckinList');
+    if (!list) return;
+
+    const search = (document.getElementById('pastCheckinSearch')?.value || '').toLowerCase();
+    let people = [...this.data.people].sort((a, b) => a.firstName.localeCompare(b.firstName));
+
+    if (search) {
+      people = people.filter(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(search));
+    }
+
+    list.innerHTML = people.map(p => {
+      const isChecked = this.pastCheckinState[p.id] || false;
+      return `
+        <div class="checkin-row ${isChecked ? 'checked' : ''}" onclick="app.togglePastCheckin('${p.id}')">
+          <div class="checkin-checkbox">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="checkin-info">
+            <span class="checkin-name">${p.firstName} ${p.lastName || ''}</span>
+            <span class="checkin-meta">${this.capitalize(p.status)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const count = Object.values(this.pastCheckinState).filter(Boolean).length;
+    const countEl = document.getElementById('pastCheckinCount');
+    if (countEl) countEl.textContent = `${count} people selected`;
+  },
+
+  togglePastCheckin(id) {
+    this.pastCheckinState[id] = !this.pastCheckinState[id];
+    this.renderPastCheckinList();
+  },
+
+  async savePastCheckin() {
+    const date = document.getElementById('pastCheckinDate').value;
+    if (!date) { this.toast('Please select a date'); return; }
+
+    const checkedIds = Object.entries(this.pastCheckinState)
+      .filter(([, v]) => v)
+      .map(([id]) => id);
+
+    if (checkedIds.length === 0) { this.toast('No one selected'); return; }
+
+    const newCount = this.data.people.filter(p =>
+      checkedIds.includes(p.id) && p.status === 'new'
+    ).length;
+
+    await db.upsertAttendance({
+      date,
+      checkedIn: checkedIds,
+      total: this.data.people.length,
+      newPeople: newCount
+    });
+
+    this.closeModal('pastCheckinModal');
+    await this.refresh();
+    this.toast(`Saved! ${checkedIds.length} people checked in for ${date}`);
+  },
+
   // ---- QUICK ADD (CHECK-IN PAGE) ----
-  quickAddPerson() {
+  async quickAddPerson() {
     const firstName = document.getElementById('quickFirst').value.trim();
     if (!firstName) { this.toast('First name is required'); return; }
 
@@ -958,22 +1009,18 @@ const app = {
       lastAttended: new Date().toISOString().split('T')[0],
       needsFollowup: true,
       followupDone: false,
-      attendanceCount: 1,
-      createdAt: new Date().toISOString()
+      attendanceCount: 1
     };
 
-    this.data.people.push(newPerson);
-    // Auto check them in
+    await db.upsertPerson(newPerson);
     this.data.checkinState[newPerson.id] = true;
 
-    // Clear inputs
     document.getElementById('quickFirst').value = '';
     document.getElementById('quickLast').value = '';
     document.getElementById('quickPhone').value = '';
     document.getElementById('quickConnector').value = '';
 
-    this.saveData();
-    this.renderAll();
+    await this.refresh();
     this.toast(`${firstName} added & checked in!`);
   },
 
@@ -1147,24 +1194,20 @@ const app = {
     document.getElementById('csvFileInput').value = '';
   },
 
-  confirmCSVImport() {
-    let imported = 0;
+  async confirmCSVImport() {
     let skipped = 0;
+    const toInsert = [];
 
-    this.csvParsedData.forEach(p => {
-      // Check for duplicates by first+last name
+    this.csvParsedData.forEach((p, i) => {
       const exists = this.data.people.find(existing =>
         existing.firstName.toLowerCase() === p.firstName.toLowerCase() &&
         (existing.lastName || '').toLowerCase() === (p.lastName || '').toLowerCase()
       );
 
-      if (exists) {
-        skipped++;
-        return;
-      }
+      if (exists) { skipped++; return; }
 
-      this.data.people.push({
-        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5) + imported,
+      toInsert.push({
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5) + i,
         firstName: p.firstName,
         lastName: p.lastName,
         phone: p.phone,
@@ -1173,20 +1216,19 @@ const app = {
         stage: 'attending',
         connector: p.connector,
         notes: p.notes,
-        lastAttended: '',
         needsFollowup: p.status === 'new',
-        followupDone: false,
-        attendanceCount: 0,
-        createdAt: new Date().toISOString()
+        attendanceCount: 0
       });
-      imported++;
     });
 
-    this.saveData();
+    if (toInsert.length > 0) {
+      await db.bulkInsertPeople(toInsert);
+    }
+
     this.cancelCSV();
     document.getElementById('csvUploadArea').classList.remove('show');
-    this.renderAll();
-    this.toast(`Imported ${imported} people${skipped > 0 ? ` (${skipped} duplicates skipped)` : ''}`);
+    await this.refresh();
+    this.toast(`Imported ${toInsert.length} people${skipped > 0 ? ` (${skipped} duplicates skipped)` : ''}`);
   },
 
   // ---- MODALS ----
@@ -1217,4 +1259,4 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 // Init
-document.addEventListener('DOMContentLoaded', () => app.init());
+document.addEventListener('DOMContentLoaded', () => app.init().catch(console.error));

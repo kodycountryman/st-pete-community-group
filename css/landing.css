@@ -168,18 +168,27 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
 }
 .logo-container { margin-bottom: 24px; }
 .hero-logo {
-  max-width: 280px;
+  max-width: 500px;
+  width: 75vw;
   height: auto;
-  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 4px 20px rgba(0,0,0,0.2));
+}
+.nav-logo-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 6px;
 }
 .logo-fallback {
   flex-direction: column;
   align-items: center;
 }
 .brand-title {
+  font-family: 'Lobster', cursive;
   font-size: 4rem;
   color: var(--pink-light);
-  line-height: 1;
+  line-height: 1.1;
 }
 .brand-subtitle {
   font-size: 1.4rem;
@@ -201,37 +210,6 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
   flex-wrap: wrap;
 }
 
-.scroll-indicator {
-  position: absolute;
-  bottom: 32px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
-}
-.scroll-indicator span {
-  display: block;
-  width: 24px;
-  height: 40px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-radius: 12px;
-  position: relative;
-}
-.scroll-indicator span::after {
-  content: '';
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 8px;
-  background: rgba(255,255,255,0.6);
-  border-radius: 2px;
-  animation: scrollPulse 2s ease-in-out infinite;
-}
-@keyframes scrollPulse {
-  0%, 100% { opacity: 1; transform: translateX(-50%) translateY(0); }
-  50% { opacity: 0.3; transform: translateX(-50%) translateY(10px); }
-}
 
 /* ============ SECTIONS ============ */
 .section {
@@ -617,8 +595,20 @@ h2 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 16px; color: var(--slate)
 
 /* ============ RESPONSIVE ============ */
 @media (max-width: 768px) {
-  .hero-logo { max-width: 200px; }
-  .brand-title { font-size: 2.8rem; }
+  .hero { justify-content: space-between; flex-direction: column; padding: 0; }
+  .hero-content {
+    width: 100%;
+    padding: 75px 24px 48px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .logo-container { margin-bottom: 8px; }
+  .hero-sub { margin-bottom: 0; }
+  .hero-cta { margin-top: auto; padding-top: 24px; }
+  .hero-details-bar { margin-top: 12px; margin-bottom: 0; }
+  .hero-logo { max-width: 340px; }
+  .brand-subtitle { font-size: 1.6rem; letter-spacing: 6px; }
   .section { padding: 72px 0; }
   .nav-brand { display: none; }
   .nav-links { gap: 20px; }
