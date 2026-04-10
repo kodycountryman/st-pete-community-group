@@ -59,6 +59,33 @@
     .roadmap-title{font-size:0.95rem;font-weight:800;color:var(--slate);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
     .roadmap-progress{font-size:0.75rem;color:var(--gray-500);font-weight:600;}
 
+    /* ACTION ITEMS */
+    .actions-section{margin-bottom:20px;border:1px solid rgba(232,184,75,0.25);border-radius:14px;overflow:hidden;background:rgba(232,184,75,0.04);}
+    .actions-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+    .actions-header-left{display:flex;align-items:center;gap:8px;}
+    .actions-icon{width:24px;height:24px;border-radius:7px;background:var(--gold);display:flex;align-items:center;justify-content:center;}
+    .actions-label{font-size:0.82rem;font-weight:700;color:var(--slate);}
+    .actions-count{font-size:0.68rem;font-weight:700;color:var(--gold);background:rgba(232,184,75,0.15);padding:2px 8px;border-radius:100px;}
+    .actions-body{padding:0 12px 12px;}
+    .action-item{display:flex;align-items:flex-start;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(0,0,0,0.04);transition:opacity 0.2s;}
+    .action-item:last-child{border-bottom:none;}
+    .action-item.done{opacity:0.45;}
+    .action-item.done .action-text{text-decoration:line-through;}
+    .action-check{width:20px;height:20px;border-radius:6px;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;margin-top:1px;transition:all 0.15s;background:white;}
+    .action-check:hover{background:rgba(232,184,75,0.1);}
+    .action-item.done .action-check{background:var(--gold);border-color:var(--gold);}
+    .action-item.done .action-check::after{content:'\\2713';color:white;font-size:0.65rem;font-weight:800;}
+    .action-info{flex:1;min-width:0;}
+    .action-text{font-size:0.8rem;font-weight:500;color:var(--slate);line-height:1.35;}
+    .action-meta{font-size:0.68rem;color:var(--gray-500);margin-top:2px;}
+    .action-remove{background:none;border:none;color:var(--gray-300);font-size:0.9rem;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+    .action-remove:hover{color:var(--pink);}
+    .actions-add{display:flex;gap:6px;padding:8px 4px 0;}
+    .actions-add input{flex:1;padding:7px 10px;border:1px solid var(--gray-100);border-radius:8px;font-size:0.78rem;font-family:inherit;color:var(--slate);}
+    .actions-add input:focus{outline:none;border-color:var(--gold);}
+    .actions-add button{padding:7px 12px;background:var(--gold);color:white;border:none;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+    .actions-empty{text-align:center;padding:12px;font-size:0.78rem;color:var(--gray-500);font-style:italic;}
+
     .phase{margin-bottom:12px;border:1px solid var(--gray-100);border-radius:14px;overflow:hidden;}
     .phase-header{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background 0.15s;}
     .phase-header:hover{background:var(--gray-100);}
@@ -231,6 +258,7 @@ const STORAGE_KEY = 'stpete_coach';
 
 let state = {
   messages: [],
+  actions: [],  // {id, text, timeframe, done, createdAt}
   roadmap: null,
   metrics: {},
   apiKey: '',
@@ -446,6 +474,22 @@ St. Pete Bible Study is a Grace Family Church (GFC) campus launch in St. Petersb
 - Discipleship through groups — Sunday is the front door, groups are the living room
 - GFC model adds: Mon-Thu specialized groups (women's, men's, youth, couples)
 
+## ACTION ITEMS FORMAT
+When you give Kody specific tasks or action steps to complete, wrap each one in double brackets like this:
+[[ACTION: Description of the task | timeframe]]
+
+Examples:
+[[ACTION: Text 15 people from the lost contacts list to schedule coffee | Next 2 weeks]]
+[[ACTION: Talk to Pastor Mike about the St. Pete commuter list | This week]]
+[[ACTION: Find 2 volunteers willing to run basic kids activities | By end of May]]
+
+Rules for action items:
+- Only use [[ACTION:...]] for SPECIFIC, completable tasks — not vague advice
+- Include a timeframe when possible
+- Keep them concise (under 15 words for the description)
+- Don't overload — max 3-5 action items per response
+- These auto-populate into a live checklist Kody can track
+
 ## INSTRUCTIONS FOR CONVERSATION
 
 1. Always reference their specific situation — names, numbers, context
@@ -480,6 +524,7 @@ async function init() {
   const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
   if (saved) {
     state.messages = saved.messages || [];
+    state.actions = saved.actions || [];
     state.roadmap = saved.roadmap || getDefaultRoadmap();
   } else {
     state.roadmap = getDefaultRoadmap();
@@ -495,6 +540,7 @@ async function init() {
   await fetchMetrics();
 
   // Render
+  renderActions();
   renderRoadmap();
   renderMessages();
   renderHeaderMetrics();
@@ -519,6 +565,7 @@ function saveApiKey() {
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     messages: state.messages,
+    actions: state.actions,
     roadmap: state.roadmap
   }));
 }
@@ -629,6 +676,144 @@ function cycleMilestone(msId) {
       return;
     }
   }
+}
+
+// ============================================================
+// ACTION ITEMS
+// ============================================================
+function parseActions(text) {
+  const regex = /\[\[ACTION:\s*(.+?)\s*(?:\|\s*(.+?))?\s*\]\]/g;
+  let match;
+  let added = 0;
+  while ((match = regex.exec(text)) !== null) {
+    const desc = match[1].trim();
+    const timeframe = match[2] ? match[2].trim() : '';
+    // Avoid duplicates
+    const exists = state.actions.some(a => a.text.toLowerCase() === desc.toLowerCase());
+    if (!exists) {
+      state.actions.unshift({
+        id: 'a' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+        text: desc,
+        timeframe: timeframe,
+        done: false,
+        createdAt: new Date().toISOString()
+      });
+      added++;
+    }
+  }
+  if (added > 0) saveState();
+}
+
+function renderActions() {
+  const panel = document.getElementById('roadmapPanel');
+  // Find or create the actions container
+  let container = document.getElementById('actionsSection');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'actionsSection';
+    panel.insertBefore(container, panel.firstChild);
+  }
+
+  const pending = state.actions.filter(a => !a.done);
+  const done = state.actions.filter(a => a.done);
+  const total = state.actions.length;
+
+  if (total === 0) {
+    container.innerHTML = `
+      <div class="actions-section">
+        <div class="actions-header" onclick="this.parentElement.classList.toggle('collapsed')">
+          <div class="actions-header-left">
+            <div class="actions-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="actions-label">Action Items</span>
+          </div>
+          <span class="actions-count">0</span>
+        </div>
+        <div class="actions-body">
+          <div class="actions-empty">Action items from the coach will appear here</div>
+          ${renderAddActionInput()}
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="actions-section">
+      <div class="actions-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <div class="actions-header-left">
+          <div class="actions-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="actions-label">Action Items</span>
+        </div>
+        <span class="actions-count">${pending.length} pending</span>
+      </div>
+      <div class="actions-body">
+        ${pending.map(a => renderActionItem(a)).join('')}
+        ${done.length > 0 ? `
+          <div style="font-size:0.68rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;padding:10px 4px 4px;margin-top:4px;border-top:1px solid var(--gray-100);">Completed (${done.length})</div>
+          ${done.slice(0, 5).map(a => renderActionItem(a)).join('')}
+          ${done.length > 5 ? `<div style="font-size:0.72rem;color:var(--gray-500);padding:4px;text-align:center;">+${done.length - 5} more</div>` : ''}
+        ` : ''}
+        ${renderAddActionInput()}
+      </div>
+    </div>
+  `;
+}
+
+function renderActionItem(a) {
+  return `
+    <div class="action-item ${a.done ? 'done' : ''}">
+      <div class="action-check" onclick="toggleAction('${a.id}')"></div>
+      <div class="action-info">
+        <div class="action-text">${escHtml(a.text)}</div>
+        ${a.timeframe ? `<div class="action-meta">${escHtml(a.timeframe)}</div>` : ''}
+      </div>
+      <button class="action-remove" onclick="removeAction('${a.id}')" title="Remove">&times;</button>
+    </div>
+  `;
+}
+
+function renderAddActionInput() {
+  return `
+    <div class="actions-add">
+      <input type="text" id="newActionInput" placeholder="Add your own task..." onkeydown="if(event.key==='Enter')addManualAction()">
+      <button onclick="addManualAction()">Add</button>
+    </div>
+  `;
+}
+
+function toggleAction(id) {
+  const action = state.actions.find(a => a.id === id);
+  if (action) {
+    action.done = !action.done;
+    saveState();
+    renderActions();
+  }
+}
+
+function removeAction(id) {
+  state.actions = state.actions.filter(a => a.id !== id);
+  saveState();
+  renderActions();
+}
+
+function addManualAction() {
+  const input = document.getElementById('newActionInput');
+  const text = input.value.trim();
+  if (!text) return;
+  state.actions.unshift({
+    id: 'a' + Date.now().toString(36) + Math.random().toString(36).substr(2, 4),
+    text: text,
+    timeframe: '',
+    done: false,
+    createdAt: new Date().toISOString()
+  });
+  input.value = '';
+  saveState();
+  renderActions();
 }
 
 // ============================================================
@@ -780,8 +965,13 @@ async function sendMessage() {
 
     // Finalize
     state.messages.push({ role: 'assistant', content: assistantText });
+
+    // Parse action items from response
+    parseActions(assistantText);
+
     saveState();
     renderMessages();
+    renderActions();
 
   } catch(err) {
     console.error('Chat error:', err);
@@ -844,6 +1034,10 @@ function showTab(tab) {
 function md(text) {
   if (!text) return '';
   let html = escHtml(text);
+  // Strip action item tags — replace with a subtle styled version
+  html = html.replace(/\[\[ACTION:\s*(.+?)\s*(?:\|\s*(.+?))?\s*\]\]/g, (_, desc, time) => {
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(232,184,75,0.12);padding:2px 8px;border-radius:6px;font-size:0.82em;font-weight:600;color:#92681A;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>${desc}${time ? ' · ' + time : ''}</span>`;
+  });
   // Headers
   html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
   html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
