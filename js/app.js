@@ -2362,7 +2362,7 @@ const app = {
               const isThisWeek = w.date === thisWeekKey;
               const isPast = !isThisWeek && this.isGamePlanDatePast(w.date, m.name);
               const cls = isThisWeek ? 'thisweek' : (isPast ? 'past' : '');
-              const assignedCount = (w.assignments || []).filter(a => (a.person || '').trim()).length;
+              const assignedCount = (w.flow || []).filter(f => (f.person || '').trim()).length;
               const assignedBadge = assignedCount > 0
                 ? `<span style="font-size:0.68rem; color:var(--gray-500); margin-left:8px; white-space:nowrap;">${assignedCount} assigned</span>`
                 : '';
@@ -2462,52 +2462,6 @@ const app = {
   // ---- WEEK DETAIL MODAL ----
   weekDetailContext: null,
 
-  getDefaultAssignments(type) {
-    const defaults = {
-      community: [
-        { role: 'Room setup', person: '' },
-        { role: 'Welcome + Icebreaker', person: '' },
-        { role: 'Bible teaching', person: '' },
-        { role: 'Prayer lead', person: '' },
-        { role: 'Food coordinator', person: '' },
-        { role: 'Cleanup', person: '' }
-      ],
-      growth: [
-        { role: 'Room setup', person: '' },
-        { role: 'Opening celebration', person: '' },
-        { role: 'Problem-solve lead', person: '' },
-        { role: 'Next-steps tracker', person: '' },
-        { role: 'Food coordinator', person: '' },
-        { role: 'Cleanup', person: '' }
-      ],
-      groups: [
-        { role: 'Room setup', person: '' },
-        { role: 'Group welcome', person: '' },
-        { role: 'Group A lead', person: '' },
-        { role: 'Group B lead', person: '' },
-        { role: 'Regather + prayer', person: '' },
-        { role: 'Food coordinator', person: '' },
-        { role: 'Cleanup', person: '' }
-      ],
-      invite: [
-        { role: 'Room setup', person: '' },
-        { role: 'Greeter (guests first!)', person: '' },
-        { role: 'Activity host', person: '' },
-        { role: 'Gospel moment', person: '' },
-        { role: 'Food coordinator', person: '' },
-        { role: 'Cleanup', person: '' }
-      ],
-      serve: [
-        { role: 'Project coordinator', person: '' },
-        { role: 'Transportation', person: '' },
-        { role: 'Partner contact', person: '' },
-        { role: 'Photographer', person: '' },
-        { role: 'Follow-up captain', person: '' }
-      ]
-    };
-    return defaults[type] || [{ role: '', person: '' }];
-  },
-
   openWeekDetail(monthId, weekIdx) {
     if (!this.data.gameplan) return;
     const month = this.data.gameplan.months.find(m => m.id === monthId);
@@ -2515,9 +2469,18 @@ const app = {
     const week = month.weeks[weekIdx];
     if (!week) return;
 
-    // Seed default assignments if empty
-    if (!Array.isArray(week.assignments) || week.assignments.length === 0) {
-      week.assignments = this.getDefaultAssignments(week.type);
+    // Seed flow from matching structure if this week has none yet
+    if (!Array.isArray(week.flow) || week.flow.length === 0) {
+      const structure = (this.data.gameplan.structures || []).find(s => s.type === week.type);
+      if (structure && Array.isArray(structure.times)) {
+        week.flow = structure.times.map(t => ({
+          time: t.label || '',
+          desc: t.desc || '',
+          person: ''
+        }));
+      } else {
+        week.flow = [];
+      }
       this.persistGamePlan();
     }
 
@@ -2550,58 +2513,70 @@ const app = {
     document.getElementById('weekDetailTitle').textContent = dateFull;
 
     const structName = structure ? structure.name : week.type;
+    const typeOptions = [
+      { value: 'community', label: 'Community' },
+      { value: 'growth', label: 'Growth' },
+      { value: 'groups', label: 'Groups' },
+      { value: 'invite', label: 'Invite / Fun' },
+      { value: 'serve', label: 'Serve' }
+    ];
 
     let html = '';
 
     // Hero
-    html += `<div class="wk-detail-hero">
-      <span class="gp-week-type-badge ${this.escapeHtml(week.type)}">${this.escapeHtml(week.type)}</span>
-      <div class="wk-detail-hero-title">${this.escapeHtml(structName)}</div>
-      ${week.desc ? `<div class="wk-detail-hero-desc">${this.renderInlineMd(week.desc)}</div>` : ''}
-      ${structure && structure.goal ? `<div class="wk-detail-hero-desc" style="font-style:italic; color:var(--gray-500);">${this.escapeHtml(structure.goal)}</div>` : ''}
-    </div>`;
-
-    // Flow
-    if (structure && Array.isArray(structure.times) && structure.times.length) {
-      html += `<div class="wk-detail-section">
-        <div class="wk-detail-label">Flow</div>`;
-      html += structure.times.map(t => `
-        <div class="gp-struct-time">
-          <span class="gp-struct-time-label">${this.escapeHtml(t.label || '')}</span>
-          <span class="gp-struct-time-desc">${this.escapeHtml(t.desc || '')}</span>
+    if (canEdit) {
+      html += `<div class="wk-detail-hero">
+        <div class="wk-hero-top">
+          <select class="wk-type-select ${this.escapeHtml(week.type)}" onchange="app.updateWeekField('type', this.value)">
+            ${typeOptions.map(o => `<option value="${o.value}" ${week.type === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+          </select>
+          <button class="wk-reset-flow" onclick="app.resetWeekFlowFromType()" title="Replace flow with default for this night type">Reset flow</button>
         </div>
-      `).join('');
-      html += `</div>`;
+        <div class="wk-detail-hero-title">${this.escapeHtml(structName)}</div>
+        <textarea class="wk-desc-edit" placeholder="Week description (e.g. **Growth Night** — What does a healthy campus look like?)" oninput="app.updateWeekField('desc', this.value)">${this.escapeHtml(week.desc || '')}</textarea>
+        ${structure && structure.goal ? `<div class="wk-detail-hero-desc" style="font-style:italic; color:var(--gray-500);">${this.escapeHtml(structure.goal)}</div>` : ''}
+      </div>`;
+    } else {
+      html += `<div class="wk-detail-hero">
+        <span class="gp-week-type-badge ${this.escapeHtml(week.type)}">${this.escapeHtml(week.type)}</span>
+        <div class="wk-detail-hero-title">${this.escapeHtml(structName)}</div>
+        ${week.desc ? `<div class="wk-detail-hero-desc">${this.renderInlineMd(week.desc)}</div>` : ''}
+        ${structure && structure.goal ? `<div class="wk-detail-hero-desc" style="font-style:italic; color:var(--gray-500);">${this.escapeHtml(structure.goal)}</div>` : ''}
+      </div>`;
     }
 
-    // Assignments
+    // Flow (editable rows with time / desc / person)
     html += `<div class="wk-detail-section">
-      <div class="wk-detail-label">
-        <span>Who's Doing What</span>
-      </div>`;
+      <div class="wk-detail-label"><span>Flow</span></div>`;
 
-    if (!week.assignments || week.assignments.length === 0) {
-      html += `<div style="font-size:0.85rem; color:var(--gray-500); font-style:italic;">No roles yet.${canEdit ? ' Click + Add below.' : ''}</div>`;
+    if (!week.flow || week.flow.length === 0) {
+      html += `<div style="font-size:0.85rem; color:var(--gray-500); font-style:italic;">No flow yet.${canEdit ? ' Click + Add Row below.' : ''}</div>`;
     } else if (canEdit) {
-      html += week.assignments.map((a, idx) => `
-        <div class="wk-assign-row">
-          <input class="wk-assign-role" type="text" value="${this.escapeHtml(a.role || '')}" placeholder="Role" oninput="app.updateWeekAssignment(${idx}, 'role', this.value)">
-          <input class="wk-assign-person" type="text" list="wkPeopleList" value="${this.escapeHtml(a.person || '')}" placeholder="Assign to…" oninput="app.updateWeekAssignment(${idx}, 'person', this.value)">
-          <button class="wk-assign-remove" onclick="app.removeWeekAssignment(${idx})" title="Remove">×</button>
+      html += `<div class="wk-flow-header">
+        <span class="wk-flow-col-time">Time</span>
+        <span class="wk-flow-col-desc">What's happening</span>
+        <span class="wk-flow-col-person">Who</span>
+        <span class="wk-flow-col-remove"></span>
+      </div>`;
+      html += week.flow.map((f, idx) => `
+        <div class="wk-flow-row">
+          <input class="wk-flow-time" type="text" value="${this.escapeHtml(f.time || '')}" placeholder="6:30" oninput="app.updateFlowItem(${idx}, 'time', this.value)">
+          <input class="wk-flow-desc" type="text" value="${this.escapeHtml(f.desc || '')}" placeholder="What's happening?" oninput="app.updateFlowItem(${idx}, 'desc', this.value)">
+          <input class="wk-flow-person" type="text" list="wkPeopleList" value="${this.escapeHtml(f.person || '')}" placeholder="Assign…" oninput="app.updateFlowItem(${idx}, 'person', this.value)">
+          <button class="wk-flow-remove" onclick="app.removeFlowItem(${idx})" title="Remove">×</button>
         </div>
       `).join('');
       html += `<datalist id="wkPeopleList">${this.teamMembers.map(m => `<option value="${this.escapeHtml(m)}">`).join('')}</datalist>`;
+      html += `<button class="wk-add-btn" onclick="app.addFlowItem()">+ Add Row</button>`;
     } else {
-      html += week.assignments.map(a => `
-        <div class="wk-assign-row-view">
-          <span class="wk-assign-role-view">${this.escapeHtml(a.role || '')}</span>
-          <span class="wk-assign-person-view ${(a.person || '').trim() ? '' : 'unassigned'}">${(a.person || '').trim() ? this.escapeHtml(a.person) : 'Unassigned'}</span>
+      // Read-only view
+      html += week.flow.map(f => `
+        <div class="wk-flow-row-view">
+          <span class="wk-flow-time-view">${this.escapeHtml(f.time || '')}</span>
+          <span class="wk-flow-desc-view">${this.escapeHtml(f.desc || '')}</span>
+          <span class="wk-flow-person-view ${(f.person || '').trim() ? '' : 'unassigned'}">${(f.person || '').trim() ? this.escapeHtml(f.person) : '—'}</span>
         </div>
       `).join('');
-    }
-
-    if (canEdit) {
-      html += `<button class="wk-add-btn" onclick="app.addWeekAssignment()">+ Add Role</button>`;
     }
 
     html += `</div>`;
@@ -2609,43 +2584,86 @@ const app = {
     document.getElementById('weekDetailBody').innerHTML = html;
   },
 
-  addWeekAssignment() {
+  addFlowItem() {
     const ctx = this.weekDetailContext;
     if (!ctx || !this.hasMinRole('editor')) return;
     const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
     if (!month) return;
     const week = month.weeks[ctx.weekIdx];
     if (!week) return;
-    if (!week.assignments) week.assignments = [];
-    week.assignments.push({ role: '', person: '' });
+    if (!week.flow) week.flow = [];
+    week.flow.push({ time: '', desc: '', person: '' });
     this.persistGamePlan();
     this.renderWeekDetail();
   },
 
-  updateWeekAssignment(idx, field, value) {
+  updateFlowItem(idx, field, value) {
     const ctx = this.weekDetailContext;
     if (!ctx || !this.hasMinRole('editor')) return;
     const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
     if (!month) return;
     const week = month.weeks[ctx.weekIdx];
-    if (!week || !week.assignments || !week.assignments[idx]) return;
-    week.assignments[idx][field] = value;
+    if (!week || !week.flow || !week.flow[idx]) return;
+    week.flow[idx][field] = value;
     clearTimeout(this._weekSaveTimer);
     this._weekSaveTimer = setTimeout(() => {
       this.persistGamePlan();
-      // Refresh the month list to update the "X assigned" badge
       this.renderGamePlanMonths();
     }, 400);
   },
 
-  removeWeekAssignment(idx) {
+  removeFlowItem(idx) {
     const ctx = this.weekDetailContext;
     if (!ctx || !this.hasMinRole('editor')) return;
     const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
     if (!month) return;
     const week = month.weeks[ctx.weekIdx];
-    if (!week || !week.assignments) return;
-    week.assignments.splice(idx, 1);
+    if (!week || !week.flow) return;
+    week.flow.splice(idx, 1);
+    this.persistGamePlan();
+    this.renderWeekDetail();
+    this.renderGamePlanMonths();
+  },
+
+  updateWeekField(field, value) {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week) return;
+    week[field] = value;
+    clearTimeout(this._weekSaveTimer);
+    this._weekSaveTimer = setTimeout(() => {
+      this.persistGamePlan();
+      this.renderGamePlanMonths();
+    }, 400);
+    // For type changes, refresh the modal immediately so the badge/title update
+    if (field === 'type') {
+      this.persistGamePlan();
+      this.renderWeekDetail();
+      this.renderGamePlanMonths();
+    }
+  },
+
+  resetWeekFlowFromType() {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week) return;
+    if (!confirm('Replace this week\'s flow with the default for "' + week.type + '" night? Any custom rows and assignees will be lost.')) return;
+    const structure = (this.data.gameplan.structures || []).find(s => s.type === week.type);
+    if (structure && Array.isArray(structure.times)) {
+      week.flow = structure.times.map(t => ({
+        time: t.label || '',
+        desc: t.desc || '',
+        person: ''
+      }));
+    } else {
+      week.flow = [];
+    }
     this.persistGamePlan();
     this.renderWeekDetail();
     this.renderGamePlanMonths();
