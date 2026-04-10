@@ -622,12 +622,18 @@ function renderHeaderMetrics() {
 // ROADMAP
 // ============================================================
 function renderRoadmap() {
-  const panel = document.getElementById('roadmapPanel');
+  // Render into a dedicated container so we don't wipe out the actions section
+  let roadmapContent = document.getElementById('roadmapContent');
+  if (!roadmapContent) {
+    roadmapContent = document.createElement('div');
+    roadmapContent.id = 'roadmapContent';
+    document.getElementById('roadmapPanel').appendChild(roadmapContent);
+  }
   const rm = state.roadmap;
   const completedCount = rm.phases.reduce((s,p) => s + p.milestones.filter(ms => ms.status === 'completed').length, 0);
   const totalCount = rm.phases.reduce((s,p) => s + p.milestones.length, 0);
 
-  panel.innerHTML = `
+  roadmapContent.innerHTML = `
     <div class="roadmap-title">
       Launch Roadmap
       <span class="roadmap-progress">${completedCount}/${totalCount} complete</span>
@@ -706,12 +712,17 @@ function parseActions(text) {
 
 function renderActions() {
   const panel = document.getElementById('roadmapPanel');
-  // Find or create the actions container
+  // Find or create the actions container (always stays at top)
   let container = document.getElementById('actionsSection');
   if (!container) {
     container = document.createElement('div');
     container.id = 'actionsSection';
     panel.insertBefore(container, panel.firstChild);
+  } else {
+    // Make sure it's still the first child
+    if (panel.firstChild !== container) {
+      panel.insertBefore(container, panel.firstChild);
+    }
   }
 
   const pending = state.actions.filter(a => !a.done);
