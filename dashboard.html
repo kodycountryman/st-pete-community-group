@@ -825,15 +825,18 @@
       <div class="page" id="page-gameplan">
 
         <!-- Week Structures Reference -->
-        <div class="card" id="weekStructuresCard">
-          <div class="card-header">
-            <h3>Weekly Structures & Goals</h3>
-            <div style="display:flex;gap:8px;">
+        <div class="card collapsible" id="weekStructuresCard">
+          <div class="card-header" onclick="app.toggleStructuresCard()" style="cursor:pointer; user-select:none;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="gp-collapse-chevron">▶</span>
+              <h3 style="margin:0;">Weekly Structures & Goals</h3>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;" onclick="event.stopPropagation()">
               <span style="font-size:0.75rem;color:var(--gray-500);">Every Thursday 6:30–8:00 PM</span>
               <button class="btn-ghost" id="editStructuresBtn" onclick="app.toggleEditStructures()" style="font-size:0.75rem;">Edit</button>
             </div>
           </div>
-          <div class="card-body">
+          <div class="card-body" id="weekStructuresCardBody">
             <div id="weekStructuresView" class="gp-structures"></div>
             <textarea id="weekStructuresEdit" class="gp-edit-area" style="display:none;" oninput="app.saveGamePlanField('structures')"></textarea>
           </div>
@@ -1052,6 +1055,17 @@
         <div class="attendance-detail-stats" id="attendanceDetailStats"></div>
         <div class="attendance-detail-list" id="attendanceDetailList"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Week Detail Modal -->
+  <div class="modal-overlay" id="weekDetailModal">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 id="weekDetailTitle">Week Detail</h3>
+        <button class="modal-close" onclick="app.closeModal('weekDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body" id="weekDetailBody" style="padding:0;"></div>
     </div>
   </div>
 

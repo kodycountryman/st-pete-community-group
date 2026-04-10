@@ -2006,6 +2006,7 @@ const app = {
   closeModal(id) {
     document.getElementById(id).classList.remove('show');
     if (id === 'attendanceModal') this.attendanceEdit = null;
+    if (id === 'weekDetailModal') this.weekDetailContext = null;
   },
 
   // ---- TOAST ----
@@ -2047,7 +2048,7 @@ const app = {
           goal: 'Anchors the 50-60s. Strong teaching, warm room, no pressure.',
           details: {
             music: 'Soft worship / hymns — comfort for the 50-60s',
-            energy: 'Reflective, thoughtful pace. Kody sets the tone in the first 5 minutes.',
+            energy: 'Reflective, thoughtful pace. Set the tone in the first 5 minutes.',
             conversation: 'Family updates, health, work transitions — lean into the older crowd\'s life',
             seating: 'Mixed ages intentionally. Put connectors at each table. Rotate weekly.'
           }
@@ -2063,7 +2064,7 @@ const app = {
           goal: 'Gives the 30s ownership. We build the campus together.',
           details: {
             music: 'Upbeat contemporary — 30s energy',
-            energy: 'Solution-focused, action-oriented. Kody opens with the problem to solve.',
+            energy: 'Solution-focused, action-oriented. Open with the problem to solve.',
             conversation: 'Career moves, weekend plans, life goals — 30s interests lead',
             seating: 'Mix ages, but weight toward the 30s voice carrying the room. Rotate weekly.'
           }
@@ -2095,7 +2096,7 @@ const app = {
           goal: 'Low-pressure door. Everyone brings one person. Grow by invitation.',
           details: {
             music: 'Popular / secular music guests will recognize — meets them where they are',
-            energy: 'High energy, celebratory. Kody keeps it fun and moving.',
+            energy: 'High energy, celebratory. Keep it fun and moving.',
             conversation: '"Best thing that happened this week?" — universal opener anyone can answer',
             seating: 'Mix ages heavily. Connectors host every table. Never seat guests alone.'
           }
@@ -2110,7 +2111,7 @@ const app = {
           goal: 'Be known in St. Pete. Love the city before we launch to it.',
           details: {
             music: 'None or upbeat in transit — focus is on the work, not the stage',
-            energy: 'Servant-hearted, hands-on. Kody serves alongside, not out front.',
+            energy: 'Servant-hearted, hands-on. Lead by serving alongside, not from out front.',
             conversation: 'Stories from the day — what did you see, who did you meet?',
             seating: 'N/A — work side by side. Pair new people with veterans.'
           }
@@ -2178,8 +2179,36 @@ const app = {
     const container = document.getElementById('gameplanMonths');
     if (!container) return;
     if (!this.data.gameplan) this.data.gameplan = this.loadGamePlan();
+    if (!this.data.gameplanUI) this.data.gameplanUI = this.loadGamePlanUI();
     this.renderGamePlanStructures();
     this.renderGamePlanMonths();
+    this.applyStructuresCollapse();
+  },
+
+  loadGamePlanUI() {
+    try {
+      const saved = localStorage.getItem('stpete_gameplan_ui');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return { structuresOpen: false };
+  },
+
+  persistGamePlanUI() {
+    localStorage.setItem('stpete_gameplan_ui', JSON.stringify(this.data.gameplanUI));
+  },
+
+  applyStructuresCollapse() {
+    const card = document.getElementById('weekStructuresCard');
+    if (!card) return;
+    const open = this.data.gameplanUI && this.data.gameplanUI.structuresOpen;
+    card.classList.toggle('collapsed', !open);
+  },
+
+  toggleStructuresCard() {
+    if (!this.data.gameplanUI) this.data.gameplanUI = { structuresOpen: false };
+    this.data.gameplanUI.structuresOpen = !this.data.gameplanUI.structuresOpen;
+    this.persistGamePlanUI();
+    this.applyStructuresCollapse();
   },
 
   renderGamePlanStructures() {
@@ -2329,15 +2358,19 @@ const app = {
             <span class="gp-month-chevron">▶</span>
           </div>
           <div class="gp-month-body">
-            ${m.weeks.map(w => {
+            ${m.weeks.map((w, wIdx) => {
               const isThisWeek = w.date === thisWeekKey;
               const isPast = !isThisWeek && this.isGamePlanDatePast(w.date, m.name);
               const cls = isThisWeek ? 'thisweek' : (isPast ? 'past' : '');
+              const assignedCount = (w.assignments || []).filter(a => (a.person || '').trim()).length;
+              const assignedBadge = assignedCount > 0
+                ? `<span style="font-size:0.68rem; color:var(--gray-500); margin-left:8px; white-space:nowrap;">${assignedCount} assigned</span>`
+                : '';
               return `
-                <div class="gp-week-row ${cls}">
+                <div class="gp-week-row ${cls}" onclick="app.openWeekDetail('${m.id}', ${wIdx})">
                   <div class="gp-week-date">${this.escapeHtml(w.date)}</div>
                   <span class="gp-week-type-badge ${this.escapeHtml(w.type)}">${this.escapeHtml(w.type)}</span>
-                  <div class="gp-week-desc">${this.renderInlineMd(w.desc || '')}</div>
+                  <div class="gp-week-desc">${this.renderInlineMd(w.desc || '')}${assignedBadge}</div>
                 </div>
               `;
             }).join('')}
@@ -2424,6 +2457,198 @@ const app = {
     return this.escapeHtml(text)
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  },
+
+  // ---- WEEK DETAIL MODAL ----
+  weekDetailContext: null,
+
+  getDefaultAssignments(type) {
+    const defaults = {
+      community: [
+        { role: 'Room setup', person: '' },
+        { role: 'Welcome + Icebreaker', person: '' },
+        { role: 'Bible teaching', person: '' },
+        { role: 'Prayer lead', person: '' },
+        { role: 'Food coordinator', person: '' },
+        { role: 'Cleanup', person: '' }
+      ],
+      growth: [
+        { role: 'Room setup', person: '' },
+        { role: 'Opening celebration', person: '' },
+        { role: 'Problem-solve lead', person: '' },
+        { role: 'Next-steps tracker', person: '' },
+        { role: 'Food coordinator', person: '' },
+        { role: 'Cleanup', person: '' }
+      ],
+      groups: [
+        { role: 'Room setup', person: '' },
+        { role: 'Group welcome', person: '' },
+        { role: 'Group A lead', person: '' },
+        { role: 'Group B lead', person: '' },
+        { role: 'Regather + prayer', person: '' },
+        { role: 'Food coordinator', person: '' },
+        { role: 'Cleanup', person: '' }
+      ],
+      invite: [
+        { role: 'Room setup', person: '' },
+        { role: 'Greeter (guests first!)', person: '' },
+        { role: 'Activity host', person: '' },
+        { role: 'Gospel moment', person: '' },
+        { role: 'Food coordinator', person: '' },
+        { role: 'Cleanup', person: '' }
+      ],
+      serve: [
+        { role: 'Project coordinator', person: '' },
+        { role: 'Transportation', person: '' },
+        { role: 'Partner contact', person: '' },
+        { role: 'Photographer', person: '' },
+        { role: 'Follow-up captain', person: '' }
+      ]
+    };
+    return defaults[type] || [{ role: '', person: '' }];
+  },
+
+  openWeekDetail(monthId, weekIdx) {
+    if (!this.data.gameplan) return;
+    const month = this.data.gameplan.months.find(m => m.id === monthId);
+    if (!month) return;
+    const week = month.weeks[weekIdx];
+    if (!week) return;
+
+    // Seed default assignments if empty
+    if (!Array.isArray(week.assignments) || week.assignments.length === 0) {
+      week.assignments = this.getDefaultAssignments(week.type);
+      this.persistGamePlan();
+    }
+
+    this.weekDetailContext = { monthId, weekIdx };
+    this.renderWeekDetail();
+    document.getElementById('weekDetailModal').classList.add('show');
+  },
+
+  renderWeekDetail() {
+    const ctx = this.weekDetailContext;
+    if (!ctx) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week) return;
+
+    const structure = (this.data.gameplan.structures || []).find(s => s.type === week.type);
+    const canEdit = this.hasMinRole('editor');
+
+    // Full date parsing
+    let dateFull = week.date;
+    try {
+      const year = parseInt(month.name.split(' ').pop(), 10);
+      const d = new Date(`${week.date}, ${year}`);
+      if (!isNaN(d.getTime())) {
+        dateFull = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      }
+    } catch(e) {}
+
+    document.getElementById('weekDetailTitle').textContent = dateFull;
+
+    const structName = structure ? structure.name : week.type;
+
+    let html = '';
+
+    // Hero
+    html += `<div class="wk-detail-hero">
+      <span class="gp-week-type-badge ${this.escapeHtml(week.type)}">${this.escapeHtml(week.type)}</span>
+      <div class="wk-detail-hero-title">${this.escapeHtml(structName)}</div>
+      ${week.desc ? `<div class="wk-detail-hero-desc">${this.renderInlineMd(week.desc)}</div>` : ''}
+      ${structure && structure.goal ? `<div class="wk-detail-hero-desc" style="font-style:italic; color:var(--gray-500);">${this.escapeHtml(structure.goal)}</div>` : ''}
+    </div>`;
+
+    // Flow
+    if (structure && Array.isArray(structure.times) && structure.times.length) {
+      html += `<div class="wk-detail-section">
+        <div class="wk-detail-label">Flow</div>`;
+      html += structure.times.map(t => `
+        <div class="gp-struct-time">
+          <span class="gp-struct-time-label">${this.escapeHtml(t.label || '')}</span>
+          <span class="gp-struct-time-desc">${this.escapeHtml(t.desc || '')}</span>
+        </div>
+      `).join('');
+      html += `</div>`;
+    }
+
+    // Assignments
+    html += `<div class="wk-detail-section">
+      <div class="wk-detail-label">
+        <span>Who's Doing What</span>
+      </div>`;
+
+    if (!week.assignments || week.assignments.length === 0) {
+      html += `<div style="font-size:0.85rem; color:var(--gray-500); font-style:italic;">No roles yet.${canEdit ? ' Click + Add below.' : ''}</div>`;
+    } else if (canEdit) {
+      html += week.assignments.map((a, idx) => `
+        <div class="wk-assign-row">
+          <input class="wk-assign-role" type="text" value="${this.escapeHtml(a.role || '')}" placeholder="Role" oninput="app.updateWeekAssignment(${idx}, 'role', this.value)">
+          <input class="wk-assign-person" type="text" list="wkPeopleList" value="${this.escapeHtml(a.person || '')}" placeholder="Assign to…" oninput="app.updateWeekAssignment(${idx}, 'person', this.value)">
+          <button class="wk-assign-remove" onclick="app.removeWeekAssignment(${idx})" title="Remove">×</button>
+        </div>
+      `).join('');
+      html += `<datalist id="wkPeopleList">${this.teamMembers.map(m => `<option value="${this.escapeHtml(m)}">`).join('')}</datalist>`;
+    } else {
+      html += week.assignments.map(a => `
+        <div class="wk-assign-row-view">
+          <span class="wk-assign-role-view">${this.escapeHtml(a.role || '')}</span>
+          <span class="wk-assign-person-view ${(a.person || '').trim() ? '' : 'unassigned'}">${(a.person || '').trim() ? this.escapeHtml(a.person) : 'Unassigned'}</span>
+        </div>
+      `).join('');
+    }
+
+    if (canEdit) {
+      html += `<button class="wk-add-btn" onclick="app.addWeekAssignment()">+ Add Role</button>`;
+    }
+
+    html += `</div>`;
+
+    document.getElementById('weekDetailBody').innerHTML = html;
+  },
+
+  addWeekAssignment() {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week) return;
+    if (!week.assignments) week.assignments = [];
+    week.assignments.push({ role: '', person: '' });
+    this.persistGamePlan();
+    this.renderWeekDetail();
+  },
+
+  updateWeekAssignment(idx, field, value) {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week || !week.assignments || !week.assignments[idx]) return;
+    week.assignments[idx][field] = value;
+    clearTimeout(this._weekSaveTimer);
+    this._weekSaveTimer = setTimeout(() => {
+      this.persistGamePlan();
+      // Refresh the month list to update the "X assigned" badge
+      this.renderGamePlanMonths();
+    }, 400);
+  },
+
+  removeWeekAssignment(idx) {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week || !week.assignments) return;
+    week.assignments.splice(idx, 1);
+    this.persistGamePlan();
+    this.renderWeekDetail();
+    this.renderGamePlanMonths();
   }
 };
 

@@ -2048,6 +2048,127 @@ h1, h2, h3, .page-title, .metric-number {
 .gp-struct-card.invite .gp-struct-detail-label { color: #7C3AED; }
 .gp-struct-card.serve .gp-struct-detail-label { color: #2F855A; }
 
+/* Collapsible structures card */
+.gp-collapse-chevron {
+  display: inline-block;
+  color: var(--gray-400);
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+.card.collapsible:not(.collapsed) .gp-collapse-chevron {
+  transform: rotate(90deg);
+}
+.card.collapsible.collapsed .card-body {
+  display: none;
+}
+.card.collapsible.collapsed .card-header {
+  border-bottom: none;
+}
+
+/* Clickable week rows (already have :hover bg) */
+.gp-week-row {
+  cursor: pointer;
+}
+
+/* Week Detail Modal content */
+.wk-detail-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.wk-detail-section:last-child { border-bottom: none; }
+.wk-detail-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wk-assign-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+.wk-assign-role,
+.wk-assign-person {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--slate);
+  background: white;
+}
+.wk-assign-role { flex: 1.6; }
+.wk-assign-person { flex: 1; }
+.wk-assign-role:focus,
+.wk-assign-person:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.wk-assign-remove {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+  border-radius: 6px;
+}
+.wk-assign-remove:hover { color: #B91C1C; background: #FEE2E2; }
+
+.wk-assign-row-view {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.88rem;
+}
+.wk-assign-row-view:last-child { border-bottom: none; }
+.wk-assign-role-view { color: var(--slate); font-weight: 600; }
+.wk-assign-person-view { color: var(--gray-600); font-size: 0.82rem; }
+.wk-assign-person-view.unassigned { color: var(--gray-400); font-style: italic; }
+
+.wk-add-btn {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--teal-dark);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+  margin-top: 6px;
+}
+.wk-add-btn:hover { background: rgba(42,171,179,0.06); border-color: var(--teal); }
+
+.wk-detail-hero {
+  padding: 16px 24px;
+  background: var(--gray-100);
+  border-bottom: 1px solid var(--border);
+}
+.wk-detail-hero-title {
+  font-family: 'Rubik', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--slate);
+  margin-top: 6px;
+}
+.wk-detail-hero-desc {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
 /* Edit textarea */
 .gp-edit-area {
   width: 100%;
