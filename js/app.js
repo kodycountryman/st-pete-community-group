@@ -42,12 +42,132 @@ const app = {
   async init() {
     if (!this.checkAuth()) return;
     this._reachedOut = JSON.parse(localStorage.getItem('stpete_reached_out') || '{}');
+    this._seenCheckins = new Set(JSON.parse(localStorage.getItem('stpete_seen_checkins') || '[]'));
     await this.loadData();
     this.setupNavigation();
     this.setupMobileMenu();
     this.setupCSVDrop();
     this.renderAll();
     this.setNextThursday();
+    // Seed the seen-checkins list so existing entries don't fire an alert on first load
+    this._recordSeenCheckins(true);
+    // Poll for new check-ins every 15 seconds
+    this._guestPoll = setInterval(() => this.pollForNewGuests(), 15000);
+    // Also pick up same-device kiosk events via storage event
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'stpete_new_guest' && e.newValue) {
+        try {
+          const g = JSON.parse(e.newValue);
+          this.refresh().then(() => this.pollForNewGuests());
+        } catch (err) {}
+      }
+    });
+  },
+
+  // Collect the set of (date, personId) pairs currently in attendance state
+  _currentCheckinKeys() {
+    const keys = new Set();
+    (this.data.attendance || []).forEach(a => {
+      (a.checkedIn || []).forEach(id => keys.add(`${a.date}|${id}`));
+    });
+    return keys;
+  },
+
+  _recordSeenCheckins(silent) {
+    const keys = this._currentCheckinKeys();
+    keys.forEach(k => this._seenCheckins.add(k));
+    try {
+      localStorage.setItem('stpete_seen_checkins', JSON.stringify([...this._seenCheckins]));
+    } catch (e) {}
+    return keys;
+  },
+
+  // Poll for brand-new check-ins and show an alert for any unseen ones.
+  async pollForNewGuests() {
+    try {
+      const fresh = await db.getAttendance();
+      const freshParsed = (fresh || []).map(r => db.attendanceFromRow(r));
+      const freshPeople = await db.getPeople();
+      this.data.people = (freshPeople || []).map(r => db.personFromRow(r));
+      this.data.attendance = freshParsed;
+
+      const today = new Date().toISOString().split('T')[0];
+      const todayRecord = freshParsed.find(a => a.date === today);
+      if (!todayRecord) return;
+
+      const newIds = (todayRecord.checkedIn || []).filter(id => !this._seenCheckins.has(`${today}|${id}`));
+      if (newIds.length === 0) return;
+
+      // Mark them all seen immediately so we don't double-notify
+      newIds.forEach(id => this._seenCheckins.add(`${today}|${id}`));
+      try {
+        localStorage.setItem('stpete_seen_checkins', JSON.stringify([...this._seenCheckins]));
+      } catch (e) {}
+
+      // Build an alert for each new check-in
+      newIds.forEach(id => {
+        const person = this.data.people.find(p => p.id === id);
+        if (!person) return;
+        const isFirstTime = (person.status === 'new') || ((person.attendanceCount || 0) <= 1);
+        this.showGuestAlert(person, isFirstTime);
+      });
+
+      // Refresh visible UI with the new data
+      this.renderAll();
+    } catch (err) {
+      console.error('pollForNewGuests failed:', err);
+    }
+  },
+
+  // Show a dashboard banner/toast for a fresh check-in.
+  // First-timers get a bigger, stickier alert; returning regulars get a lightweight toast.
+  showGuestAlert(person, isFirstTime) {
+    if (!isFirstTime) {
+      this.toast(`✓ ${person.firstName} just checked in`);
+      return;
+    }
+
+    // Full banner for first-time guests
+    let container = document.getElementById('guestAlertContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'guestAlertContainer';
+      container.className = 'guest-alert-container';
+      document.body.appendChild(container);
+    }
+
+    const alertEl = document.createElement('div');
+    alertEl.className = 'guest-alert';
+    const invitedBy = person.connector ? ` · invited by <strong>${this.escapeHtml(person.connector)}</strong>` : '';
+    const phoneHint = person.phone ? `<div class="guest-alert-sub">📱 ${this.escapeHtml(person.phone)}</div>` : '';
+    alertEl.innerHTML = `
+      <div class="guest-alert-badge">🆕 First Time</div>
+      <div class="guest-alert-name">${this.escapeHtml(person.firstName)} ${this.escapeHtml(person.lastName || '')}</div>
+      <div class="guest-alert-meta">Just checked in${invitedBy}</div>
+      ${phoneHint}
+      <div class="guest-alert-actions">
+        <button class="guest-alert-btn" onclick="app.navigate('followup'); this.closest('.guest-alert').remove();">Follow Up</button>
+        <button class="guest-alert-dismiss" onclick="this.closest('.guest-alert').remove()">Dismiss</button>
+      </div>
+    `;
+    container.appendChild(alertEl);
+
+    // Play a subtle chime if supported
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880; g.gain.value = 0.08;
+      o.start(); o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      o.stop(ctx.currentTime + 0.4);
+    } catch (e) {}
+
+    // Auto-dismiss after 30 seconds
+    setTimeout(() => {
+      if (alertEl.parentNode) alertEl.remove();
+    }, 30000);
   },
 
   checkAuth() {
@@ -427,6 +547,19 @@ const app = {
       `<option value="${m}">${m}</option>`
     ).join('');
 
+    const sendTextBtn = (p) => {
+      if (!p.phone) {
+        return `<button class="followup-text-btn disabled" title="No phone number on file" onclick="app.toast('No phone number on file for ${p.firstName.replace(/'/g,"\\'")}.')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          No #
+        </button>`;
+      }
+      return `<button class="followup-text-btn" onclick="app.sendFollowupText('${p.id}')" title="Opens your SMS app with a pre-written message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Send Text
+      </button>`;
+    };
+
     // Main followup page
     const mainList = document.getElementById('followupList');
     if (mainList) {
@@ -444,6 +577,7 @@ const app = {
                 <option value="">Assign to...</option>
                 ${assignOptions}
               </select>
+              ${sendTextBtn(p)}
               <button class="followup-done-btn" onclick="app.markFollowedUp('${p.id}')">Done</button>
             </div>
           </div>
@@ -471,11 +605,49 @@ const app = {
               <span class="followup-item-name">${p.firstName} ${p.lastName || ''}</span>
               <span class="followup-item-reason">${p.followupAssignedTo ? '<strong>' + p.followupAssignedTo + '</strong> · ' : ''}${p.status === 'new' ? 'New — 24hr follow-up' : 'Check-in'}</span>
             </div>
-            <button class="followup-done-btn" onclick="app.markFollowedUp('${p.id}')">Done</button>
+            <div class="followup-item-actions">
+              ${sendTextBtn(p)}
+              <button class="followup-done-btn" onclick="app.markFollowedUp('${p.id}')">Done</button>
+            </div>
           </div>
         `).join('');
       }
     }
+  },
+
+  // Send a pre-written follow-up text via the native SMS app
+  sendFollowupText(id) {
+    const person = this.data.people.find(p => p.id === id);
+    if (!person) return;
+    if (!person.phone) {
+      this.toast(`No phone number on file for ${person.firstName}.`);
+      return;
+    }
+
+    // Pick template based on person status
+    const type = person.status === 'new' ? 'new' : 'checkin';
+    const body = Generators.getText(type, person.firstName);
+
+    // Native SMS URL scheme — works on iOS/Android, and on macOS via Messages app.
+    // iOS wants `&body=`, Android wants `?body=`. Using `?` is the safest for both.
+    const phone = person.phone.replace(/[^\d+]/g, '');
+    const url = `sms:${phone}?&body=${encodeURIComponent(body)}`;
+
+    // Open SMS app
+    window.location.href = url;
+
+    // Optimistically mark the follow-up as reached out so the list shrinks.
+    // Also drop a record on the `_reachedOut` map for audit.
+    this._reachedOut[id] = {
+      at: new Date().toISOString(),
+      method: 'sms',
+      body
+    };
+    try { localStorage.setItem('stpete_reached_out', JSON.stringify(this._reachedOut)); } catch (e) {}
+
+    // Mark followed up in DB + state
+    this.markFollowedUp(id);
+    this.toast(`Text drafted for ${person.firstName}. Hit send in your Messages app.`);
   },
 
   async assignFollowup(personId, assignee) {

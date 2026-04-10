@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're Invited — St. Pete Bible Study</title>
+  <meta name="description" content="Thursdays at 6:30 PM. Food, real conversation, honest questions, and people who actually show up. Come join us — we saved you a seat.">
+
+  <!-- Open Graph (Facebook, iMessage, WhatsApp, LinkedIn) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://stpetebiblestudy.com/invite.html">
+  <meta property="og:title" content="You're Invited — St. Pete Bible Study">
+  <meta property="og:description" content="Thursdays at 6:30 PM in Pinellas Park. Food, real conversation, and people who actually show up. Come join us — we saved you a seat.">
+  <meta property="og:image" content="https://stpetebiblestudy.com/assets/spbs-logo.png">
+  <meta property="og:image:alt" content="St. Pete Bible Study">
+  <meta property="og:site_name" content="St. Pete Bible Study">
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="You're Invited — St. Pete Bible Study">
+  <meta name="twitter:description" content="Thursdays at 6:30 PM. Food, real conversation, and people who actually show up.">
+  <meta name="twitter:image" content="https://stpetebiblestudy.com/assets/spbs-logo.png">
+
+  <link rel="icon" type="image/png" href="assets/spbs-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #2AABB3;
+      --teal-dark: #1B7A80;
+      --teal-deep: #145A5E;
+      --gold: #E8B84B;
+      --sand: #FDF6EE;
+      --slate: #2D3436;
+      --gray-100: #F1F4F8;
+      --gray-500: #8E99A4;
+      --gray-600: #636E72;
+      --white: #FFFFFF;
+      --radius: 20px;
+      --shadow: 0 12px 40px rgba(20, 90, 94, 0.14);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Karla', -apple-system, sans-serif;
+      background: linear-gradient(180deg, var(--sand) 0%, #F4E8D6 100%);
+      color: var(--slate);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+    h1, h2, h3 { font-family: 'Rubik', sans-serif; }
+
+    .invite-wrap {
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    /* ---- HERO CARD ---- */
+    .invite-hero {
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-deep) 100%);
+      border-radius: var(--radius);
+      padding: 40px 28px 36px;
+      text-align: center;
+      color: white;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .invite-hero::before {
+      content: "";
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(232,184,75,0.28), transparent 70%);
+      pointer-events: none;
+    }
+    .invite-hero::after {
+      content: "";
+      position: absolute;
+      bottom: -80px; left: -80px;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1), transparent 70%);
+      pointer-events: none;
+    }
+    .invite-eyebrow {
+      display: inline-block;
+      background: rgba(255,255,255,0.16);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .invite-hero h1 {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      line-height: 1.15;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .invite-hero .lead {
+      font-size: clamp(0.98rem, 2.5vw, 1.1rem);
+      color: rgba(255,255,255,0.92);
+      line-height: 1.55;
+      max-width: 420px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ---- WHEN/WHERE ---- */
+    .invite-details {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px 22px;
+      margin-top: -22px;
+      position: relative;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 18px;
+    }
+    .invite-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .invite-row-icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--sand);
+      color: var(--teal-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .invite-row-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+    .invite-row-value {
+      font-size: 1.02rem;
+      font-weight: 600;
+      color: var(--slate);
+      line-height: 1.4;
+    }
+    .invite-row-sub {
+      font-size: 0.82rem;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+
+    /* ---- WHAT TO EXPECT ---- */
+    .invite-expect {
+      background: white;
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      margin-top: 20px;
+      box-shadow: var(--shadow);
+    }
+    .invite-expect h2 {
+      font-size: 1.25rem;
+      color: var(--teal-dark);
+      margin-bottom: 6px;
+    }
+    .invite-expect .sub {
+      font-size: 0.88rem;
+      color: var(--gray-500);
+      margin-bottom: 18px;
+    }
+    .expect-list {
+      list-style: none;
+      display: grid;
+      gap: 14px;
+    }
+    .expect-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .expect-icon {
+      flex-shrink: 0;
+      font-size: 1.3rem;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .expect-text {
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: var(--slate);
+    }
+    .expect-text strong { color: var(--teal-dark); }
+
+    /* ---- CTA BUTTONS ---- */
+    .invite-ctas {
+      margin-top: 22px;
+      display: grid;
+      gap: 12px;
+    }
+    .invite-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 22px;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .invite-btn-primary {
+      background: var(--teal);
+      color: white;
+      box-shadow: 0 10px 28px rgba(42, 171, 179, 0.32);
+    }
+    .invite-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(42, 171, 179, 0.42); }
+    .invite-btn-secondary {
+      background: white;
+      color: var(--teal-dark);
+      border: 2px solid var(--teal);
+    }
+    .invite-btn-secondary:hover { background: var(--teal); color: white; }
+    .invite-btn-whatsapp {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: white;
+      box-shadow: 0 10px 28px rgba(37, 211, 102, 0.32);
+    }
+    .invite-btn-whatsapp:hover { transform: translateY(-2px); }
+
+    /* ---- SHARE (for the inviter) ---- */
+    .invite-share {
+      margin-top: 26px;
+      padding: 20px;
+      background: rgba(255,255,255,0.55);
+      border: 1.5px dashed var(--teal);
+      border-radius: var(--radius);
+      text-align: center;
+    }
+    .invite-share p {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      margin-bottom: 10px;
+    }
+    .invite-share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: var(--teal-dark);
+      color: white;
+      border: none;
+      border-radius: 999px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .invite-share-btn:hover { background: var(--teal); }
+
+    /* ---- FOOTER ---- */
+    .invite-footer {
+      text-align: center;
+      padding: 24px 0 0;
+      font-size: 0.78rem;
+      color: var(--gray-500);
+    }
+    .invite-footer a { color: var(--teal-dark); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="invite-wrap">
+
+    <!-- HERO -->
+    <div class="invite-hero">
+      <div class="invite-eyebrow">You're Invited</div>
+      <h1>We saved you a seat.</h1>
+      <p class="lead">Food, real conversation, honest questions, and people who actually show up. Thursdays at 6:30 PM — just come as you are.</p>
+    </div>
+
+    <!-- WHEN / WHERE -->
+    <div class="invite-details">
+      <div class="invite-row">
+        <div class="invite-row-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="invite-row-label">When</div>
+          <div class="invite-row-value">Every Thursday · 6:30 PM</div>
+          <div class="invite-row-sub">Doors open at 6:15. Food's ready when you arrive.</div>
+        </div>
+      </div>
+      <div class="invite-row">
+        <div class="invite-row-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div>
+          <div class="invite-row-label">Where</div>
+          <div class="invite-row-value">3845 Gateway Centre Blvd</div>
+          <div class="invite-row-sub">Pinellas Park, FL 33782</div>
+        </div>
+      </div>
+      <div class="invite-row">
+        <div class="invite-row-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <div class="invite-row-label">Who</div>
+          <div class="invite-row-value">20s, 30s, 40s — mostly</div>
+          <div class="invite-row-sub">No dress code. No hoops to jump through. Bring a friend.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHAT TO EXPECT -->
+    <div class="invite-expect">
+      <h2>What to expect</h2>
+      <p class="sub">Honest answer: it's more like a dinner with friends than a church service.</p>
+      <ul class="expect-list">
+        <li class="expect-item">
+          <span class="expect-icon">🍽️</span>
+          <div class="expect-text"><strong>Food first.</strong> We actually eat together. It's not a snack table — it's a real meal.</div>
+        </li>
+        <li class="expect-item">
+          <span class="expect-icon">💬</span>
+          <div class="expect-text"><strong>Real conversation.</strong> Small tables, honest questions, no one putting you on the spot.</div>
+        </li>
+        <li class="expect-item">
+          <span class="expect-icon">📖</span>
+          <div class="expect-text"><strong>A short teaching.</strong> About 15 minutes. Practical, not preachy.</div>
+        </li>
+        <li class="expect-item">
+          <span class="expect-icon">🙌</span>
+          <div class="expect-text"><strong>Zero pressure.</strong> No offering plate. No sign-up sheet. Come once and see.</div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- CTA -->
+    <div class="invite-ctas">
+      <a href="https://www.google.com/maps/dir//3845+Gateway+Centre+Blvd+Pinellas+Park+FL+33782" target="_blank" rel="noopener" class="invite-btn invite-btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Get Directions
+      </a>
+      <a href="https://chat.whatsapp.com/BR9awVtv6Z25B0vDH9vGz1?mode=gi_t" target="_blank" rel="noopener" class="invite-btn invite-btn-whatsapp">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Join the Group Chat
+      </a>
+      <a href="index.html" class="invite-btn invite-btn-secondary">
+        Learn More
+      </a>
+    </div>
+
+    <!-- SHARE (for the inviter) -->
+    <div class="invite-share">
+      <p>Want to invite someone? Send them this link.</p>
+      <button class="invite-share-btn" onclick="shareInvite()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share This Invite
+      </button>
+    </div>
+
+    <div class="invite-footer">
+      <p>St. Pete Bible Study · A Grace Family Church community</p>
+      <p style="margin-top:4px;"><a href="index.html">Back to main site</a></p>
+    </div>
+  </div>
+
+  <script>
+    async function shareInvite() {
+      const shareData = {
+        title: "You're Invited — St. Pete Bible Study",
+        text: "Hey! Come hang out with us Thursday at 6:30 — food, good people, real conversation. I think you'd love it.",
+        url: window.location.href
+      };
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+        } catch (err) {
+          if (err.name !== 'AbortError') fallbackCopy();
+        }
+      } else {
+        fallbackCopy();
+      }
+    }
+    function fallbackCopy() {
+      const url = window.location.href;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          alert('Link copied! Paste it in a text to invite a friend.');
+        });
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Link copied! Paste it in a text to invite a friend.');
+      }
+    }
+  </script>
+</body>
+</html>

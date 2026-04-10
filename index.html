@@ -4,6 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>St. Pete Bible Study | Grace Family Church</title>
+  <meta name="description" content="Thursdays at 6:30 PM in Pinellas Park. Food, real conversation, honest questions, and people who actually show up.">
+
+  <!-- Open Graph (iMessage, WhatsApp, Facebook, LinkedIn) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://stpetebiblestudy.com/">
+  <meta property="og:title" content="St. Pete Bible Study · Thursdays 6:30 PM">
+  <meta property="og:description" content="Food, real conversation, honest questions, and people who actually show up. Come join us — we saved you a seat.">
+  <meta property="og:image" content="https://stpetebiblestudy.com/assets/spbs-logo.png">
+  <meta property="og:site_name" content="St. Pete Bible Study">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="St. Pete Bible Study · Thursdays 6:30 PM">
+  <meta name="twitter:description" content="Food, real conversation, and people who actually show up.">
+  <meta name="twitter:image" content="https://stpetebiblestudy.com/assets/spbs-logo.png">
+
+  <link rel="icon" type="image/png" href="assets/spbs-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&family=Karla:wght@300;400;500;600;700&family=Lobster&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/landing.css">
@@ -238,6 +253,8 @@
         <div class="connect-form-wrap">
           <form class="connect-form" id="contactForm" onsubmit="handleContactSubmit(event)">
             <h3>Send us a message</h3>
+            <!-- honeypot: bots fill this in, real users don't see it -->
+            <input type="text" id="contactWebsite" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;opacity:0;pointer-events:none;height:0;width:0;" aria-hidden="true">
             <div class="form-group">
               <input type="text" id="contactName" placeholder="Your name" required>
             </div>
@@ -265,6 +282,7 @@
       <p class="lead">No sign-up. No RSVP. Just show up and we'll take it from there.</p>
       <div class="cta-buttons">
         <a href="https://www.google.com/maps/dir//3845+Gateway+Centre+Blvd+Pinellas+Park+FL+33782" target="_blank" class="btn btn-primary btn-lg">Get Directions</a>
+        <a href="invite.html" class="btn btn-secondary btn-lg">Invite a Friend</a>
       </div>
     </div>
   </section>
@@ -318,20 +336,37 @@
         name,
         phone: document.getElementById('contactPhone').value,
         email: document.getElementById('contactEmail').value,
-        message: document.getElementById('contactMessage').value
+        message: document.getElementById('contactMessage').value,
+        website: document.getElementById('contactWebsite')?.value || '' // honeypot
       };
-      // Save to Supabase
+
+      // Try the Pages Function first — writes to Supabase AND sends email to Kody.
+      let handled = false;
       try {
-        await fetch('https://itgyatshpvwxqmfhxgra.supabase.co/rest/v1/messages', {
+        const res = await fetch('/api/contact', {
           method: 'POST',
-          headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk',
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(msg)
         });
-      } catch (err) { console.error(err); }
+        if (res.ok) handled = true;
+      } catch (err) { console.error('contact function failed:', err); }
+
+      // Fallback: write directly to Supabase so messages are never lost even
+      // before the Pages Function is deployed / env vars are configured.
+      if (!handled) {
+        try {
+          await fetch('https://itgyatshpvwxqmfhxgra.supabase.co/rest/v1/messages', {
+            method: 'POST',
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: msg.name, phone: msg.phone, email: msg.email, message: msg.message })
+          });
+        } catch (err) { console.error(err); }
+      }
+
       e.target.innerHTML = '<div style="text-align:center;padding:40px 0;"><h3 style="color:var(--teal-dark);margin-bottom:8px;">Message sent!</h3><p style="color:var(--gray-600);">Thanks, ' + name + '. We\'ll be in touch soon.</p></div>';
     }
   </script>

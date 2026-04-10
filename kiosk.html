@@ -326,6 +326,72 @@
       margin: 0 auto 12px;
     }
 
+    /* ---- WHATSAPP WELCOME OVERLAY (after new check-in) ---- */
+    .kiosk-welcome-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 110;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .kiosk-welcome-overlay.show { opacity: 1; pointer-events: all; }
+    .kiosk-welcome-card {
+      background: white;
+      border-radius: 28px;
+      padding: 44px 36px 36px;
+      width: 100%;
+      max-width: 560px;
+      text-align: center;
+      transform: translateY(24px) scale(0.96);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.25);
+    }
+    .kiosk-welcome-overlay.show .kiosk-welcome-card { transform: translateY(0) scale(1); }
+    .kiosk-welcome-wave { font-size: 3rem; margin-bottom: 8px; }
+    .kiosk-welcome-card h2 {
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      color: var(--teal-dark);
+      margin-bottom: 10px;
+    }
+    .kiosk-welcome-card p {
+      font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+      color: var(--gray-600);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .kiosk-welcome-wa {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 28px;
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: white;
+      border-radius: 16px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.05rem;
+      box-shadow: 0 10px 28px rgba(37, 211, 102, 0.4);
+      transition: transform 0.2s;
+    }
+    .kiosk-welcome-wa:hover { transform: translateY(-2px); }
+    .kiosk-welcome-close {
+      display: block;
+      margin: 18px auto 0;
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      font-size: 0.9rem;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
     /* ---- NEW PERSON MODAL ---- */
     .kiosk-modal-overlay {
       position: fixed;
@@ -465,6 +531,20 @@
   <div class="kiosk-flash" id="kioskFlash">
     <svg class="kiosk-flash-check" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="16 8.5 10.5 15 8 12"/></svg>
     <span id="kioskFlashText"></span>
+  </div>
+
+  <!-- First-Time Guest Welcome Overlay -->
+  <div class="kiosk-welcome-overlay" id="welcomeOverlay">
+    <div class="kiosk-welcome-card">
+      <div class="kiosk-welcome-wave">👋</div>
+      <h2 id="welcomeName">So glad you're here!</h2>
+      <p>Stay connected between Thursdays — join our WhatsApp group for prayer, photos, and a friendly hello.</p>
+      <a href="https://chat.whatsapp.com/BR9awVtv6Z25B0vDH9vGz1?mode=gi_t" target="_blank" rel="noopener" class="kiosk-welcome-wa" onclick="closeWelcomeOverlay()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Join WhatsApp Group
+      </a>
+      <button class="kiosk-welcome-close" onclick="closeWelcomeOverlay()">Maybe later</button>
+    </div>
   </div>
 
   <!-- New Person Modal -->
@@ -832,12 +912,42 @@
       await saveAttendance();
       showFlash(`Welcome, ${firstName}!`);
 
+      // Broadcast a first-time guest event for the dashboard to pick up.
+      // The dashboard polls `people` + `attendance` already; we also drop a lightweight
+      // localStorage flag that the same-device dashboard can see instantly,
+      // and a Supabase row in `messages` so other devices get notified on next refresh.
+      try {
+        localStorage.setItem('stpete_new_guest', JSON.stringify({
+          id, firstName, lastName, connector, phone, at: new Date().toISOString()
+        }));
+      } catch (e) {}
+
+      try {
+        await apiFetch('messages', {
+          method: 'POST',
+          body: {
+            name: `🆕 ${firstName} ${lastName || ''}`.trim(),
+            phone,
+            email: '',
+            message: `First-time check-in on kiosk${connector ? ' — invited by ' + connector : ''}`
+          }
+        });
+      } catch (e) { console.error('Failed to log guest event', e); }
+
       // Reset button
       btn.textContent = 'Check Me In';
       btn.disabled = false;
 
-      // Reset to welcome
-      setTimeout(resetToWelcome, 1600);
+      // Show the welcome overlay with WhatsApp invite
+      setTimeout(() => {
+        document.getElementById('welcomeName').textContent = `Welcome, ${firstName}!`;
+        document.getElementById('welcomeOverlay').classList.add('show');
+      }, 1200);
+    }
+
+    function closeWelcomeOverlay() {
+      document.getElementById('welcomeOverlay').classList.remove('show');
+      resetToWelcome();
     }
   </script>
 </body>
