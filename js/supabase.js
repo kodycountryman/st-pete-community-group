@@ -260,6 +260,96 @@ const db = {
     return await this._fetch('team_users') || [];
   },
 
+  // ---- AUTH / PASSWORDS ----
+  async getTeamRoleById(userId) {
+    const rows = await this._fetch('team_roles', { query: `?user_id=eq.${encodeURIComponent(userId)}&limit=1` });
+    return rows && rows.length > 0 ? rows[0] : null;
+  },
+
+  async updatePassword(userId, passwordHash) {
+    return await this._fetch('team_roles', {
+      method: 'PATCH',
+      query: `?user_id=eq.${encodeURIComponent(userId)}`,
+      body: { password_hash: passwordHash, password_updated_at: new Date().toISOString() }
+    });
+  },
+
+  // ---- GAME PLAN ----
+  async getGamePlan() {
+    const rows = await this._fetch('gameplan', { query: '?id=eq.1&limit=1' });
+    return rows && rows.length > 0 ? rows[0] : null;
+  },
+
+  async saveGamePlan(data, userId) {
+    return await this._fetch('gameplan', {
+      method: 'PATCH',
+      query: '?id=eq.1',
+      body: {
+        data,
+        updated_by: userId || null,
+        updated_at: new Date().toISOString()
+      }
+    });
+  },
+
+  async publishGamePlan(isPublished) {
+    return await this._fetch('gameplan', {
+      method: 'PATCH',
+      query: '?id=eq.1',
+      body: { is_published: isPublished }
+    });
+  },
+
+  // ---- POLLS ----
+  async getPolls() {
+    return await this._fetch('polls', { query: '?order=created_at.desc' }) || [];
+  },
+
+  async getPublishedPolls() {
+    return await this._fetch('polls', { query: '?is_published=eq.true&is_active=eq.true&order=created_at.desc' }) || [];
+  },
+
+  async createPoll(poll) {
+    return await this._fetch('polls', {
+      method: 'POST',
+      body: poll
+    });
+  },
+
+  async updatePoll(id, fields) {
+    return await this._fetch('polls', {
+      method: 'PATCH',
+      query: `?id=eq.${encodeURIComponent(id)}`,
+      body: fields
+    });
+  },
+
+  async deletePoll(id) {
+    return await this._fetch('polls', {
+      method: 'DELETE',
+      query: `?id=eq.${encodeURIComponent(id)}`
+    });
+  },
+
+  async getPollVotes(pollId) {
+    return await this._fetch('poll_votes', { query: `?poll_id=eq.${encodeURIComponent(pollId)}` }) || [];
+  },
+
+  async castPollVote(vote) {
+    return await this._fetch('poll_votes', {
+      method: 'POST',
+      body: vote,
+      headers: { 'Prefer': 'return=representation,resolution=merge-duplicates' }
+    });
+  },
+
+  async deletePollVotesForVoter(pollId, voterKey) {
+    return await this._fetch('poll_votes', {
+      method: 'DELETE',
+      query: `?poll_id=eq.${encodeURIComponent(pollId)}&voter_key=eq.${encodeURIComponent(voterKey)}`
+    });
+  },
+
   // ---- HELPERS ----
   // Convert DB row (snake_case) to JS object (camelCase)
   personFromRow(row) {

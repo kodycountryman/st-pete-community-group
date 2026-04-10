@@ -77,6 +77,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           <span>Microgroups</span>
         </a>
+        <a href="#" class="nav-item" data-page="polls">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="4" width="3" height="14"/></svg>
+          <span>Polls</span>
+        </a>
         <a href="#" class="nav-item" data-page="timeline">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
           <span>Launch Timeline</span>
@@ -114,6 +118,7 @@
         </div>
         <div class="user-menu" id="userMenu">
           <span id="userName">Team</span>
+          <button class="btn-ghost" onclick="app.openChangePasswordModal()" style="padding:6px 12px; font-size:0.75rem;" title="Change your password">Password</button>
           <button class="btn-ghost" onclick="app.logout()" style="padding:6px 12px; font-size:0.75rem;">Sign Out</button>
         </div>
       </div>
@@ -845,6 +850,32 @@
         <!-- Calendar Game Plan -->
         <div id="gameplanMonths"></div>
 
+        <!-- Publish / sync controls -->
+        <div id="gameplanPublishBar" style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;padding:14px 18px;background:white;border-radius:12px;box-shadow:var(--shadow-sm);">
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;color:var(--slate);">Public display</div>
+            <div id="gameplanPublishStatus" style="font-size:0.75rem;color:var(--gray-500);margin-top:2px;">Not published yet</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-ghost" onclick="app.syncGamePlanFromCloud()" style="font-size:0.78rem;">Pull from cloud</button>
+            <button class="btn-primary-sm" onclick="app.publishGamePlan()" id="gameplanPublishBtn" style="font-size:0.78rem;">Publish to Public Page</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== POLLS PAGE ==================== -->
+      <div class="page" id="page-polls">
+        <div class="card">
+          <div class="card-header">
+            <h3>Polls</h3>
+            <button class="btn-primary-sm" onclick="app.openPollModal()">+ New Poll</button>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:16px;">Create quick polls the team or visitors can vote on. Published polls show up as a subtle prompt on the public site.</p>
+            <div id="pollsList"></div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /page-container -->
@@ -1083,6 +1114,71 @@
       <div class="modal-footer">
         <button class="btn-ghost" onclick="app.closeModal('priorityModal')">Cancel</button>
         <button class="btn-primary-sm" onclick="app.savePriorityEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div class="modal-overlay" id="changePasswordModal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h3>Change Password</h3>
+        <button class="modal-close" onclick="app.closeModal('changePasswordModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Current password</label>
+          <input type="password" id="pwdCurrent" placeholder="Current password" autocomplete="current-password">
+        </div>
+        <div class="form-group">
+          <label>New password</label>
+          <input type="password" id="pwdNew" placeholder="At least 8 characters" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label>Confirm new password</label>
+          <input type="password" id="pwdConfirm" placeholder="Re-enter new password" autocomplete="new-password">
+        </div>
+        <div id="pwdError" style="color:#DC2626; font-size:0.8rem; min-height:1.2em; margin-top:4px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="app.closeModal('changePasswordModal')">Cancel</button>
+        <button class="btn-primary-sm" onclick="app.submitChangePassword()">Update Password</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create / Edit Poll Modal -->
+  <div class="modal-overlay" id="pollModal">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-header">
+        <h3 id="pollModalTitle">Create Poll</h3>
+        <button class="modal-close" onclick="app.closeModal('pollModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Question *</label>
+          <input type="text" id="pollQuestion" placeholder="e.g. Where should we do our next serve project?">
+        </div>
+        <div class="form-group">
+          <label>Short description (optional)</label>
+          <input type="text" id="pollDescription" placeholder="Extra context for voters">
+        </div>
+        <div class="form-group">
+          <label>Options (one per line)</label>
+          <textarea id="pollOptionsText" rows="5" placeholder="Option 1&#10;Option 2&#10;Option 3" style="width:100%; border:1px solid var(--border); border-radius:8px; padding:12px; font-family:inherit; font-size:0.9rem; resize:vertical;"></textarea>
+        </div>
+        <div class="form-group" style="display:flex; gap:16px; align-items:center;">
+          <label style="display:flex; gap:8px; align-items:center; font-weight:500; cursor:pointer;">
+            <input type="checkbox" id="pollMultiSelect"> Allow multiple selections
+          </label>
+          <label style="display:flex; gap:8px; align-items:center; font-weight:500; cursor:pointer;">
+            <input type="checkbox" id="pollPublishNow"> Publish immediately
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="app.closeModal('pollModal')">Cancel</button>
+        <button class="btn-primary-sm" onclick="app.savePoll()">Save Poll</button>
       </div>
     </div>
   </div>

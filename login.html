@@ -178,8 +178,9 @@
     const SUPABASE_URL = 'https://itgyatshpvwxqmfhxgra.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk';
 
-    // Per-user passwords — Kody has a unique owner password
-    const PASSWORDS = {
+    // Fallback passwords — only used if a user has no password_hash in the DB yet.
+    // Once everyone has a hash stored, this map is effectively unused.
+    const LEGACY_PASSWORDS = {
       kody:      'StPete#Owner26',
       dewayne:   'stpete2026',
       elizabeth: 'stpete2026',
@@ -194,50 +195,96 @@
       window.location.href = 'dashboard.html';
     }
 
+    // SHA-256 with per-user salt so the hash can't be replayed across users.
+    async function hashPassword(userId, password) {
+      const enc = new TextEncoder().encode(`${userId}:${password}`);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function showError(msg) {
+      const errorEl = document.getElementById('loginError');
+      errorEl.textContent = msg;
+      errorEl.classList.add('show');
+    }
+
     async function handleLogin(e) {
       e.preventDefault();
       const user = document.getElementById('loginUser').value;
       const password = document.getElementById('loginPassword').value;
       const errorEl = document.getElementById('loginError');
+      errorEl.classList.remove('show');
 
-      if (!PASSWORDS[user] || password !== PASSWORDS[user]) {
-        errorEl.classList.add('show');
-        document.getElementById('loginPassword').value = '';
-        return;
-      }
-
-      // Show loading state
       const btn = e.target.querySelector('.login-btn');
       btn.textContent = 'Signing in...';
       btn.disabled = true;
-      errorEl.classList.remove('show');
 
-      // Fetch role from Supabase team_roles table
-      let dbRole = 'editor';
-      let fullName = user;
       try {
+        // Fetch this user's row (including password_hash)
         const res = await fetch(
-          `${SUPABASE_URL}/rest/v1/team_roles?user_id=eq.${user}&limit=1`,
+          `${SUPABASE_URL}/rest/v1/team_roles?user_id=eq.${encodeURIComponent(user)}&limit=1`,
           { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
         );
         const rows = await res.json();
-        if (rows && rows.length > 0) {
-          dbRole = rows[0].role;
-          fullName = rows[0].full_name;
+        if (!rows || rows.length === 0) {
+          showError('Unknown user.');
+          btn.textContent = 'Sign In';
+          btn.disabled = false;
+          return;
         }
-      } catch (err) {
-        console.error('Role fetch failed, using default:', err);
-      }
+        const row = rows[0];
 
-      localStorage.setItem('stpete_session', JSON.stringify({
-        loggedIn: true,
-        userId: user,
-        name: fullName.split(' ')[0],
-        fullName: fullName,
-        dbRole: dbRole,
-        loginTime: new Date().toISOString()
-      }));
-      window.location.href = 'dashboard.html';
+        // Verify the password.
+        // - Preferred: compare against password_hash in DB.
+        // - Fallback: if no hash stored, compare against the legacy map and backfill the hash.
+        let ok = false;
+        const entered = await hashPassword(user, password);
+        if (row.password_hash) {
+          ok = entered === row.password_hash;
+        } else if (LEGACY_PASSWORDS[user] && password === LEGACY_PASSWORDS[user]) {
+          ok = true;
+          // Backfill the DB hash silently so future logins use it.
+          try {
+            await fetch(
+              `${SUPABASE_URL}/rest/v1/team_roles?user_id=eq.${encodeURIComponent(user)}`,
+              {
+                method: 'PATCH',
+                headers: {
+                  'apikey': SUPABASE_KEY,
+                  'Authorization': `Bearer ${SUPABASE_KEY}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password_hash: entered, password_updated_at: new Date().toISOString() })
+              }
+            );
+          } catch (err) { /* non-fatal */ }
+        }
+
+        if (!ok) {
+          showError('Incorrect password. Try again.');
+          document.getElementById('loginPassword').value = '';
+          btn.textContent = 'Sign In';
+          btn.disabled = false;
+          return;
+        }
+
+        localStorage.setItem('stpete_session', JSON.stringify({
+          loggedIn: true,
+          userId: user,
+          name: (row.full_name || user).split(' ')[0],
+          fullName: row.full_name || user,
+          dbRole: row.role || 'editor',
+          loginTime: new Date().toISOString()
+        }));
+        window.location.href = 'dashboard.html';
+      } catch (err) {
+        console.error('Login failed:', err);
+        showError('Connection error. Try again.');
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
+      }
     }
   </script>
 </body>

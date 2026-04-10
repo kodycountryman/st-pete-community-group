@@ -236,6 +236,97 @@
       box-shadow: 0 10px 28px rgba(37, 211, 102, 0.32);
     }
     .invite-btn-whatsapp:hover { transform: translateY(-2px); }
+    .invite-btn-calendar {
+      background: white;
+      color: var(--teal-dark);
+      border: 2px solid var(--gold);
+    }
+    .invite-btn-calendar:hover {
+      background: var(--gold);
+      color: var(--slate);
+      transform: translateY(-2px);
+    }
+
+    /* ---- PRE SIGN IN ---- */
+    .invite-presignin {
+      margin-top: 22px;
+      background: linear-gradient(135deg, #FFF8EA 0%, #FDF6EE 100%);
+      border: 2px solid var(--gold);
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      box-shadow: var(--shadow);
+    }
+    .invite-presignin h2 {
+      font-size: 1.2rem;
+      color: var(--teal-dark);
+      margin-bottom: 4px;
+    }
+    .invite-presignin .sub {
+      font-size: 0.85rem;
+      color: var(--gray-600);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    .invite-ps-row {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .invite-ps-row input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid #E6D4A8;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      background: white;
+      color: var(--slate);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .invite-ps-row input:focus {
+      outline: none;
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(42,171,179,0.12);
+    }
+    .invite-ps-submit {
+      width: 100%;
+      padding: 15px 22px;
+      background: var(--teal);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 6px;
+      box-shadow: 0 10px 24px rgba(42,171,179,0.25);
+    }
+    .invite-ps-submit:hover { transform: translateY(-1px); background: var(--teal-dark); }
+    .invite-ps-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+    .invite-ps-msg {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      min-height: 1.1em;
+    }
+    .invite-ps-msg.ok { color: #15803D; }
+    .invite-ps-msg.err { color: #DC2626; }
+    .invite-ps-done {
+      text-align: center;
+      padding: 10px 0;
+    }
+    .invite-ps-done h3 {
+      color: var(--teal-dark);
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+    }
+    .invite-ps-done p {
+      color: var(--gray-600);
+      font-size: 0.9rem;
+    }
 
     /* ---- SHARE (for the inviter) ---- */
     .invite-share {
@@ -351,6 +442,10 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Get Directions
       </a>
+      <button type="button" onclick="addToCalendar()" class="invite-btn invite-btn-calendar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Add to Calendar
+      </button>
       <a href="https://chat.whatsapp.com/BR9awVtv6Z25B0vDH9vGz1?mode=gi_t" target="_blank" rel="noopener" class="invite-btn invite-btn-whatsapp">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         Join the Group Chat
@@ -358,6 +453,28 @@
       <a href="index.html" class="invite-btn invite-btn-secondary">
         Learn More
       </a>
+    </div>
+
+    <!-- PRE SIGN IN / I'M INTERESTED -->
+    <div class="invite-presignin" id="preSignIn">
+      <h2>I'm interested — save my seat</h2>
+      <p class="sub">Give us your name and number and we'll send a quick text so you know where to park, what to expect, and that we're actually expecting you.</p>
+      <form onsubmit="submitPreSignIn(event)">
+        <div class="invite-ps-row">
+          <input type="text" id="psFirst" placeholder="First name" required autocomplete="given-name">
+        </div>
+        <div class="invite-ps-row">
+          <input type="text" id="psLast" placeholder="Last name (optional)" autocomplete="family-name">
+        </div>
+        <div class="invite-ps-row">
+          <input type="tel" id="psPhone" placeholder="Mobile number" required autocomplete="tel" inputmode="tel">
+        </div>
+        <div class="invite-ps-row">
+          <input type="text" id="psConnector" placeholder="Who invited you? (optional)">
+        </div>
+        <button type="submit" class="invite-ps-submit" id="psSubmitBtn">Save my seat</button>
+        <div class="invite-ps-msg" id="psMsg"></div>
+      </form>
     </div>
 
     <!-- SHARE (for the inviter) -->
@@ -376,6 +493,174 @@
   </div>
 
   <script>
+    const SUPABASE_URL = 'https://itgyatshpvwxqmfhxgra.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk';
+
+    // ---- ADD TO CALENDAR ----
+    // Generates a recurring weekly event (Thursdays 6:30-8:30 PM ET) and either
+    // opens Google Calendar on desktop or downloads an .ics file on mobile / other.
+    function addToCalendar() {
+      // Find the next Thursday (if today is Thursday and before 6:30pm local, use today)
+      const now = new Date();
+      const day = now.getDay(); // 0=Sun ... 4=Thu
+      let daysUntil = (4 - day + 7) % 7;
+      if (daysUntil === 0 && (now.getHours() > 18 || (now.getHours() === 18 && now.getMinutes() >= 30))) {
+        daysUntil = 7;
+      }
+      const start = new Date(now);
+      start.setDate(now.getDate() + daysUntil);
+      start.setHours(18, 30, 0, 0);
+      const end = new Date(start);
+      end.setHours(20, 30, 0, 0);
+
+      const title = 'St. Pete Bible Study';
+      const location = '3845 Gateway Centre Blvd, Pinellas Park, FL 33782';
+      const details = "Thursdays at 6:30 PM — food, real conversation, honest questions, and people who actually show up. Doors open 6:15.";
+
+      // Detect mobile (iOS/Android) — .ics works best there; Google link works everywhere
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (!isMobile) {
+        // Google Calendar URL (works on desktop browsers)
+        const fmt = d => d.toISOString().replace(/[-:]|\.\d{3}/g, '');
+        const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+          '&text=' + encodeURIComponent(title) +
+          '&dates=' + fmt(start) + '/' + fmt(end) +
+          '&details=' + encodeURIComponent(details) +
+          '&location=' + encodeURIComponent(location) +
+          '&recur=' + encodeURIComponent('RRULE:FREQ=WEEKLY;BYDAY=TH');
+        window.open(url, '_blank', 'noopener');
+        return;
+      }
+
+      // iOS / Android — download an .ics file the native calendar can open
+      const dtFmt = d => {
+        const p = n => String(n).padStart(2, '0');
+        return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + 'T' +
+               p(d.getUTCHours()) + p(d.getUTCMinutes()) + p(d.getUTCSeconds()) + 'Z';
+      };
+      const uid = 'spbs-' + start.getTime() + '@stpetebiblestudy.com';
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//St Pete Bible Study//Invite//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'BEGIN:VEVENT',
+        'UID:' + uid,
+        'DTSTAMP:' + dtFmt(new Date()),
+        'DTSTART:' + dtFmt(start),
+        'DTEND:' + dtFmt(end),
+        'RRULE:FREQ=WEEKLY;BYDAY=TH',
+        'SUMMARY:' + title,
+        'LOCATION:' + location,
+        'DESCRIPTION:' + details.replace(/\n/g, '\\n'),
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'st-pete-bible-study.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+    // ---- PRE SIGN IN ----
+    async function submitPreSignIn(e) {
+      e.preventDefault();
+      const firstName = document.getElementById('psFirst').value.trim();
+      const lastName = document.getElementById('psLast').value.trim();
+      const phone = document.getElementById('psPhone').value.trim();
+      const connector = document.getElementById('psConnector').value.trim();
+      const msg = document.getElementById('psMsg');
+      const btn = document.getElementById('psSubmitBtn');
+      msg.className = 'invite-ps-msg';
+      msg.textContent = '';
+
+      if (!firstName || !phone) {
+        msg.classList.add('err');
+        msg.textContent = 'Please enter your name and phone.';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+      const row = {
+        id,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        email: '',
+        status: 'new',
+        stage: 'interested',
+        connector,
+        notes: 'Pre sign-in from invite page',
+        needs_followup: true,
+        followup_done: false,
+        followup_assigned_to: '',
+        attendance_count: 0
+      };
+
+      try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/people', {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(row)
+        });
+        if (!res.ok) throw new Error(await res.text());
+
+        // Ping the SMS notify function — text Kody about the new pre sign-in.
+        // Fire-and-forget; don't block the success UI on it.
+        fetch('/api/sms-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            firstName, lastName, phone, connector, source: 'invite'
+          })
+        }).catch(() => {});
+
+        // Also drop a row in messages so the dashboard picks it up
+        fetch(SUPABASE_URL + '/rest/v1/messages', {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name: '✋ ' + (firstName + ' ' + lastName).trim(),
+            phone,
+            email: '',
+            message: 'Pre sign-in from invite page' + (connector ? ' — invited by ' + connector : '')
+          })
+        }).catch(() => {});
+
+        document.getElementById('preSignIn').innerHTML =
+          '<div class="invite-ps-done">' +
+          '<h3>You\'re on the list, ' + firstName.replace(/[<>]/g, '') + '!</h3>' +
+          '<p>We\'ll text you before Thursday. Seriously — just show up. We\'ve got a seat saved.</p>' +
+          '</div>';
+      } catch (err) {
+        console.error(err);
+        msg.classList.add('err');
+        msg.textContent = 'Something went wrong. Please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Save my seat';
+      }
+    }
+
     async function shareInvite() {
       const shareData = {
         title: "You're Invited — St. Pete Bible Study",

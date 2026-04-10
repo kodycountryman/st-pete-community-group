@@ -200,7 +200,9 @@ const app = {
         db.getTeamMembers(),
         db.getGroups(),
         db.getCurrentWeeklyPrep(),
-        db.getPastWeeks()
+        db.getPastWeeks(),
+        db.getGamePlan(),
+        db.getPolls()
       ]);
 
       const val = (i) => results[i].status === 'fulfilled' ? results[i].value : null;
@@ -222,6 +224,24 @@ const app = {
       this.data.groups = val(4) || [];
       this.data.weeklyPrep = val(5) || { topic: '', scripture: '', takeaway: '', cta: '', icebreaker: '', questions: [] };
       this.data.pastWeeks = val(6) || [];
+
+      // Game plan: prefer cloud version, fall back to local defaults
+      const cloudGP = val(7);
+      if (cloudGP && cloudGP.data && cloudGP.data.structures && cloudGP.data.months) {
+        this.data.gameplan = cloudGP.data;
+        this.data.gameplanMeta = {
+          is_published: !!cloudGP.is_published,
+          updated_by: cloudGP.updated_by,
+          updated_at: cloudGP.updated_at
+        };
+      } else {
+        // No cloud gameplan yet — use local/default and push it up once editor signs in
+        this.data.gameplan = this.loadGamePlan();
+        this.data.gameplanMeta = { is_published: false };
+      }
+
+      // Polls (admin list)
+      this.data.polls = val(8) || [];
     } catch (err) {
       console.error('Failed to load from Supabase:', err);
       this.toast('Connection error — check your internet');
@@ -272,7 +292,8 @@ const app = {
       teams: 'Teams',
       groups: 'Microgroups',
       timeline: 'Launch Timeline',
-      gameplan: 'Game Plan'
+      gameplan: 'Game Plan',
+      polls: 'Polls'
     };
     document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
 
@@ -325,6 +346,7 @@ const app = {
     this.renderPriorityGoals();
     this.renderAttendanceReport();
     this.renderGamePlan();
+    this.renderPolls();
   },
 
   // ---- METRICS ----
@@ -2345,6 +2367,72 @@ const app = {
 
   persistGamePlan() {
     localStorage.setItem('stpete_gameplan', JSON.stringify(this.data.gameplan));
+    // Debounced cloud save
+    clearTimeout(this._gameplanCloudSaveTimer);
+    this._gameplanCloudSaveTimer = setTimeout(() => this._cloudSaveGamePlan(), 1000);
+  },
+
+  async _cloudSaveGamePlan() {
+    if (!this.hasMinRole('editor')) return;
+    try {
+      await db.saveGamePlan(this.data.gameplan, this.currentUser?.userId || null);
+    } catch (err) {
+      console.error('Cloud save of gameplan failed:', err);
+    }
+  },
+
+  async syncGamePlanFromCloud() {
+    try {
+      const row = await db.getGamePlan();
+      if (row && row.data && row.data.structures && row.data.months) {
+        this.data.gameplan = row.data;
+        this.data.gameplanMeta = {
+          is_published: !!row.is_published,
+          updated_by: row.updated_by,
+          updated_at: row.updated_at
+        };
+        localStorage.setItem('stpete_gameplan', JSON.stringify(this.data.gameplan));
+        this.renderGamePlan();
+        this.updateGameplanPublishStatus();
+        this.toast('Game plan pulled from cloud');
+      } else {
+        this.toast('No cloud game plan yet');
+      }
+    } catch (err) {
+      this.toast('Pull failed');
+    }
+  },
+
+  async publishGamePlan() {
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+    // Force-save current state first
+    try {
+      await db.saveGamePlan(this.data.gameplan, this.currentUser?.userId || null);
+      await db.publishGamePlan(true);
+      if (!this.data.gameplanMeta) this.data.gameplanMeta = {};
+      this.data.gameplanMeta.is_published = true;
+      this.updateGameplanPublishStatus();
+      this.toast('Published! Public page will show upcoming weeks.');
+    } catch (err) {
+      this.toast('Publish failed');
+    }
+  },
+
+  updateGameplanPublishStatus() {
+    const el = document.getElementById('gameplanPublishStatus');
+    const btn = document.getElementById('gameplanPublishBtn');
+    if (!el) return;
+    const meta = this.data.gameplanMeta || {};
+    if (meta.is_published) {
+      const when = meta.updated_at
+        ? new Date(meta.updated_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+        : '';
+      el.innerHTML = `✓ Published · last saved ${this.escapeHtml(when)}${meta.updated_by ? ' by <strong>' + this.escapeHtml(meta.updated_by) + '</strong>' : ''}`;
+      if (btn) { btn.textContent = 'Re-publish'; btn.classList.add('published'); }
+    } else {
+      el.textContent = 'Not published yet — click to make it visible on the public page.';
+      if (btn) { btn.textContent = 'Publish to Public Page'; btn.classList.remove('published'); }
+    }
   },
 
   renderGamePlan() {
@@ -2355,6 +2443,7 @@ const app = {
     this.renderGamePlanStructures();
     this.renderGamePlanMonths();
     this.applyStructuresCollapse();
+    this.updateGameplanPublishStatus();
   },
 
   loadGamePlanUI() {
@@ -2702,9 +2791,17 @@ const app = {
           <select class="wk-type-select ${this.escapeHtml(week.type)}" onchange="app.updateWeekField('type', this.value)">
             ${typeOptions.map(o => `<option value="${o.value}" ${week.type === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
           </select>
-          <button class="wk-reset-flow" onclick="app.resetWeekFlowFromType()" title="Replace flow with default for this night type">Reset flow</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="wk-reset-flow" onclick="app.duplicateWeek()" title="Make a copy of this week at the end of the month">Duplicate</button>
+            <button class="wk-reset-flow" onclick="app.resetWeekFlowFromType()" title="Replace flow with default for this night type">Reset flow</button>
+            <button class="wk-reset-flow" style="background:#FEF2F2;color:#DC2626;border-color:#FECACA;" onclick="app.deleteWeek()" title="Delete this week">Delete</button>
+          </div>
         </div>
-        <div class="wk-detail-hero-title">${this.escapeHtml(structName)}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:10px;">
+          <label style="font-size:0.7rem;color:var(--gray-500);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Date</label>
+          <input type="text" class="wk-flow-time" style="flex:1;min-width:120px;" value="${this.escapeHtml(week.date || '')}" placeholder="e.g. Apr 2" oninput="app.updateWeekField('date', this.value)" title="Short date label used in the calendar (e.g. 'Apr 2')">
+        </div>
+        <div class="wk-detail-hero-title" style="margin-top:10px;">${this.escapeHtml(structName)}</div>
         <textarea class="wk-desc-edit" placeholder="Week description (e.g. **Growth Night** — What does a healthy campus look like?)" oninput="app.updateWeekField('desc', this.value)">${this.escapeHtml(week.desc || '')}</textarea>
         ${structure && structure.goal ? `<div class="wk-detail-hero-desc" style="font-style:italic; color:var(--gray-500);">${this.escapeHtml(structure.goal)}</div>` : ''}
       </div>`;
@@ -2839,6 +2936,209 @@ const app = {
     this.persistGamePlan();
     this.renderWeekDetail();
     this.renderGamePlanMonths();
+  },
+
+  duplicateWeek() {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week) return;
+    // Deep-clone
+    const copy = JSON.parse(JSON.stringify(week));
+    copy.desc = (copy.desc || '') + (copy.desc ? ' (copy)' : '(copy)');
+    month.weeks.splice(ctx.weekIdx + 1, 0, copy);
+    this.persistGamePlan();
+    // Point the modal at the new copy so Kody can edit date + details immediately
+    this.weekDetailContext = { monthId: ctx.monthId, weekIdx: ctx.weekIdx + 1 };
+    this.renderWeekDetail();
+    this.renderGamePlanMonths();
+    this.toast('Week duplicated — change the date on the copy.');
+  },
+
+  deleteWeek() {
+    const ctx = this.weekDetailContext;
+    if (!ctx || !this.hasMinRole('editor')) return;
+    const month = this.data.gameplan.months.find(m => m.id === ctx.monthId);
+    if (!month) return;
+    const week = month.weeks[ctx.weekIdx];
+    if (!week) return;
+    if (!confirm(`Delete the week "${week.date}" from ${month.name}? This cannot be undone.`)) return;
+    month.weeks.splice(ctx.weekIdx, 1);
+    this.persistGamePlan();
+    this.closeModal('weekDetailModal');
+    this.renderGamePlanMonths();
+    this.toast('Week deleted');
+  },
+
+  // ---- CHANGE PASSWORD ----
+  async hashPassword(userId, password) {
+    const enc = new TextEncoder().encode(`${userId}:${password}`);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  openChangePasswordModal() {
+    document.getElementById('pwdCurrent').value = '';
+    document.getElementById('pwdNew').value = '';
+    document.getElementById('pwdConfirm').value = '';
+    document.getElementById('pwdError').textContent = '';
+    document.getElementById('changePasswordModal').classList.add('show');
+    setTimeout(() => document.getElementById('pwdCurrent').focus(), 150);
+  },
+
+  async submitChangePassword() {
+    const errEl = document.getElementById('pwdError');
+    errEl.textContent = '';
+    const current = document.getElementById('pwdCurrent').value;
+    const next = document.getElementById('pwdNew').value;
+    const confirm = document.getElementById('pwdConfirm').value;
+    const userId = this.currentUser?.userId;
+    if (!userId) { errEl.textContent = 'No active session.'; return; }
+    if (!current || !next || !confirm) { errEl.textContent = 'Fill in all three fields.'; return; }
+    if (next.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; return; }
+    if (next !== confirm) { errEl.textContent = 'New passwords don\'t match.'; return; }
+
+    // Verify current password against DB hash
+    const row = await db.getTeamRoleById(userId);
+    if (!row) { errEl.textContent = 'Could not load your account.'; return; }
+    const currentHash = await this.hashPassword(userId, current);
+    if (row.password_hash && row.password_hash !== currentHash) {
+      errEl.textContent = 'Current password is incorrect.';
+      return;
+    }
+
+    const newHash = await this.hashPassword(userId, next);
+    try {
+      await db.updatePassword(userId, newHash);
+      this.closeModal('changePasswordModal');
+      this.toast('Password updated. Use it next time you sign in.');
+    } catch (err) {
+      errEl.textContent = 'Save failed. Try again.';
+    }
+  },
+
+  // ---- POLLS ----
+  async renderPolls() {
+    const listEl = document.getElementById('pollsList');
+    if (!listEl) return;
+    const polls = this.data.polls || [];
+    if (polls.length === 0) {
+      listEl.innerHTML = '<p class="empty-state">No polls yet. Click "+ New Poll" to create one.</p>';
+      return;
+    }
+
+    // Fetch vote counts for each poll in parallel
+    const voteLists = await Promise.all(polls.map(p => db.getPollVotes(p.id)));
+    const voteCounts = voteLists.map(votes => {
+      const counts = {};
+      (votes || []).forEach(v => { counts[v.option_index] = (counts[v.option_index] || 0) + 1; });
+      return { counts, total: (votes || []).length };
+    });
+
+    listEl.innerHTML = polls.map((p, i) => {
+      const { counts, total } = voteCounts[i];
+      const opts = Array.isArray(p.options) ? p.options : [];
+      const bars = opts.map((opt, idx) => {
+        const n = counts[idx] || 0;
+        const pct = total > 0 ? Math.round((n / total) * 100) : 0;
+        return `
+          <div class="poll-bar-row">
+            <div class="poll-bar-label">${this.escapeHtml(opt)}</div>
+            <div class="poll-bar-track"><div class="poll-bar-fill" style="width:${pct}%;"></div></div>
+            <div class="poll-bar-count">${n} · ${pct}%</div>
+          </div>
+        `;
+      }).join('');
+      const pubBadge = p.is_published
+        ? '<span class="poll-pub-badge live">● Live on public site</span>'
+        : '<span class="poll-pub-badge">Draft</span>';
+      return `
+        <div class="poll-admin-card">
+          <div class="poll-admin-head">
+            <div>
+              <div class="poll-admin-q">${this.escapeHtml(p.question)}</div>
+              ${p.description ? `<div class="poll-admin-desc">${this.escapeHtml(p.description)}</div>` : ''}
+              ${pubBadge}
+              <span class="poll-admin-meta">${total} vote${total === 1 ? '' : 's'}</span>
+            </div>
+            <div class="poll-admin-actions">
+              <button class="btn-ghost" onclick="app.togglePollPublished('${p.id}', ${!p.is_published})" style="font-size:0.72rem;">${p.is_published ? 'Unpublish' : 'Publish'}</button>
+              <button class="btn-ghost" onclick="app.deletePoll('${p.id}')" style="font-size:0.72rem;color:#DC2626;">Delete</button>
+            </div>
+          </div>
+          <div class="poll-bars">${bars}</div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  openPollModal(editId) {
+    document.getElementById('pollModalTitle').textContent = editId ? 'Edit Poll' : 'Create Poll';
+    document.getElementById('pollQuestion').value = '';
+    document.getElementById('pollDescription').value = '';
+    document.getElementById('pollOptionsText').value = '';
+    document.getElementById('pollMultiSelect').checked = false;
+    document.getElementById('pollPublishNow').checked = true;
+    this._editingPollId = editId || null;
+    document.getElementById('pollModal').classList.add('show');
+    setTimeout(() => document.getElementById('pollQuestion').focus(), 150);
+  },
+
+  async savePoll() {
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+    const question = document.getElementById('pollQuestion').value.trim();
+    const description = document.getElementById('pollDescription').value.trim();
+    const optionsText = document.getElementById('pollOptionsText').value;
+    const multiSelect = document.getElementById('pollMultiSelect').checked;
+    const publishNow = document.getElementById('pollPublishNow').checked;
+    const options = optionsText.split('\n').map(s => s.trim()).filter(Boolean);
+
+    if (!question) { this.toast('Question is required'); return; }
+    if (options.length < 2) { this.toast('Add at least 2 options'); return; }
+
+    const body = {
+      question,
+      description,
+      options,
+      multi_select: multiSelect,
+      is_published: publishNow,
+      is_active: true,
+      created_by: this.currentUser?.userId || null
+    };
+    try {
+      await db.createPoll(body);
+      this.closeModal('pollModal');
+      this.toast(publishNow ? 'Poll published!' : 'Poll saved as draft');
+      this.data.polls = await db.getPolls();
+      this.renderPolls();
+    } catch (err) {
+      this.toast('Save failed');
+    }
+  },
+
+  async togglePollPublished(id, published) {
+    if (!this.hasMinRole('editor')) return;
+    await db.updatePoll(id, { is_published: published });
+    this.data.polls = await db.getPolls();
+    this.renderPolls();
+    this.toast(published ? 'Poll published' : 'Poll unpublished');
+  },
+
+  async deletePoll(id) {
+    if (!this.hasMinRole('editor')) return;
+    if (!confirm('Delete this poll and all its votes? This cannot be undone.')) return;
+    await db.deletePoll(id);
+    this.data.polls = await db.getPolls();
+    this.renderPolls();
+    this.toast('Poll deleted');
+  },
+
+  // ---- GENERIC MODAL CLOSER ----
+  closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
   }
 };
 
