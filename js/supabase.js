@@ -135,6 +135,13 @@ const db = {
     });
   },
 
+  async deleteAttendance(date) {
+    return await this._fetch('attendance', {
+      method: 'DELETE',
+      query: `?date=eq.${date}`
+    });
+  },
+
   // ---- TEAMS ----
   async getTeams() {
     return await this._fetch('teams', { query: '?order=id.asc' }) || [];

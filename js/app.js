@@ -1091,53 +1091,200 @@ const app = {
     }).join('');
   },
 
+  // Holds state while the attendance detail modal is open
+  attendanceEdit: null, // { date, checkedIn: Set, newPeople, editMode }
+
   showAttendanceDetail(idx) {
     const record = this.data.attendance[idx];
     if (!record) return;
 
-    const date = new Date(record.date + 'T12:00:00');
-    const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    this.attendanceEdit = {
+      date: record.date,
+      checkedIn: new Set(record.checkedIn),
+      newPeople: record.newPeople || 0,
+      total: record.total || 0,
+      editMode: false,
+      originalIdx: idx
+    };
 
+    this.renderAttendanceDetail();
+    document.getElementById('attendanceModal').classList.add('show');
+  },
+
+  renderAttendanceDetail() {
+    const edit = this.attendanceEdit;
+    if (!edit) return;
+
+    const date = new Date(edit.date + 'T12:00:00');
+    const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
     document.getElementById('attendanceModalTitle').textContent = dateStr;
 
-    // Stats bar
-    const pct = record.total > 0 ? Math.round((record.checkedIn.length / record.total) * 100) : 0;
+    const canEdit = this.hasMinRole('editor');
+    const presentCount = edit.checkedIn.size;
+    const pct = edit.total > 0 ? Math.round((presentCount / edit.total) * 100) : 0;
+
+    // Stats + action bar
+    const btnBase = 'padding:8px 16px; border-radius:8px; font-size:0.8rem; font-weight:700; cursor:pointer; border:none; font-family:inherit;';
+    const btnPrimary = btnBase + ' background:var(--teal); color:white;';
+    const btnDanger = btnBase + ' background:#FEE2E2; color:#B91C1C;';
+    const btnGhostInline = btnBase + ' background:var(--gray-100); color:var(--gray-600);';
+
+    const actionsHtml = canEdit ? (edit.editMode ? `
+      <div style="display:flex; gap:8px; padding:12px 24px; background:white; border-top:1px solid var(--border); justify-content:flex-end;">
+        <button style="${btnGhostInline}" onclick="app.cancelAttendanceEdit()">Cancel</button>
+        <button style="${btnPrimary}" onclick="app.saveAttendanceEdit()">Save Changes</button>
+      </div>
+    ` : `
+      <div style="display:flex; gap:8px; padding:12px 24px; background:white; border-top:1px solid var(--border); justify-content:flex-end;">
+        <button style="${btnDanger}" onclick="app.deleteAttendanceRecord()">Delete</button>
+        <button style="${btnPrimary}" onclick="app.toggleAttendanceEditMode()">Edit Check-ins</button>
+      </div>
+    `) : '';
+
     document.getElementById('attendanceDetailStats').innerHTML = `
       <div style="display:flex; gap:24px; padding:16px 24px; background:var(--gray-100); justify-content:center;">
-        <div style="text-align:center;"><strong style="font-size:1.3rem; color:var(--teal-dark);">${record.checkedIn.length}</strong><br><span style="font-size:0.72rem; color:var(--gray-500); text-transform:uppercase; font-weight:600;">Present</span></div>
-        <div style="text-align:center;"><strong style="font-size:1.3rem; color:var(--pink);">${record.newPeople || 0}</strong><br><span style="font-size:0.72rem; color:var(--gray-500); text-transform:uppercase; font-weight:600;">New</span></div>
-        <div style="text-align:center;"><strong style="font-size:1.3rem; color:var(--gold);">${pct}%</strong><br><span style="font-size:0.72rem; color:var(--gray-500); text-transform:uppercase; font-weight:600;">of ${record.total}</span></div>
+        <div style="text-align:center;"><strong style="font-size:1.3rem; color:var(--teal-dark);">${presentCount}</strong><br><span style="font-size:0.72rem; color:var(--gray-500); text-transform:uppercase; font-weight:600;">Present</span></div>
+        <div style="text-align:center;"><strong style="font-size:1.3rem; color:var(--pink);">${edit.newPeople || 0}</strong><br><span style="font-size:0.72rem; color:var(--gray-500); text-transform:uppercase; font-weight:600;">New</span></div>
+        <div style="text-align:center;"><strong style="font-size:1.3rem; color:var(--gold);">${pct}%</strong><br><span style="font-size:0.72rem; color:var(--gray-500); text-transform:uppercase; font-weight:600;">of ${edit.total}</span></div>
       </div>
+      ${actionsHtml}
     `;
 
-    // People list
-    const people = record.checkedIn.map(id => this.data.people.find(p => p.id === id)).filter(Boolean);
-    const absent = this.data.people.filter(p => !record.checkedIn.includes(p.id));
+    // People lists
+    const present = this.data.people
+      .filter(p => edit.checkedIn.has(p.id))
+      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+    const absent = this.data.people
+      .filter(p => !edit.checkedIn.has(p.id))
+      .sort((a, b) => a.firstName.localeCompare(b.firstName));
+
+    const clickAttr = (id) => edit.editMode
+      ? `onclick="app.toggleAttendancePerson('${id}')" style="cursor:pointer;"`
+      : '';
 
     let html = '<div style="padding:16px 24px;">';
-    html += '<div style="font-size:0.75rem; font-weight:700; color:var(--teal-dark); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Present (' + people.length + ')</div>';
-    html += people.sort((a, b) => a.firstName.localeCompare(b.firstName)).map(p => `
-      <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-100);">
+
+    if (edit.editMode) {
+      html += '<div style="font-size:0.72rem; color:var(--gray-500); margin-bottom:12px; font-style:italic;">Tap any name to toggle present/absent.</div>';
+    }
+
+    html += `<div style="font-size:0.75rem; font-weight:700; color:var(--teal-dark); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Present (${present.length})</div>`;
+    html += present.map(p => `
+      <div ${clickAttr(p.id)} style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-100); ${edit.editMode ? 'cursor:pointer;' : ''}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        <span style="font-size:0.85rem; font-weight:500; color:var(--slate);">${p.firstName} ${p.lastName || ''}</span>
+        <span style="font-size:0.85rem; font-weight:500; color:var(--slate);">${this.escapeHtml(p.firstName)} ${this.escapeHtml(p.lastName || '')}</span>
         <span style="font-size:0.72rem; color:var(--gray-500); margin-left:auto;">${this.capitalize(p.status)}</span>
       </div>
     `).join('');
 
     if (absent.length > 0) {
-      html += '<div style="font-size:0.75rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:1px; margin:16px 0 8px;">Absent (' + absent.length + ')</div>';
-      html += absent.sort((a, b) => a.firstName.localeCompare(b.firstName)).map(p => `
-        <div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-100); opacity:0.5;">
+      html += `<div style="font-size:0.75rem; font-weight:700; color:var(--gray-500); text-transform:uppercase; letter-spacing:1px; margin:16px 0 8px;">Absent (${absent.length})</div>`;
+      html += absent.map(p => `
+        <div ${clickAttr(p.id)} style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray-100); opacity:${edit.editMode ? '0.75' : '0.5'}; ${edit.editMode ? 'cursor:pointer;' : ''}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          <span style="font-size:0.85rem; font-weight:500; color:var(--gray-600);">${p.firstName} ${p.lastName || ''}</span>
+          <span style="font-size:0.85rem; font-weight:500; color:var(--gray-600);">${this.escapeHtml(p.firstName)} ${this.escapeHtml(p.lastName || '')}</span>
         </div>
       `).join('');
     }
 
     html += '</div>';
     document.getElementById('attendanceDetailList').innerHTML = html;
+  },
 
-    document.getElementById('attendanceModal').classList.add('show');
+  toggleAttendanceEditMode() {
+    if (!this.attendanceEdit) return;
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+    this.attendanceEdit.editMode = true;
+    this.renderAttendanceDetail();
+  },
+
+  cancelAttendanceEdit() {
+    if (!this.attendanceEdit) return;
+    // Restore from original record
+    const record = this.data.attendance.find(a => a.date === this.attendanceEdit.date);
+    if (record) {
+      this.attendanceEdit.checkedIn = new Set(record.checkedIn);
+    }
+    this.attendanceEdit.editMode = false;
+    this.renderAttendanceDetail();
+  },
+
+  toggleAttendancePerson(personId) {
+    if (!this.attendanceEdit || !this.attendanceEdit.editMode) return;
+    if (this.attendanceEdit.checkedIn.has(personId)) {
+      this.attendanceEdit.checkedIn.delete(personId);
+    } else {
+      this.attendanceEdit.checkedIn.add(personId);
+    }
+    this.renderAttendanceDetail();
+  },
+
+  async saveAttendanceEdit() {
+    if (!this.attendanceEdit) return;
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+
+    const edit = this.attendanceEdit;
+    const newCheckedIn = Array.from(edit.checkedIn);
+
+    try {
+      await db.upsertAttendance({
+        date: edit.date,
+        checkedIn: newCheckedIn,
+        total: edit.total,
+        newPeople: edit.newPeople || 0
+      });
+
+      // Update local cache
+      const record = this.data.attendance.find(a => a.date === edit.date);
+      if (record) record.checkedIn = newCheckedIn;
+
+      // If editing today's record, sync kiosk checkinState
+      const today = new Date().toISOString().split('T')[0];
+      if (edit.date === today) {
+        this.data.checkinState = {};
+        newCheckedIn.forEach(id => { this.data.checkinState[id] = true; });
+      }
+
+      edit.editMode = false;
+      this.renderAttendanceDetail();
+      this.renderAll();
+      this.toast('Attendance updated');
+    } catch (err) {
+      console.error('Failed to save attendance edit:', err);
+      this.toast('Save failed — try again');
+    }
+  },
+
+  async deleteAttendanceRecord() {
+    if (!this.attendanceEdit) return;
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+
+    const edit = this.attendanceEdit;
+    const date = new Date(edit.date + 'T12:00:00');
+    const dateStr = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+    if (!confirm(`Delete the entire check-in record for ${dateStr}?\n\nThis removes ${edit.checkedIn.size} check-ins permanently. This cannot be undone.`)) return;
+
+    try {
+      await db.deleteAttendance(edit.date);
+
+      // Remove from local cache
+      this.data.attendance = this.data.attendance.filter(a => a.date !== edit.date);
+
+      // If deleting today's record, clear kiosk checkinState
+      const today = new Date().toISOString().split('T')[0];
+      if (edit.date === today) {
+        this.data.checkinState = {};
+      }
+
+      this.attendanceEdit = null;
+      this.closeModal('attendanceModal');
+      this.renderAll();
+      this.toast('Record deleted');
+    } catch (err) {
+      console.error('Failed to delete attendance:', err);
+      this.toast('Delete failed — try again');
+    }
   },
 
   // ---- PAST CHECK-IN ----
@@ -1858,6 +2005,7 @@ const app = {
   // ---- MODALS ----
   closeModal(id) {
     document.getElementById(id).classList.remove('show');
+    if (id === 'attendanceModal') this.attendanceEdit = null;
   },
 
   // ---- TOAST ----
