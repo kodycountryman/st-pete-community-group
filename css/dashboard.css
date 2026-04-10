@@ -1936,3 +1936,263 @@ h1, h2, h3, .page-title, .metric-number {
     font-size: 16px; /* Prevents iOS zoom on focus */
   }
 }
+
+/* ============================================
+   GAME PLAN PAGE
+   ============================================ */
+
+/* Week Structures */
+.gp-structures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+.gp-struct-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  transition: transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.gp-struct-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+.gp-struct-card.community::before { background: var(--teal); }
+.gp-struct-card.growth::before { background: var(--gold); }
+.gp-struct-card.groups::before { background: var(--pink); }
+.gp-struct-card.invite::before { background: #A855F7; }
+.gp-struct-card.serve::before { background: #48BB78; }
+.gp-struct-week {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.gp-struct-card.community .gp-struct-week { color: var(--teal-dark); }
+.gp-struct-card.growth .gp-struct-week { color: #92681A; }
+.gp-struct-card.groups .gp-struct-week { color: var(--pink); }
+.gp-struct-card.invite .gp-struct-week { color: #7C3AED; }
+.gp-struct-card.serve .gp-struct-week { color: #2F855A; }
+.gp-struct-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--slate);
+  margin-bottom: 10px;
+}
+.gp-struct-time {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 5px 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.gp-struct-time-label {
+  font-weight: 700;
+  color: var(--gray-500);
+  min-width: 62px;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+.gp-struct-time-desc { color: var(--slate); }
+.gp-struct-goal {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.gp-struct-card.community .gp-struct-goal { background: rgba(42,171,179,0.08); color: var(--teal-dark); }
+.gp-struct-card.growth .gp-struct-goal { background: rgba(232,184,75,0.1); color: #92681A; }
+.gp-struct-card.groups .gp-struct-goal { background: rgba(232,140,160,0.08); color: #B44D6A; }
+.gp-struct-card.invite .gp-struct-goal { background: rgba(168,85,247,0.08); color: #7C3AED; }
+.gp-struct-card.serve .gp-struct-goal { background: rgba(72,187,120,0.08); color: #2F855A; }
+
+.gp-struct-details {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gp-struct-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.gp-struct-detail-label {
+  flex-shrink: 0;
+  min-width: 62px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 0.66rem;
+  color: var(--gray-500);
+  padding-top: 2px;
+}
+.gp-struct-detail-value { color: var(--slate); flex: 1; }
+.gp-struct-card.community .gp-struct-detail-label { color: var(--teal-dark); }
+.gp-struct-card.growth .gp-struct-detail-label { color: #92681A; }
+.gp-struct-card.groups .gp-struct-detail-label { color: #B44D6A; }
+.gp-struct-card.invite .gp-struct-detail-label { color: #7C3AED; }
+.gp-struct-card.serve .gp-struct-detail-label { color: #2F855A; }
+
+/* Edit textarea */
+.gp-edit-area {
+  width: 100%;
+  min-height: 300px;
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-family: 'Karla', -apple-system, sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--slate);
+  resize: vertical;
+}
+.gp-edit-area:focus { outline: none; border-color: var(--teal); }
+
+/* Calendar Months */
+.gp-month {
+  margin-bottom: 24px;
+}
+.gp-month-card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.gp-month-header {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.gp-month-header:hover { background: var(--gray-100); }
+.gp-month-name {
+  font-family: 'Rubik', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--slate);
+}
+.gp-month-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+}
+.gp-month-chevron {
+  color: var(--gray-300);
+  transition: transform 0.2s;
+  font-size: 0.8rem;
+}
+.gp-month.open .gp-month-chevron { transform: rotate(90deg); }
+.gp-month-body {
+  display: none;
+  padding: 8px 16px 16px;
+}
+.gp-month.open .gp-month-body { display: block; }
+.gp-month-edit-wrap {
+  display: none;
+  padding: 8px 16px 16px;
+}
+.gp-month.editing .gp-month-edit-wrap { display: block; }
+.gp-month.editing .gp-month-body { display: none; }
+
+/* Week Rows */
+.gp-week-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--gray-100);
+  border-radius: 8px;
+  transition: background 0.1s;
+}
+.gp-week-row:last-child { border-bottom: none; }
+.gp-week-row:hover { background: var(--gray-100); }
+.gp-week-date {
+  min-width: 70px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--slate);
+  padding-top: 2px;
+}
+.gp-week-type-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 80px;
+  text-align: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.gp-week-type-badge.community { background: rgba(42,171,179,0.1); color: var(--teal-dark); }
+.gp-week-type-badge.growth { background: rgba(232,184,75,0.12); color: #92681A; }
+.gp-week-type-badge.groups { background: rgba(232,140,160,0.1); color: #B44D6A; }
+.gp-week-type-badge.invite { background: rgba(168,85,247,0.1); color: #7C3AED; }
+.gp-week-type-badge.serve { background: rgba(72,187,120,0.1); color: #2F855A; }
+.gp-week-desc {
+  flex: 1;
+  font-size: 0.88rem;
+  color: var(--slate);
+  line-height: 1.4;
+}
+.gp-week-desc strong { font-weight: 700; }
+.gp-week-row.past { opacity: 0.4; }
+.gp-week-row.thisweek {
+  background: rgba(42,171,179,0.06);
+  border: 1px solid rgba(42,171,179,0.15);
+  border-radius: 10px;
+}
+.gp-week-row.thisweek .gp-week-date { color: var(--teal-dark); }
+
+.gp-month-edit-area {
+  width: 100%;
+  min-height: 180px;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Karla', -apple-system, sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--slate);
+  resize: vertical;
+}
+.gp-month-edit-area:focus { outline: none; border-color: var(--teal); }
+.gp-month-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+.gp-month-edit-actions button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+}
+.gp-edit-save { background: var(--teal); color: white; }
+.gp-edit-cancel { background: var(--gray-100); color: var(--gray-600); }

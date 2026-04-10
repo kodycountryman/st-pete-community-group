@@ -151,7 +151,8 @@ const app = {
       weekly: 'Weekly Prep',
       teams: 'Teams',
       groups: 'Microgroups',
-      timeline: 'Launch Timeline'
+      timeline: 'Launch Timeline',
+      gameplan: 'Game Plan'
     };
     document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
 
@@ -203,6 +204,7 @@ const app = {
     this.renderAttendanceHistory();
     this.renderPriorityGoals();
     this.renderAttendanceReport();
+    this.renderGamePlan();
   },
 
   // ---- METRICS ----
@@ -1870,6 +1872,410 @@ const app = {
   capitalize(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+
+  escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  },
+
+  // ==================== GAME PLAN ====================
+  getGamePlanDefault() {
+    return {
+      structures: [
+        {
+          week: 'WEEK 1', type: 'community', name: 'COMMUNITY NIGHT',
+          times: [
+            { label: '6:30', desc: 'Arrival + light food' },
+            { label: '6:45', desc: 'Welcome + icebreaker' },
+            { label: '7:00', desc: 'Bible study (core teaching)' },
+            { label: '7:45', desc: 'Prayer + hangout' }
+          ],
+          goal: 'Anchors the 50-60s. Strong teaching, warm room, no pressure.',
+          details: {
+            music: 'Soft worship / hymns — comfort for the 50-60s',
+            energy: 'Reflective, thoughtful pace. Kody sets the tone in the first 5 minutes.',
+            conversation: 'Family updates, health, work transitions — lean into the older crowd\'s life',
+            seating: 'Mixed ages intentionally. Put connectors at each table. Rotate weekly.'
+          }
+        },
+        {
+          week: 'WEEK 2', type: 'growth', name: 'GROWTH NIGHT',
+          times: [
+            { label: '6:30', desc: 'Arrival + food' },
+            { label: '6:45', desc: 'Opening win / celebration' },
+            { label: '7:00', desc: 'Problem-solve together (campus topic)' },
+            { label: '7:45', desc: 'Commit to next steps' }
+          ],
+          goal: 'Gives the 30s ownership. We build the campus together.',
+          details: {
+            music: 'Upbeat contemporary — 30s energy',
+            energy: 'Solution-focused, action-oriented. Kody opens with the problem to solve.',
+            conversation: 'Career moves, weekend plans, life goals — 30s interests lead',
+            seating: 'Mix ages, but weight toward the 30s voice carrying the room. Rotate weekly.'
+          }
+        },
+        {
+          week: 'WEEK 3', type: 'groups', name: 'GROUPS NIGHT',
+          times: [
+            { label: '6:30', desc: 'Arrival + food' },
+            { label: '6:45', desc: 'Quick group welcome' },
+            { label: '7:00', desc: 'Split by life stage / interest' },
+            { label: '7:50', desc: 'Regather + prayer' }
+          ],
+          goal: 'Practice the microgroup format. Build future group leaders.',
+          details: {
+            music: 'Acoustic / coffeehouse vibe — low volume, conversational',
+            energy: 'Intimate, conversational. The room should feel like a living room.',
+            conversation: 'Inside each group — "Best thing that happened this week?" opens everyone up',
+            seating: 'Split intentionally by life stage or interest. This is where future microgroups form.'
+          }
+        },
+        {
+          week: 'WEEK 4', type: 'invite', name: 'INVITE / FUN NIGHT',
+          times: [
+            { label: '6:30', desc: 'Arrival + food' },
+            { label: '6:45', desc: 'Activity / game / theme' },
+            { label: '7:30', desc: 'Short gospel moment' },
+            { label: '7:45', desc: 'Hangout' }
+          ],
+          goal: 'Low-pressure door. Everyone brings one person. Grow by invitation.',
+          details: {
+            music: 'Popular / secular music guests will recognize — meets them where they are',
+            energy: 'High energy, celebratory. Kody keeps it fun and moving.',
+            conversation: '"Best thing that happened this week?" — universal opener anyone can answer',
+            seating: 'Mix ages heavily. Connectors host every table. Never seat guests alone.'
+          }
+        },
+        {
+          week: '5TH WEEK', type: 'serve', name: 'SERVE PROJECT',
+          times: [
+            { label: 'Varies', desc: 'Off-site community service' },
+            { label: '', desc: 'Partner with a local org when possible' },
+            { label: '', desc: 'Photos + story for social after' }
+          ],
+          goal: 'Be known in St. Pete. Love the city before we launch to it.',
+          details: {
+            music: 'None or upbeat in transit — focus is on the work, not the stage',
+            energy: 'Servant-hearted, hands-on. Kody serves alongside, not out front.',
+            conversation: 'Stories from the day — what did you see, who did you meet?',
+            seating: 'N/A — work side by side. Pair new people with veterans.'
+          }
+        }
+      ],
+      months: [
+        { id: 'apr2026', name: 'April 2026', weeks: [
+          { date: 'Apr 2', type: 'community', desc: '**Community Night** — Kick off the new rhythm. Set the vibe.' },
+          { date: 'Apr 9', type: 'growth', desc: '**Growth Night** — What does a healthy St. Pete campus look like?' },
+          { date: 'Apr 16', type: 'groups', desc: '**Groups Night** — Split by life stage. Test future microgroup chemistry.' },
+          { date: 'Apr 23', type: 'invite', desc: '**GAME NIGHT** — Board games + pizza. Everyone brings one person.' },
+          { date: 'Apr 30', type: 'serve', desc: '**Serve Project** — Neighborhood outreach day.' }
+        ]},
+        { id: 'may2026', name: 'May 2026', weeks: [
+          { date: 'May 7', type: 'community', desc: '**Community Night** — Open the new teaching series.' },
+          { date: 'May 14', type: 'growth', desc: '**Growth Night** — Who are the 10 leaders we need by August?' },
+          { date: 'May 21', type: 'groups', desc: '**Groups Night** — Practice microgroup format. Demographic splits.' },
+          { date: 'May 28', type: 'invite', desc: '**TRIVIA NIGHT** — Bible + pop culture trivia. Friend-bring competition.' }
+        ]},
+        { id: 'jun2026', name: 'June 2026', weeks: [
+          { date: 'Jun 4', type: 'community', desc: '**Community Night** — Deeper in the series.' },
+          { date: 'Jun 11', type: 'growth', desc: '**Growth Night** — Kids ministry plan. What do we need by launch?' },
+          { date: 'Jun 18', type: 'groups', desc: '**Groups Night** — Pilot microgroups begin meeting off-Thursdays.' },
+          { date: 'Jun 25', type: 'invite', desc: '**MOVIE NIGHT** — Outdoor movie. Invite 2+ people each.' }
+        ]},
+        { id: 'jul2026', name: 'July 2026', weeks: [
+          { date: 'Jul 2', type: 'community', desc: '**Community Night** — Mid-summer momentum check.' },
+          { date: 'Jul 9', type: 'growth', desc: '**Growth Night** — Volunteer team structure: greeters, kids, setup, worship.' },
+          { date: 'Jul 16', type: 'groups', desc: '**Groups Night** — Groups report back. Refine model.' },
+          { date: 'Jul 23', type: 'invite', desc: '**PIZZA & VISION NIGHT** — Cast vision for launch. Bring anyone curious.' },
+          { date: 'Jul 30', type: 'serve', desc: '**Serve Project** — Big serve day with a local partner org.' }
+        ]},
+        { id: 'aug2026', name: 'August 2026', weeks: [
+          { date: 'Aug 6', type: 'community', desc: '**Community Night** — Launch readiness teaching begins.' },
+          { date: 'Aug 13', type: 'growth', desc: '**Growth Night** — Venue walkthrough + production plan.' },
+          { date: 'Aug 20', type: 'groups', desc: '**Groups Night** — Covenant conversation with core team.' },
+          { date: 'Aug 27', type: 'invite', desc: '**DESSERT & DREAMS NIGHT** — Share the St. Pete dream. Invite everyone.' }
+        ]},
+        { id: 'sep2026', name: 'September 2026', weeks: [
+          { date: 'Sep 3', type: 'community', desc: '**Community Night** — Final push toward preview services.' },
+          { date: 'Sep 10', type: 'growth', desc: '**Growth Night** — Volunteer team assignments finalized.' },
+          { date: 'Sep 17', type: 'groups', desc: '**Groups Night** — Microgroups officially launched.' },
+          { date: 'Sep 24', type: 'invite', desc: '**INVITE NIGHT** — Last big invite before preview services begin.' }
+        ]}
+      ]
+    };
+  },
+
+  loadGamePlan() {
+    const saved = localStorage.getItem('stpete_gameplan');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.structures && parsed.months) return parsed;
+      } catch(e) { /* fall through */ }
+    }
+    return this.getGamePlanDefault();
+  },
+
+  persistGamePlan() {
+    localStorage.setItem('stpete_gameplan', JSON.stringify(this.data.gameplan));
+  },
+
+  renderGamePlan() {
+    const container = document.getElementById('gameplanMonths');
+    if (!container) return;
+    if (!this.data.gameplan) this.data.gameplan = this.loadGamePlan();
+    this.renderGamePlanStructures();
+    this.renderGamePlanMonths();
+  },
+
+  renderGamePlanStructures() {
+    const view = document.getElementById('weekStructuresView');
+    if (!view) return;
+    const canEdit = this.hasMinRole('editor');
+    const editBtn = document.getElementById('editStructuresBtn');
+    if (editBtn) editBtn.style.display = canEdit ? '' : 'none';
+
+    const detailFields = [
+      { key: 'music', label: 'Music' },
+      { key: 'energy', label: 'Energy' },
+      { key: 'conversation', label: 'Convo' },
+      { key: 'seating', label: 'Seating' }
+    ];
+
+    view.innerHTML = this.data.gameplan.structures.map(s => {
+      const d = s.details || {};
+      const hasDetails = detailFields.some(f => (d[f.key] || '').trim());
+      return `
+      <div class="gp-struct-card ${this.escapeHtml(s.type)}">
+        <div class="gp-struct-week">${this.escapeHtml(s.week)}</div>
+        <div class="gp-struct-name">${this.escapeHtml(s.name)}</div>
+        ${(s.times || []).map(t => `
+          <div class="gp-struct-time">
+            <span class="gp-struct-time-label">${this.escapeHtml(t.label || '')}</span>
+            <span class="gp-struct-time-desc">${this.escapeHtml(t.desc || '')}</span>
+          </div>
+        `).join('')}
+        ${s.goal ? `<div class="gp-struct-goal">${this.escapeHtml(s.goal)}</div>` : ''}
+        ${hasDetails ? `
+          <div class="gp-struct-details">
+            ${detailFields.map(f => d[f.key] ? `
+              <div class="gp-struct-detail">
+                <div class="gp-struct-detail-label">${f.label}</div>
+                <div class="gp-struct-detail-value">${this.escapeHtml(d[f.key])}</div>
+              </div>
+            ` : '').join('')}
+          </div>
+        ` : ''}
+      </div>
+    `; }).join('');
+
+    const textarea = document.getElementById('weekStructuresEdit');
+    if (textarea && document.activeElement !== textarea) {
+      textarea.value = this.serializeStructures(this.data.gameplan.structures);
+    }
+  },
+
+  serializeStructures(structures) {
+    return structures.map(s => {
+      const head = `${s.week} :: ${s.type} :: ${s.name}`;
+      const times = (s.times || []).map(t => `${t.label || ''} | ${t.desc || ''}`).join('\n');
+      const goal = s.goal ? `GOAL: ${s.goal}` : '';
+      const d = s.details || {};
+      const detailLines = [];
+      if (d.music) detailLines.push(`MUSIC: ${d.music}`);
+      if (d.energy) detailLines.push(`ENERGY: ${d.energy}`);
+      if (d.conversation) detailLines.push(`CONVERSATION: ${d.conversation}`);
+      if (d.seating) detailLines.push(`SEATING: ${d.seating}`);
+      return [head, times, goal, detailLines.join('\n')].filter(Boolean).join('\n');
+    }).join('\n\n');
+  },
+
+  parseStructuresText(text) {
+    const blocks = text.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+    return blocks.map(block => {
+      const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+      if (!lines.length) return null;
+      const head = lines[0].split('::').map(s => s.trim());
+      const week = head[0] || '';
+      const type = (head[1] || 'community').toLowerCase();
+      const name = head[2] || '';
+      const times = [];
+      let goal = '';
+      const details = { music: '', energy: '', conversation: '', seating: '' };
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const m = line.match(/^(GOAL|MUSIC|ENERGY|CONVERSATION|CONVO|SEATING)\s*:\s*(.*)$/i);
+        if (m) {
+          const key = m[1].toUpperCase();
+          const val = m[2].trim();
+          if (key === 'GOAL') goal = val;
+          else if (key === 'MUSIC') details.music = val;
+          else if (key === 'ENERGY') details.energy = val;
+          else if (key === 'CONVERSATION' || key === 'CONVO') details.conversation = val;
+          else if (key === 'SEATING') details.seating = val;
+        } else {
+          const parts = line.split('|').map(p => p.trim());
+          times.push({ label: parts[0] || '', desc: parts.slice(1).join(' | ') || parts[0] || '' });
+        }
+      }
+      return { week, type, name, times, goal, details };
+    }).filter(Boolean);
+  },
+
+  toggleEditStructures() {
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+    const view = document.getElementById('weekStructuresView');
+    const edit = document.getElementById('weekStructuresEdit');
+    const btn = document.getElementById('editStructuresBtn');
+    if (!view || !edit || !btn) return;
+    if (edit.style.display === 'none') {
+      edit.value = this.serializeStructures(this.data.gameplan.structures);
+      edit.style.display = '';
+      view.style.display = 'none';
+      btn.textContent = 'Done';
+    } else {
+      edit.style.display = 'none';
+      view.style.display = '';
+      btn.textContent = 'Edit';
+      this.renderGamePlanStructures();
+    }
+  },
+
+  saveGamePlanField(field) {
+    if (!this.hasMinRole('editor')) return;
+    if (field === 'structures') {
+      const text = document.getElementById('weekStructuresEdit').value;
+      const parsed = this.parseStructuresText(text);
+      if (parsed.length) {
+        this.data.gameplan.structures = parsed;
+        this.persistGamePlan();
+      }
+    }
+  },
+
+  renderGamePlanMonths() {
+    const container = document.getElementById('gameplanMonths');
+    if (!container) return;
+    const canEdit = this.hasMinRole('editor');
+    const now = new Date();
+    const currentMonthKey = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    const thisWeekKey = this.getCurrentThursdayKey(now);
+
+    container.innerHTML = this.data.gameplan.months.map(m => {
+      const isCurrent = m.name === currentMonthKey;
+      const openClass = isCurrent ? ' open' : '';
+      return `
+      <div class="gp-month${openClass}" id="gpmonth-${this.escapeHtml(m.id)}">
+        <div class="gp-month-card">
+          <div class="gp-month-header" onclick="app.toggleGamePlanMonth('${m.id}')">
+            <div>
+              <div class="gp-month-name">${this.escapeHtml(m.name)}</div>
+              <div class="gp-month-count">${m.weeks.length} Thursday${m.weeks.length === 1 ? '' : 's'}</div>
+            </div>
+            <span class="gp-month-chevron">▶</span>
+          </div>
+          <div class="gp-month-body">
+            ${m.weeks.map(w => {
+              const isThisWeek = w.date === thisWeekKey;
+              const isPast = !isThisWeek && this.isGamePlanDatePast(w.date, m.name);
+              const cls = isThisWeek ? 'thisweek' : (isPast ? 'past' : '');
+              return `
+                <div class="gp-week-row ${cls}">
+                  <div class="gp-week-date">${this.escapeHtml(w.date)}</div>
+                  <span class="gp-week-type-badge ${this.escapeHtml(w.type)}">${this.escapeHtml(w.type)}</span>
+                  <div class="gp-week-desc">${this.renderInlineMd(w.desc || '')}</div>
+                </div>
+              `;
+            }).join('')}
+            ${canEdit ? `<div style="text-align:right;margin-top:12px;"><button class="btn-ghost" onclick="app.toggleEditGamePlanMonth('${m.id}')" style="font-size:0.75rem;">Edit this month</button></div>` : ''}
+          </div>
+          <div class="gp-month-edit-wrap">
+            <div style="font-size:0.72rem;color:var(--gray-500);margin-bottom:6px;">Format: <code>Date | type | description</code> — one per line. Types: community, growth, groups, invite, serve.</div>
+            <textarea class="gp-month-edit-area" id="gpedit-${this.escapeHtml(m.id)}"></textarea>
+            <div class="gp-month-edit-actions">
+              <button class="gp-edit-cancel" onclick="app.cancelEditGamePlanMonth('${m.id}')">Cancel</button>
+              <button class="gp-edit-save" onclick="app.saveEditGamePlanMonth('${m.id}')">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `; }).join('');
+  },
+
+  getCurrentThursdayKey(now) {
+    const d = new Date(now);
+    const day = d.getDay();
+    let diff = 4 - day;
+    if (diff < 0) diff += 7;
+    d.setDate(d.getDate() + diff);
+    return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+  },
+
+  isGamePlanDatePast(dateStr, monthYearStr) {
+    try {
+      const parts = monthYearStr.split(' ');
+      const year = parseInt(parts[parts.length - 1], 10);
+      const d = new Date(`${dateStr}, ${year}`);
+      if (isNaN(d.getTime())) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return d < today;
+    } catch(e) { return false; }
+  },
+
+  toggleGamePlanMonth(id) {
+    const el = document.getElementById('gpmonth-' + id);
+    if (el) el.classList.toggle('open');
+  },
+
+  toggleEditGamePlanMonth(id) {
+    if (!this.hasMinRole('editor')) { this.toast('Editor access required'); return; }
+    const el = document.getElementById('gpmonth-' + id);
+    const month = this.data.gameplan.months.find(m => m.id === id);
+    if (!el || !month) return;
+    const textarea = document.getElementById('gpedit-' + id);
+    textarea.value = month.weeks.map(w => `${w.date} | ${w.type} | ${w.desc}`).join('\n');
+    el.classList.add('editing');
+  },
+
+  cancelEditGamePlanMonth(id) {
+    const el = document.getElementById('gpmonth-' + id);
+    if (el) el.classList.remove('editing');
+  },
+
+  saveEditGamePlanMonth(id) {
+    if (!this.hasMinRole('editor')) return;
+    const textarea = document.getElementById('gpedit-' + id);
+    if (!textarea) return;
+    const lines = textarea.value.split('\n').map(l => l.trim()).filter(Boolean);
+    const weeks = lines.map(line => {
+      const parts = line.split('|').map(p => p.trim());
+      return {
+        date: parts[0] || '',
+        type: (parts[1] || 'community').toLowerCase(),
+        desc: parts.slice(2).join(' | ') || ''
+      };
+    });
+    const month = this.data.gameplan.months.find(m => m.id === id);
+    if (month) {
+      month.weeks = weeks;
+      this.persistGamePlan();
+      this.renderGamePlanMonths();
+      this.toast('Month saved');
+    }
+  },
+
+  renderInlineMd(text) {
+    if (!text) return '';
+    return this.escapeHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
   }
 };
 
