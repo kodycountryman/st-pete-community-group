@@ -30,12 +30,6 @@ const app = {
   },
 
   applyRoleRestrictions() {
-    // Hide Launch Timeline nav for editor/leader
-    if (!this.hasMinRole('admin')) {
-      document.querySelectorAll('.nav-item[data-page="timeline"]').forEach(el => {
-        el.style.display = 'none';
-      });
-    }
   },
 
   // ---- INIT ----
@@ -265,12 +259,6 @@ const app = {
   },
 
   navigate(page) {
-    // Block restricted pages based on role
-    if (page === 'timeline' && !this.hasMinRole('admin')) {
-      this.toast('Access restricted — contact your admin');
-      return;
-    }
-
     // Update nav
     document.querySelectorAll('.nav-item[data-page]').forEach(el => el.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
@@ -288,12 +276,14 @@ const app = {
       people: 'People Tracker',
       pipeline: 'Leadership Pipeline',
       followup: 'Follow-Up',
+      retention: 'Retention & Growth',
       weekly: 'Weekly Prep',
       teams: 'Teams',
       groups: 'Microgroups',
       timeline: 'Launch Timeline',
       gameplan: 'Game Plan',
-      polls: 'Polls'
+      polls: 'Polls',
+      planner: 'Season Planner'
     };
     document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
 
@@ -302,6 +292,15 @@ const app = {
 
     // Re-render page-specific content
     this.renderAll();
+
+    // Retention chart can only measure its canvas once the page is visible
+    if (page === 'retention') {
+      requestAnimationFrame(() => {
+        this._drawAttendanceChart(this._retentionTimeline());
+        this.renderGrowth();
+      });
+    }
+    if (page === 'planner') requestAnimationFrame(() => this.renderPlanner());
   },
 
   setupMobileMenu() {
@@ -347,6 +346,7 @@ const app = {
     this.renderAttendanceReport();
     this.renderGamePlan();
     this.renderPolls();
+    this.renderRetention();
   },
 
   // ---- METRICS ----
@@ -717,15 +717,33 @@ const app = {
       questions = questionsTA.value.trim().split('\n').map(q => q.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
     }
 
+    // Icebreaker now comes from an editable textarea
+    const icebreakerTA = document.getElementById('weekIcebreaker');
+    const icebreaker = icebreakerTA
+      ? icebreakerTA.value
+      : (this.data.weeklyPrep?.icebreaker || '');
+
+    const nightType = document.getElementById('weekNightType')?.value
+      || this.data.weeklyPrep?.night_type
+      || 'community';
+
+    const flow = Array.isArray(this.data.weeklyPrep?.flow) ? this.data.weeklyPrep.flow : [];
+    const cardOrder = Array.isArray(this.data.weeklyPrep?.card_order)
+      ? this.data.weeklyPrep.card_order
+      : ['icebreaker', 'questions', 'schedule', 'cta'];
+
     const prep = {
       id: this.data.weeklyPrep?.id || undefined,
       topic: document.getElementById('weekTopic')?.value || '',
       scripture: document.getElementById('weekScripture')?.value || '',
       takeaway: document.getElementById('weekTakeaway')?.value || '',
       cta: document.getElementById('weekCTA')?.value || '',
-      icebreaker: this.data.weeklyPrep?.icebreaker || '',
+      icebreaker,
       questions,
       message_notes: document.getElementById('weekMessageNotes')?.value || '',
+      night_type: nightType,
+      flow,
+      card_order: cardOrder,
       is_published: this.data.weeklyPrep?.is_published || false
     };
 
@@ -736,6 +754,9 @@ const app = {
 
     const topicEl = document.getElementById('weeklyTopic');
     if (topicEl && prep.topic) topicEl.textContent = prep.topic;
+
+    const labelEl = document.getElementById('currentWeekLabel');
+    if (labelEl) labelEl.textContent = prep.topic || "Set this week's topic below";
   },
 
   renderWeeklyPrep() {
@@ -757,16 +778,46 @@ const app = {
       qTA.value = wp.questions.map((q, i) => `${i+1}. ${q}`).join('\n');
     }
 
-    // Restore saved icebreaker
-    const ibOutput = document.getElementById('icebreakerOutput');
-    if (ibOutput && wp.icebreaker && ibOutput.querySelector('.placeholder-text')) {
-      ibOutput.innerHTML = `<p style="font-size:1rem; font-weight:500; color:var(--slate);">"${wp.icebreaker}"</p>`;
+    // Restore saved icebreaker into editable textarea
+    const ibTA = document.getElementById('weekIcebreaker');
+    if (ibTA && !ibTA.dataset.userEdited) {
+      ibTA.value = wp.icebreaker || '';
     }
 
     const topicEl = document.getElementById('weeklyTopic');
     if (topicEl) {
       topicEl.textContent = wp.topic || 'Set this week\'s topic in Weekly Prep';
     }
+
+    const labelEl = document.getElementById('currentWeekLabel');
+    if (labelEl) labelEl.textContent = wp.topic || "Set this week's topic below";
+
+    // Populate night type dropdown from game plan structures
+    const ntSel = document.getElementById('weekNightType');
+    if (ntSel) {
+      const structures = this.data.gameplan?.structures || [];
+      ntSel.innerHTML = structures
+        .map(s => `<option value="${s.type}">${s.name || s.type}</option>`)
+        .join('') || '<option value="community">Community Night</option>';
+      ntSel.value = wp.night_type || structures[0]?.type || 'community';
+    }
+
+    // Default the flow from the structure template if none saved
+    if (!wp.flow || wp.flow.length === 0) {
+      const struct = (this.data.gameplan?.structures || [])
+        .find(s => s.type === (wp.night_type || 'community'));
+      if (struct && Array.isArray(struct.times)) {
+        // Copy the template into the working prep object (not saved until user edits)
+        this.data.weeklyPrep = this.data.weeklyPrep || {};
+        this.data.weeklyPrep.flow = struct.times.map(t => ({
+          time: t.label || '',
+          desc: t.desc || ''
+        }));
+      }
+    }
+
+    this.renderWeeklyFlowEditor();
+    this.renderCardOrder();
 
     // Update publish button state
     const pubBtn = document.getElementById('publishBtn');
@@ -781,10 +832,183 @@ const app = {
     }
   },
 
+  // ---- WEEKLY FLOW EDITOR ----
+  renderWeeklyFlowEditor() {
+    const container = document.getElementById('weeklyFlowEditor');
+    if (!container) return;
+    const flow = this.data.weeklyPrep?.flow || [];
+    if (flow.length === 0) {
+      container.innerHTML = '<p class="empty-state" style="padding:12px 0;">No flow rows yet. Pick a night type above, or click + Add Row.</p>';
+      return;
+    }
+    container.innerHTML = flow.map((row, idx) => `
+      <div style="display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;margin-bottom:8px;">
+        <input type="text" value="${this._escAttr(row.time || '')}" placeholder="Time"
+          oninput="app.updateWeeklyFlowRow(${idx}, 'time', this.value)"
+          style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.88rem;font-weight:600;color:var(--slate);">
+        <input type="text" value="${this._escAttr(row.desc || '')}" placeholder="What's happening at this time..."
+          oninput="app.updateWeeklyFlowRow(${idx}, 'desc', this.value)"
+          style="padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.88rem;color:var(--slate);">
+        <button class="btn-ghost" onclick="app.removeWeeklyFlowRow(${idx})" aria-label="Remove row"
+          style="padding:8px 12px;font-size:0.8rem;color:var(--pink);">×</button>
+      </div>
+    `).join('');
+  },
+
+  _escAttr(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  },
+
+  changeWeeklyNightType(type) {
+    this.data.weeklyPrep = this.data.weeklyPrep || {};
+    this.data.weeklyPrep.night_type = type;
+    const struct = (this.data.gameplan?.structures || []).find(s => s.type === type);
+    if (struct && Array.isArray(struct.times)) {
+      this.data.weeklyPrep.flow = struct.times.map(t => ({
+        time: t.label || '',
+        desc: t.desc || ''
+      }));
+    }
+    this.renderWeeklyFlowEditor();
+    this._doSaveWeeklyPrep();
+  },
+
+  addWeeklyFlowRow() {
+    this.data.weeklyPrep = this.data.weeklyPrep || {};
+    this.data.weeklyPrep.flow = this.data.weeklyPrep.flow || [];
+    this.data.weeklyPrep.flow.push({ time: '', desc: '' });
+    this.renderWeeklyFlowEditor();
+    this.saveWeeklyPrep();
+  },
+
+  removeWeeklyFlowRow(idx) {
+    if (!this.data.weeklyPrep?.flow) return;
+    this.data.weeklyPrep.flow.splice(idx, 1);
+    this.renderWeeklyFlowEditor();
+    this.saveWeeklyPrep();
+  },
+
+  updateWeeklyFlowRow(idx, field, value) {
+    if (!this.data.weeklyPrep?.flow?.[idx]) return;
+    this.data.weeklyPrep.flow[idx][field] = value;
+    this.saveWeeklyPrep();
+  },
+
+  resetWeeklyFlowToDefault() {
+    const type = document.getElementById('weekNightType')?.value
+      || this.data.weeklyPrep?.night_type
+      || 'community';
+    this.changeWeeklyNightType(type);
+    this.toast('Flow reset to default template');
+  },
+
+  // ---- CARD ORDER ----
+  _CARD_DEFS: {
+    icebreaker: { label: 'Icebreaker', sub: 'Connection question shown at the top' },
+    questions:  { label: 'Discussion Questions', sub: 'Table questions for small group time' },
+    schedule:   { label: "Tonight's Schedule", sub: 'Night flow timeline' },
+    cta:        { label: 'Ownership Moment', sub: 'Call-to-action / next step card' },
+  },
+
+  _getCardOrder() {
+    const saved = this.data.weeklyPrep?.card_order;
+    const defaults = ['icebreaker', 'questions', 'schedule', 'cta'];
+    if (!Array.isArray(saved) || saved.length === 0) return [...defaults];
+    // Ensure all defaults are present (add missing at end), remove unknown
+    const known = new Set(Object.keys(this._CARD_DEFS));
+    const ordered = saved.filter(k => known.has(k));
+    defaults.forEach(k => { if (!ordered.includes(k)) ordered.push(k); });
+    return ordered;
+  },
+
+  renderCardOrder() {
+    const container = document.getElementById('cardOrderList');
+    if (!container) return;
+    const order = this._getCardOrder();
+
+    container.innerHTML = order.map((id, idx) => {
+      const def = this._CARD_DEFS[id] || { label: id, sub: '' };
+      const isFirst = idx === 0;
+      const isLast = idx === order.length - 1;
+      return `
+        <div class="card-order-row" draggable="true"
+             data-card-id="${id}"
+             ondragstart="app._cardDragStart(event,'${id}')"
+             ondragover="app._cardDragOver(event)"
+             ondragleave="app._cardDragLeave(event)"
+             ondrop="app._cardDrop(event,'${id}')">
+          <div class="card-order-drag">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/>
+              <circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/>
+              <circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="card-order-label">
+            <div>${this.escapeHtml(def.label)}</div>
+            <div class="card-order-sub">${this.escapeHtml(def.sub)}</div>
+          </div>
+          <div class="card-order-arrows">
+            <button class="card-order-arrow" onclick="app.moveCard('${id}',-1)" ${isFirst ? 'disabled' : ''} title="Move up">▲</button>
+            <button class="card-order-arrow" onclick="app.moveCard('${id}', 1)" ${isLast ? 'disabled' : ''} title="Move down">▼</button>
+          </div>
+        </div>`;
+    }).join('');
+  },
+
+  moveCard(id, dir) {
+    const order = this._getCardOrder();
+    const idx = order.indexOf(id);
+    if (idx === -1) return;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= order.length) return;
+    order.splice(idx, 1);
+    order.splice(newIdx, 0, id);
+    this.data.weeklyPrep = this.data.weeklyPrep || {};
+    this.data.weeklyPrep.card_order = order;
+    this.renderCardOrder();
+    this.saveWeeklyPrep();
+  },
+
+  // Drag-and-drop helpers
+  _cardDragStart(e, id) {
+    e.dataTransfer.setData('card-id', id);
+    e.currentTarget.classList.add('dragging');
+  },
+  _cardDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  },
+  _cardDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  },
+  _cardDrop(e, targetId) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const dragId = e.dataTransfer.getData('card-id');
+    if (!dragId || dragId === targetId) return;
+    const order = this._getCardOrder();
+    const fromIdx = order.indexOf(dragId);
+    const toIdx = order.indexOf(targetId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    order.splice(fromIdx, 1);
+    order.splice(toIdx, 0, dragId);
+    this.data.weeklyPrep = this.data.weeklyPrep || {};
+    this.data.weeklyPrep.card_order = order;
+    this.renderCardOrder();
+    this.saveWeeklyPrep();
+    // Clean up dragging class from any row
+    document.querySelectorAll('.card-order-row.dragging')
+      .forEach(el => el.classList.remove('dragging'));
+  },
+
   async generateIcebreaker() {
     const icebreaker = Generators.getIcebreaker();
-    const output = document.getElementById('icebreakerOutput');
-    output.innerHTML = `<p style="font-size:1rem; font-weight:500; color:var(--slate);">"${icebreaker}"</p>`;
+    const ta = document.getElementById('weekIcebreaker');
+    if (ta) {
+      ta.value = icebreaker;
+      ta.dataset.userEdited = '1';
+    }
     if (this.data.weeklyPrep) this.data.weeklyPrep.icebreaker = icebreaker;
     this._doSaveWeeklyPrep();
   },
@@ -869,48 +1093,73 @@ const app = {
   },
 
   // ---- PAST WEEKS ----
-  archiveWeek() {
-    const wp = this.data.weeklyPrep;
-    if (!wp.topic) return;
+  async startNewWeek() {
+    const wp = this.data.weeklyPrep || {};
+    if (!wp.topic && !wp.scripture && !wp.takeaway) {
+      this.toast('Nothing to archive yet — add a topic first');
+      return;
+    }
+    const label = wp.topic || 'this week';
+    if (!confirm(`Archive "${label}" to Past Weeks and start a fresh week? The current prep will be saved to the archive, and a blank week will be created.`)) return;
 
-    this.data.pastWeeks.unshift({
-      topic: wp.topic,
-      scripture: wp.scripture,
-      takeaway: wp.takeaway,
-      cta: wp.cta,
-      icebreaker: wp.icebreaker,
-      questions: wp.questions,
-      date: new Date().toISOString().split('T')[0]
-    });
+    // 1) Make sure every pending field edit is persisted to the current row.
+    await this._doSaveWeeklyPrep();
 
-    // Reset current
-    this.data.weeklyPrep = {
-      topic: '', scripture: '', takeaway: '', cta: '',
-      icebreaker: '', questions: [], date: ''
+    // 2) Insert a brand-new blank weekly_prep row. upsertWeeklyPrep auto-flips
+    //    every existing is_current=true row to is_current=false before inserting,
+    //    which is exactly what we want for archiving.
+    const fresh = {
+      // no id -> triggers the archive-and-insert path
+      topic: '',
+      scripture: '',
+      takeaway: '',
+      cta: '',
+      icebreaker: '',
+      questions: [],
+      message_notes: '',
+      night_type: wp.night_type || 'community',
+      flow: [],
+      is_published: false
     };
+    const created = await db.upsertWeeklyPrep(fresh);
+    this.data.weeklyPrep = (created && created[0]) ? created[0] : fresh;
 
-    this.saveData();
-    this.renderAll();
-    this.toast('Week archived');
+    // Clear any user-edited markers + input values for the blank week
+    const qTA = document.getElementById('questionsTextarea');
+    if (qTA) { qTA.value = ''; qTA.dataset.userEdited = ''; }
+    const ibTA = document.getElementById('weekIcebreaker');
+    if (ibTA) { ibTA.value = ''; ibTA.dataset.userEdited = ''; }
+
+    // 3) Reload past weeks from DB so the archived one appears in the archive card.
+    this.data.pastWeeks = (await db.getPastWeeks()) || [];
+    this.renderWeeklyPrep();
+    this.renderPastWeeks();
+    this.toast(`Archived "${label}" — fresh week ready`);
   },
 
   renderPastWeeks() {
     const container = document.getElementById('pastWeeks');
     if (!container) return;
 
-    if (this.data.pastWeeks.length === 0) {
-      container.innerHTML = '<p class="empty-state">Past week preps will appear here as you use Weekly Prep.</p>';
+    if (!this.data.pastWeeks || this.data.pastWeeks.length === 0) {
+      container.innerHTML = '<p class="empty-state">Past week preps will appear here after you click New Week.</p>';
       return;
     }
 
-    container.innerHTML = this.data.pastWeeks.map(w => `
-      <div class="past-week-item">
-        <div class="past-week-item-info">
-          <span class="past-week-item-topic">${w.topic || 'Untitled'}</span>
-          <span class="past-week-item-date">${w.date || w.created_at?.split('T')[0] || ''} · ${w.scripture || 'No scripture'}</span>
+    container.innerHTML = this.data.pastWeeks.map(w => {
+      const date = w.date || (w.created_at ? w.created_at.split('T')[0] : '');
+      const topic = w.topic || 'Untitled';
+      const scripture = w.scripture || 'No scripture';
+      const qCount = Array.isArray(w.questions) ? w.questions.length : 0;
+      return `
+        <div class="past-week-item">
+          <div class="past-week-item-info">
+            <span class="past-week-item-topic">${this._escAttr(topic)}</span>
+            <span class="past-week-item-date">${date} · ${this._escAttr(scripture)}${qCount ? ` · ${qCount} questions` : ''}</span>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   },
 
   // ---- TEAMS ----
@@ -2435,6 +2684,466 @@ const app = {
     }
   },
 
+  // ============================================
+  //                 RETENTION
+  // ============================================
+
+  // Compute the canonical list of Thursday attendance records, sorted oldest -> newest.
+  _retentionTimeline() {
+    return [...(this.data.attendance || [])]
+      .filter(a => a && a.date)
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+
+  // "Tonight" is the most recent Thursday record, OR today if we're mid-check-in.
+  // Fall back to the latest record if today isn't present.
+  _retentionTonightRecord() {
+    const today = new Date().toISOString().split('T')[0];
+    const timeline = this._retentionTimeline();
+    const todayRec = timeline.find(a => a.date === today);
+    return todayRec || timeline[timeline.length - 1] || null;
+  },
+
+  // Build a map of personId -> attended date strings (sorted asc)
+  _retentionPersonHistory() {
+    const map = new Map();
+    const timeline = this._retentionTimeline();
+    timeline.forEach(rec => {
+      (rec.checkedIn || []).forEach(pid => {
+        if (!map.has(pid)) map.set(pid, []);
+        map.get(pid).push(rec.date);
+      });
+    });
+    return map;
+  },
+
+  // ---- Missing Tonight ----
+  // People who came in 1 of the last 3 weeks (excluding tonight) but aren't here tonight yet.
+  // Priority scored by recency + frequency so the list is naturally ranked.
+  getMissingTonightList() {
+    const timeline = this._retentionTimeline();
+    if (timeline.length < 2) return [];
+
+    const tonight = this._retentionTonightRecord();
+    if (!tonight) return [];
+    const tonightIds = new Set(tonight.checkedIn || []);
+
+    // Look at the 3 Thursdays BEFORE tonight
+    const recent = timeline
+      .filter(r => r.date !== tonight.date)
+      .slice(-3);
+
+    const history = this._retentionPersonHistory();
+    const results = [];
+
+    this.data.people.forEach(p => {
+      if (tonightIds.has(p.id)) return; // Already here — not missing
+      if (['inactive', 'dropped'].includes(p.status)) return;
+
+      const attendedRecent = recent.filter(r => (r.checkedIn || []).includes(p.id));
+      if (attendedRecent.length === 0) return; // Haven't been around recently
+
+      const hist = history.get(p.id) || [];
+      const lastAttended = hist[hist.length - 1] || '';
+      // Priority: more recent weeks attended + higher count = higher score
+      const recencyBoost = attendedRecent[attendedRecent.length - 1] === recent[recent.length - 1]?.date ? 2 : 0;
+      const score = attendedRecent.length * 10 + recencyBoost;
+
+      results.push({
+        id: p.id,
+        name: `${p.firstName} ${p.lastName || ''}`.trim(),
+        firstName: p.firstName,
+        phone: p.phone || '',
+        attendedWeeks: attendedRecent.length,
+        lastAttended,
+        score,
+        urgent: attendedRecent.length >= 2 // Came 2+ of last 3 weeks = high value
+      });
+    });
+
+    return results.sort((a, b) => b.score - a.score);
+  },
+
+  // ---- Ghosted Guests ----
+  // Came 2+ weeks in a row, then missed the last 2+ Thursdays. They liked it — go get them.
+  getGhostedGuests() {
+    const timeline = this._retentionTimeline();
+    if (timeline.length < 4) return [];
+
+    const history = this._retentionPersonHistory();
+    const results = [];
+    const recent5 = timeline.slice(-5); // Window we analyze
+    const lastTwo = recent5.slice(-2).map(r => r.date);
+
+    this.data.people.forEach(p => {
+      if (['inactive', 'dropped'].includes(p.status)) return;
+      const hist = history.get(p.id) || [];
+      if (hist.length < 2) return;
+
+      // Must have missed BOTH of the last two Thursdays in the window
+      const missedLastTwo = lastTwo.every(d => !hist.includes(d));
+      if (!missedLastTwo) return;
+
+      // Must have at least one "run" of 2+ consecutive attended Thursdays somewhere in recent weeks
+      let maxRun = 0;
+      let run = 0;
+      recent5.forEach(rec => {
+        if (hist.includes(rec.date)) {
+          run++;
+          if (run > maxRun) maxRun = run;
+        } else {
+          run = 0;
+        }
+      });
+      if (maxRun < 2) return;
+
+      const lastAttended = hist[hist.length - 1] || '';
+      const daysGone = lastAttended
+        ? Math.max(0, Math.round((Date.now() - new Date(lastAttended).getTime()) / 86400000))
+        : 999;
+
+      results.push({
+        id: p.id,
+        name: `${p.firstName} ${p.lastName || ''}`.trim(),
+        firstName: p.firstName,
+        phone: p.phone || '',
+        streak: maxRun,
+        lastAttended,
+        daysGone
+      });
+    });
+
+    return results.sort((a, b) => b.streak - a.streak || a.daysGone - b.daysGone);
+  },
+
+  // ---- Render ----
+  renderRetention() {
+    const timeline = this._retentionTimeline();
+
+    // Summary metrics
+    const lastRec = timeline[timeline.length - 1];
+    const lastWeekEl = document.getElementById('retLastWeek');
+    const lastWeekDateEl = document.getElementById('retLastWeekDate');
+    if (lastWeekEl && lastWeekDateEl) {
+      if (lastRec) {
+        const count = (lastRec.checkedIn || []).length;
+        lastWeekEl.textContent = count;
+        lastWeekDateEl.textContent = this._formatRetentionDate(lastRec.date);
+      } else {
+        lastWeekEl.textContent = '—';
+        lastWeekDateEl.textContent = 'No data yet';
+      }
+    }
+
+    // 4-week average + trend vs previous 4
+    const last4 = timeline.slice(-4);
+    const prev4 = timeline.slice(-8, -4);
+    const avg = arr => arr.length ? Math.round(arr.reduce((sum, r) => sum + (r.checkedIn || []).length, 0) / arr.length) : 0;
+    const avg4 = avg(last4);
+    const prevAvg = avg(prev4);
+    const avgEl = document.getElementById('retAvg4');
+    const trendEl = document.getElementById('retAvgTrend');
+    if (avgEl) avgEl.textContent = last4.length ? avg4 : '—';
+    if (trendEl) {
+      if (prev4.length && last4.length) {
+        const diff = avg4 - prevAvg;
+        if (diff > 0) trendEl.innerHTML = `<span style="color:#1B7A80;font-weight:700;">▲ +${diff}</span> vs previous 4`;
+        else if (diff < 0) trendEl.innerHTML = `<span style="color:#c4486a;font-weight:700;">▼ ${diff}</span> vs previous 4`;
+        else trendEl.textContent = 'Flat vs previous 4';
+      } else {
+        trendEl.textContent = 'Need 8 weeks of data';
+      }
+    }
+
+    // Lists
+    const missing = this.getMissingTonightList();
+    const ghosted = this.getGhostedGuests();
+
+    const missingEl = document.getElementById('retMissingCount');
+    if (missingEl) missingEl.textContent = missing.length;
+    const ghostedEl = document.getElementById('retGhostedCount');
+    if (ghostedEl) ghostedEl.textContent = ghosted.length;
+
+    // Nav badge = urgent retention count (missing 2+ weeks + ghosted)
+    const urgent = missing.filter(m => m.urgent).length + ghosted.length;
+    const badge = document.getElementById('retentionBadge');
+    if (badge) {
+      badge.textContent = urgent;
+      badge.style.display = urgent > 0 ? '' : 'none';
+    }
+
+    this._renderRetentionList('missingTonightList', missing, 'missing');
+    this._renderRetentionList('ghostedList', ghosted, 'ghosted');
+
+    // The canvas has zero clientWidth while the page is hidden, so defer the draw
+    // until the page is actually visible. Also redraw on window resize.
+    const page = document.getElementById('page-retention');
+    const canvas = document.getElementById('attendanceChart');
+    if (page && canvas) {
+      if (page.classList.contains('active')) {
+        this._drawAttendanceChart(timeline);
+      } else {
+        // Stash the timeline so we can render on demand when navigate() flips the page active
+        this._pendingRetentionTimeline = timeline;
+      }
+      if (!this._retentionResizeBound) {
+        this._retentionResizeBound = true;
+        window.addEventListener('resize', () => {
+          if (document.getElementById('page-retention')?.classList.contains('active')) {
+            this._drawAttendanceChart(this._retentionTimeline());
+          }
+        });
+      }
+    }
+  },
+
+  _renderRetentionList(containerId, rows, variant) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (rows.length === 0) {
+      container.innerHTML = variant === 'missing'
+        ? '<p class="empty-state">No one to reach out to tonight — either everyone\'s here or there\'s no attendance history yet.</p>'
+        : '<p class="empty-state">Nobody has ghosted. Great retention!</p>';
+      return;
+    }
+
+    container.innerHTML = rows.map(r => {
+      const initials = ((r.name || '').match(/\b[A-Z]/g) || []).slice(0, 2).join('').toUpperCase() || 'SP';
+      let meta, badge;
+      if (variant === 'missing') {
+        meta = `Came ${r.attendedWeeks} of last 3 · Last: ${this._formatRetentionDate(r.lastAttended)}`;
+        badge = r.urgent
+          ? '<span class="retention-row-badge urgent">High Priority</span>'
+          : '<span class="retention-row-badge">Recent</span>';
+      } else {
+        meta = `${r.streak}-week streak · Last here ${r.daysGone}d ago`;
+        badge = '<span class="retention-row-badge urgent">Ghosted</span>';
+      }
+
+      const canText = r.phone && r.phone.length >= 7;
+      const textBtn = canText
+        ? `<button class="retention-action-btn primary" onclick="app.openRetentionText('${r.id}', '${variant}')">Text</button>`
+        : `<button class="retention-action-btn ghost" disabled title="No phone number">No phone</button>`;
+      const followBtn = `<button class="retention-action-btn ghost" onclick="app.flagForFollowup('${r.id}')">Flag</button>`;
+
+      return `
+        <div class="retention-row ${variant === 'ghosted' || (variant === 'missing' && r.urgent) ? 'is-urgent' : ''}">
+          <div class="retention-row-avatar">${initials}</div>
+          <div class="retention-row-info">
+            <div class="retention-row-name">${this.escapeHtml(r.name)}</div>
+            <div class="retention-row-meta">${this.escapeHtml(meta)}</div>
+          </div>
+          ${badge}
+          <div class="retention-row-actions">
+            ${textBtn}
+            ${followBtn}
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  _formatRetentionDate(iso) {
+    if (!iso) return '—';
+    try {
+      const d = new Date(iso + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch (e) { return iso; }
+  },
+
+  // ---- Canvas line chart (no external library) ----
+  _drawAttendanceChart(timeline) {
+    const canvas = document.getElementById('attendanceChart');
+    const emptyEl = document.getElementById('attendanceChartEmpty');
+    if (!canvas) return;
+
+    if (!timeline || timeline.length === 0) {
+      if (emptyEl) emptyEl.style.display = '';
+      canvas.style.visibility = 'hidden';
+      return;
+    }
+    if (emptyEl) emptyEl.style.display = 'none';
+    canvas.style.visibility = 'visible';
+
+    // Use last 12 weeks max
+    const data = timeline.slice(-12).map(r => ({
+      date: r.date,
+      total: (r.checkedIn || []).length,
+      newPeople: r.newPeople || 0
+    }));
+
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = canvas.clientWidth || canvas.parentElement.clientWidth || 600;
+    const cssHeight = 260;
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+    canvas.style.width = cssWidth + 'px';
+    canvas.style.height = cssHeight + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+    const pad = { top: 20, right: 20, bottom: 44, left: 40 };
+    const w = cssWidth - pad.left - pad.right;
+    const h = cssHeight - pad.top - pad.bottom;
+
+    const maxVal = Math.max(5, ...data.map(d => d.total));
+    const niceMax = Math.ceil(maxVal / 5) * 5;
+
+    // Y-axis grid
+    ctx.strokeStyle = 'rgba(142, 153, 164, 0.18)';
+    ctx.lineWidth = 1;
+    ctx.font = '11px Karla, -apple-system, sans-serif';
+    ctx.fillStyle = '#8E99A4';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const y = pad.top + (h * i) / steps;
+      const val = Math.round(niceMax - (niceMax * i) / steps);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(pad.left + w, y);
+      ctx.stroke();
+      ctx.fillText(String(val), pad.left - 8, y);
+    }
+
+    if (data.length === 0) return;
+
+    // X positions
+    const xFor = i => data.length === 1
+      ? pad.left + w / 2
+      : pad.left + (w * i) / (data.length - 1);
+    const yFor = val => pad.top + h - (h * val) / niceMax;
+
+    // New guests area (gold, semi-transparent bars)
+    const barWidth = Math.min(22, (data.length > 1 ? w / data.length * 0.55 : 40));
+    data.forEach((d, i) => {
+      if (!d.newPeople) return;
+      const cx = xFor(i);
+      const by = yFor(d.newPeople);
+      const bh = pad.top + h - by;
+      ctx.fillStyle = 'rgba(232, 184, 75, 0.55)';
+      ctx.fillRect(cx - barWidth / 2, by, barWidth, bh);
+    });
+
+    // Line — teal gradient fill under it
+    const gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + h);
+    gradient.addColorStop(0, 'rgba(42, 171, 179, 0.25)');
+    gradient.addColorStop(1, 'rgba(42, 171, 179, 0)');
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = xFor(i);
+      const y = yFor(d.total);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    // Close the area
+    ctx.lineTo(xFor(data.length - 1), pad.top + h);
+    ctx.lineTo(xFor(0), pad.top + h);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // Line stroke
+    ctx.beginPath();
+    data.forEach((d, i) => {
+      const x = xFor(i);
+      const y = yFor(d.total);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#2AABB3';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Dots + value labels
+    data.forEach((d, i) => {
+      const x = xFor(i);
+      const y = yFor(d.total);
+      ctx.beginPath();
+      ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#2AABB3';
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#2D3436';
+      ctx.font = 'bold 11px Karla, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(String(d.total), x, y - 8);
+    });
+
+    // X-axis labels (dates)
+    ctx.fillStyle = '#8E99A4';
+    ctx.font = '11px Karla, -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const labelStep = Math.ceil(data.length / 8); // Avoid overcrowding
+    data.forEach((d, i) => {
+      if (i % labelStep !== 0 && i !== data.length - 1) return;
+      const label = this._formatRetentionDate(d.date);
+      ctx.fillText(label, xFor(i), pad.top + h + 8);
+    });
+  },
+
+  // ---- Retention actions ----
+  openRetentionText(personId, variant) {
+    const person = this.data.people.find(p => p.id === personId);
+    if (!person) { this.toast('Person not found'); return; }
+
+    const firstName = person.firstName;
+    let message;
+    if (variant === 'ghosted') {
+      message = `Hey ${firstName}! Noticed we haven't seen you at Bible study in a couple weeks. We've missed you — everything okay? No pressure, just wanted you to know the seat's still yours.`;
+    } else {
+      message = `Hey ${firstName}! Just wrapping up at St. Pete Bible Study tonight and realized you weren't here. Everything good? Would love to see you next Thursday!`;
+    }
+
+    // Prefer SMS link on mobile, fallback to clipboard copy
+    const phone = (person.phone || '').replace(/[^+\d]/g, '');
+    if (phone) {
+      const smsUrl = `sms:${phone}${/iphone|ipad|mac/i.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(message)}`;
+      window.open(smsUrl, '_blank');
+    }
+
+    navigator.clipboard?.writeText(message).then(() => this.toast('Message copied — opening SMS')).catch(() => {});
+  },
+
+  flagForFollowup(personId) {
+    const person = this.data.people.find(p => p.id === personId);
+    if (!person) return;
+    db.updatePerson(personId, { needs_followup: true, followup_done: false })
+      .then(() => this.refresh())
+      .then(() => this.toast(`${person.firstName} flagged for follow-up`));
+  },
+
+  copyMissingList() {
+    const missing = this.getMissingTonightList();
+    if (missing.length === 0) { this.toast('No one missing tonight'); return; }
+    const text = missing
+      .map(r => `${r.name}${r.phone ? ' — ' + r.phone : ''} (${r.attendedWeeks} of last 3)`)
+      .join('\n');
+    navigator.clipboard?.writeText(text)
+      .then(() => this.toast(`Copied ${missing.length} names`))
+      .catch(() => this.toast('Copy failed'));
+  },
+
+  async assignAllGhosted() {
+    const ghosted = this.getGhostedGuests();
+    if (ghosted.length === 0) { this.toast('No ghosted guests right now'); return; }
+    if (!confirm(`Mark all ${ghosted.length} ghosted guests as needing follow-up?`)) return;
+    for (const g of ghosted) {
+      try { await db.updatePerson(g.id, { needs_followup: true, followup_done: false }); }
+      catch (e) { console.error(e); }
+    }
+    await this.refresh();
+    this.toast(`Flagged ${ghosted.length} for follow-up`);
+  },
+
   renderGamePlan() {
     const container = document.getElementById('gameplanMonths');
     if (!container) return;
@@ -3147,6 +3856,193 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) overlay.classList.remove('show');
   });
+});
+
+/* ================================================================
+   SEASON PLANNER
+   ================================================================ */
+Object.assign(app, {
+  _plannerRows: [],
+  _plannerSaveTimers: {},
+
+  async renderPlanner() {
+    const tbody = document.getElementById('plannerBody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7" class="planner-empty">Loading...</td></tr>';
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/season_plan?order=sort_order.asc,session_date.asc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      this._plannerRows = await res.json();
+    } catch(e) { this._plannerRows = []; }
+    this._renderPlannerTable();
+  },
+
+  _renderPlannerTable() {
+    const tbody = document.getElementById('plannerBody');
+    if (!tbody) return;
+    const rows = this._plannerRows;
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="planner-empty">No sessions yet — click <strong>+ Add Session</strong> to start planning.</td></tr>';
+      return;
+    }
+    const cols = ['session_date','icebreaker_game','teaching_focus','speaker','dev_focus','notes'];
+    const placeholders = ['Date (e.g. May 1)','Icebreaker Game','Teaching Focus','Speaker','Dev Focus','Notes'];
+    tbody.innerHTML = rows.map(row => `
+      <tr data-planner-id="${row.id}">
+        ${cols.map((col, i) => `
+          <td>
+            <input class="planner-cell" value="${(row[col]||'').replace(/"/g,'&quot;')}"
+              placeholder="${placeholders[i]}"
+              onchange="app._savePlannerCell('${row.id}','${col}',this.value)"
+              onblur="app._savePlannerCell('${row.id}','${col}',this.value)">
+          </td>`).join('')}
+        <td style="text-align:center;">
+          <button class="planner-delete" onclick="app.deletePlannerRow('${row.id}')" title="Delete row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+        </td>
+      </tr>`).join('');
+  },
+
+  _savePlannerCell(id, col, value) {
+    const row = this._plannerRows.find(r => r.id === id);
+    if (!row || row[col] === value) return;
+    row[col] = value;
+    clearTimeout(this._plannerSaveTimers[id]);
+    this._plannerSaveTimers[id] = setTimeout(async () => {
+      await fetch(`${SUPABASE_URL}/rest/v1/season_plan?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ [col]: value })
+      });
+    }, 600);
+  },
+
+  async addPlannerRow() {
+    const sort_order = this._plannerRows.length;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/season_plan`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ session_date: '', icebreaker_game: '', teaching_focus: '', speaker: '', dev_focus: '', notes: '', sort_order })
+    });
+    const [newRow] = await res.json();
+    this._plannerRows.push(newRow);
+    this._renderPlannerTable();
+    // Focus the first cell of the new row
+    const tbody = document.getElementById('plannerBody');
+    if (tbody) {
+      const lastRow = tbody.querySelector('tr:last-child');
+      if (lastRow) lastRow.querySelector('.planner-cell')?.focus();
+    }
+  },
+
+  async deletePlannerRow(id) {
+    if (!confirm('Delete this session row?')) return;
+    await fetch(`${SUPABASE_URL}/rest/v1/season_plan?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+    this._plannerRows = this._plannerRows.filter(r => r.id !== id);
+    this._renderPlannerTable();
+  }
+});
+
+/* ================================================================
+   GROWTH & ATTENDANCE CHARTS
+   ================================================================ */
+Object.assign(app, {
+  async renderGrowth() {
+    const statsEl = document.getElementById('growthStats');
+    const chartEl = document.getElementById('growthChart');
+    const tableEl = document.getElementById('growthTable');
+    if (!statsEl || !chartEl || !tableEl) return;
+    statsEl.innerHTML = '<div style="padding:16px;color:var(--gray-500);font-size:0.85rem;">Loading...</div>';
+
+    let records = [];
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/attendance?order=date.asc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      });
+      records = await res.json();
+    } catch(e) {}
+
+    if (!records.length) {
+      statsEl.innerHTML = '<div style="padding:32px;color:var(--gray-500);text-align:center;">No attendance data yet. Check people in via the kiosk to start tracking growth.</div>';
+      chartEl.innerHTML = '';
+      tableEl.innerHTML = '';
+      return;
+    }
+
+    const totals = records.map(r => Array.isArray(r.checked_in) ? r.checked_in.length : (r.total || 0));
+    const newCounts = records.map(r => r.new_people || 0);
+    const allTotal = totals.reduce((a,b)=>a+b,0);
+    const avg = records.length ? Math.round(allTotal / records.length) : 0;
+    const best = Math.max(...totals);
+    const totalNew = newCounts.reduce((a,b)=>a+b,0);
+    const latest = records[records.length-1];
+    const latestTotal = totals[totals.length-1];
+    const prev = totals.length > 1 ? totals[totals.length-2] : null;
+    const trend = prev !== null ? latestTotal - prev : null;
+
+    // Stats row
+    statsEl.innerHTML = `
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+        ${this._growthStat('Last Session', latestTotal, trend !== null ? (trend >= 0 ? `+${trend} vs prev` : `${trend} vs prev`) : 'First session', trend > 0 ? 'var(--teal)' : trend < 0 ? '#e74c3c' : 'var(--gray-500)')}
+        ${this._growthStat('Avg Attendance', avg, 'per session')}
+        ${this._growthStat('Best Session', best, 'all time high')}
+        ${this._growthStat('Total Sessions', records.length, `${totalNew} new people total`)}
+      </div>`;
+
+    // Bar chart
+    const maxVal = Math.max(...totals, 1);
+    const bars = records.map((r, i) => {
+      const total = totals[i];
+      const newP = newCounts[i];
+      const ret = Math.max(0, total - newP);
+      const newPct = Math.round((newP / maxVal) * 100);
+      const retPct = Math.round((ret / maxVal) * 100);
+      const label = r.date ? r.date.replace(/^\d{4}-/, '').replace('-','/') : '?';
+      return `<div class="growth-bar-col" title="${r.date}: ${total} total, ${newP} new">
+        <div class="growth-bar-count">${total || ''}</div>
+        <div class="growth-bar-stack">
+          ${newP ? `<div class="growth-bar growth-bar-new" style="height:${newPct}%;min-height:${newP?'4px':'0'};"></div>` : ''}
+          ${ret  ? `<div class="growth-bar growth-bar-returning" style="height:${retPct}%;min-height:${ret?'4px':'0'};"></div>` : ''}
+        </div>
+        <div class="growth-bar-label">${label}</div>
+      </div>`;
+    }).join('');
+    chartEl.innerHTML = `
+      <div style="margin-bottom:10px;display:flex;gap:16px;font-size:0.75rem;color:var(--gray-500);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--teal);margin-right:4px;vertical-align:middle;"></span>New</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#b2e8eb;margin-right:4px;vertical-align:middle;"></span>Returning</span>
+      </div>
+      <div class="growth-bar-wrap">${bars}</div>`;
+
+    // History table
+    const tableRows = [...records].reverse().map(r => {
+      const total = Array.isArray(r.checked_in) ? r.checked_in.length : (r.total || 0);
+      const newP = r.new_people || 0;
+      return `<tr>
+        <td>${r.date || '—'}</td>
+        <td style="font-weight:700;">${total}</td>
+        <td>${newP > 0 ? `<span style="color:var(--teal);font-weight:700;">+${newP} new</span>` : '—'}</td>
+        <td>${Math.max(0, total - newP)}</td>
+      </tr>`;
+    }).join('');
+    tableEl.innerHTML = `<table class="growth-history-table">
+      <thead><tr><th>Date</th><th>Total</th><th>New</th><th>Returning</th></tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>`;
+  },
+
+  _growthStat(label, value, sub, subColor) {
+    return `<div class="growth-stat-card">
+      <div class="growth-stat-label">${label}</div>
+      <div class="growth-stat-value">${value}</div>
+      <div class="growth-stat-sub" style="${subColor?`color:${subColor};font-weight:700;`:''}">${sub}</div>
+    </div>`;
+  }
 });
 
 // Init

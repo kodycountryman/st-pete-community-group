@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="assets/spbs-icon.png">
   <title>This Week | St. Pete Bible Study</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Karla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -246,7 +247,11 @@
       color: white;
     }
     .icebreaker-card .card-label { color: rgba(255,255,255,0.6); }
-    .icebreaker-card p { color: rgba(255,255,255,0.9); font-size: 1.05rem; font-style: italic; }
+    .icebreaker-card p { color: rgba(255,255,255,0.9); font-size: 1.05rem; font-style: italic; margin: 0; }
+    .icebreaker-q { color: rgba(255,255,255,0.9); font-size: 1.05rem; font-style: italic; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .icebreaker-q:first-child { padding-top: 0; }
+    .icebreaker-q:last-child { padding-bottom: 0; border-bottom: none; }
+    .icebreaker-q-num { font-size: 0.68rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
 
     /* ---- SCHEDULE ---- */
     .schedule {
@@ -591,6 +596,98 @@
       .whatsapp-sticky svg { width: 20px; height: 20px; }
     }
 
+    /* ---- PAGE-LEVEL TAB BAR ---- */
+    .page-tab-bar {
+      display: none; /* shown via JS when notes exist */
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: white;
+      border-bottom: 1px solid var(--gray-100);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+    }
+    .page-tab-bar-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+    }
+    .page-tab-btn {
+      flex: 1;
+      padding: 15px 12px 13px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-family: 'Karla', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -1px;
+    }
+    .page-tab-btn.active {
+      color: var(--teal-dark);
+      border-bottom-color: var(--teal);
+    }
+    .page-tab-btn:hover:not(.active) { color: var(--slate); }
+
+    /* notes-only view */
+    .notes-heading {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0 4px;
+      font-family: 'Rubik', sans-serif;
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--teal-deep);
+      line-height: 1.3;
+    }
+    .notes-heading::before {
+      content: '';
+      display: block;
+      flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal);
+      margin-top: 5px;
+    }
+    .notes-quote {
+      margin: 10px 0;
+      padding: 12px 16px;
+      background: rgba(42, 171, 179, 0.06);
+      border-left: 3px solid var(--teal);
+      border-radius: 0 10px 10px 0;
+      font-size: 1.02rem;
+      font-style: italic;
+      color: var(--slate);
+      line-height: 1.65;
+    }
+    .notes-scripture {
+      margin: 12px 0;
+      padding: 12px 16px;
+      background: rgba(232, 184, 75, 0.1);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 10px 10px 0;
+    }
+    .notes-scripture-ref {
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #92400E;
+      margin-bottom: 5px;
+    }
+    .notes-scripture-text {
+      font-size: 0.95rem;
+      font-style: italic;
+      color: var(--slate);
+      line-height: 1.6;
+    }
+
     /* ---- PRINT BUTTON (screen) ---- */
     .print-btn-wrap {
       max-width: 680px;
@@ -622,27 +719,183 @@
     }
     .print-btn svg { flex-shrink: 0; }
 
+    /* ---- SELF CHECK-IN ---- */
+    .checkin-card {
+      background: linear-gradient(135deg, var(--teal-deep), var(--teal-dark));
+      border-radius: var(--radius);
+      padding: 28px 28px 24px;
+      margin-bottom: 20px;
+      color: white;
+    }
+    .checkin-card .card-label { color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+    .checkin-card h2 { font-size: 1.2rem; color: white; margin-bottom: 4px; }
+    .checkin-card p { font-size: 0.88rem; color: rgba(255,255,255,0.75); margin-bottom: 16px; }
+    .checkin-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 22px;
+      background: white;
+      color: var(--teal-deep);
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+    .checkin-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    .checkin-success {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: white;
+    }
+
+    /* Check-in modal */
+    .checkin-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 300;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+    }
+    .checkin-modal-overlay.show { display: flex; }
+    @media (min-width: 500px) {
+      .checkin-modal-overlay { align-items: center; }
+    }
+    .checkin-modal {
+      background: white;
+      border-radius: 20px 20px 16px 16px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px 24px 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    @media (min-width: 500px) {
+      .checkin-modal { border-radius: 20px; }
+    }
+    .checkin-modal-title {
+      font-family: 'Rubik', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--slate);
+      margin-bottom: 4px;
+    }
+    .checkin-modal-sub {
+      font-size: 0.88rem;
+      color: var(--gray-500);
+      margin-bottom: 20px;
+    }
+    .checkin-search {
+      width: 100%;
+      padding: 13px 16px;
+      border: 2px solid var(--gray-100);
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.15s;
+      box-sizing: border-box;
+    }
+    .checkin-search:focus { border-color: var(--teal); }
+    .checkin-results { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .checkin-result-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      border: 2px solid var(--gray-100);
+      border-radius: 12px;
+      background: white;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s, background 0.15s;
+      width: 100%;
+    }
+    .checkin-result-btn:hover { border-color: var(--teal); background: rgba(42,171,179,0.06); }
+    .checkin-result-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--teal);
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .checkin-result-name { font-size: 0.95rem; font-weight: 700; color: var(--slate); }
+    .checkin-result-sub { font-size: 0.75rem; color: var(--gray-500); }
+    .checkin-new-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 13px;
+      border: 2px dashed var(--gray-100);
+      border-radius: 12px;
+      background: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .checkin-new-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+    .checkin-modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--gray-500);
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 0 8px 8px;
+    }
+
     /* ---- PRINT STYLES ---- */
+    /* Print-only header — hidden on screen */
+    .print-handout-header { display: none; }
+    /* Print-only footer — hidden on screen */
+    .print-footer { display: none; }
+
     @media print {
-      /* Reset backgrounds + kill colors that waste ink */
       @page {
         size: letter;
-        margin: 0.55in 0.6in;
+        margin: 0;
       }
+
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+
       html, body {
+        margin: 0 !important;
+        padding: 0 !important;
         background: white !important;
-        color: #111 !important;
+        font-family: 'Karla', Georgia, serif;
         font-size: 11pt;
+        color: #111 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
-      body {
-        font-family: 'Karla', Georgia, serif;
-        line-height: 1.4;
-      }
-      h1, h2, h3 { font-family: 'Rubik', Georgia, serif; color: #111 !important; }
 
-      /* Hide everything that isn't part of the printed handout */
+      /* ---- HIDE EVERYTHING SCREEN-ONLY ---- */
+      .hero,
+      .hero-wave,
       .nav-menu-btn,
       .nav-drawer,
       .nav-drawer-overlay,
@@ -654,150 +907,229 @@
       .print-btn-wrap,
       #loading,
       #empty,
-      footer {
+      #takeawayCard,
+      #scheduleCard,
+      #ctaCard,
+      footer,
+      .card[style*="text-align:center"] {
         display: none !important;
       }
 
-      /* Container opens up for full-page printing */
-      .container {
-        max-width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-      }
-
-      /* HERO — strip gradient, thin rule, compact */
-      .hero {
-        background: white !important;
-        color: #111 !important;
-        padding: 0 0 14pt !important;
-        margin: 0 0 18pt !important;
-        border-bottom: 2pt solid #111;
-        text-align: left !important;
-        page-break-after: avoid;
-      }
-      .hero-eyebrow {
-        font-size: 8pt !important;
-        color: #555 !important;
-        opacity: 1 !important;
-        letter-spacing: 1.5pt;
-        margin-bottom: 4pt !important;
-      }
-      .hero-title {
-        font-size: 22pt !important;
-        color: #111 !important;
-        line-height: 1.1 !important;
-        margin-bottom: 6pt !important;
-      }
-      .hero-scripture {
-        font-size: 10pt !important;
-        color: #333 !important;
-        font-style: italic;
-        opacity: 1 !important;
-      }
-      .hero-wave { display: none !important; }
-
-      /* Cards become plain sections with a thin divider */
-      .card,
-      .cta-card,
-      .icebreaker-card {
-        background: white !important;
-        color: #111 !important;
-        border: none !important;
-        border-top: 1pt solid #ccc !important;
-        border-radius: 0 !important;
-        box-shadow: none !important;
-        padding: 10pt 0 !important;
-        margin: 0 !important;
-        page-break-inside: avoid;
-      }
-      .card-label {
-        color: #666 !important;
-        font-size: 8pt !important;
-        letter-spacing: 1pt;
-        margin-bottom: 4pt !important;
-      }
-      .card h2 {
-        font-size: 13pt !important;
-        color: #111 !important;
-        margin-bottom: 4pt !important;
-      }
-      .card p {
-        font-size: 11pt !important;
-        color: #111 !important;
-        line-height: 1.45 !important;
-        margin-top: 4pt !important;
-      }
-      .icebreaker-card p { font-style: italic; color: #111 !important; }
-      .icebreaker-card .card-label { color: #666 !important; }
-      .cta-card h2 { font-size: 13pt !important; }
-
-      /* Questions — numbered list, cleaner for a printed handout */
-      .questions-list { gap: 8pt !important; }
-      .question-item {
-        page-break-inside: avoid;
-        gap: 10pt !important;
-      }
-      .question-num {
-        background: white !important;
-        border: 1.2pt solid #111;
-        color: #111 !important;
-        width: 20pt !important;
-        height: 20pt !important;
-        border-radius: 50% !important;
-        font-size: 9pt !important;
-      }
-      .question-text {
-        font-size: 11pt !important;
-        color: #111 !important;
-        line-height: 1.4 !important;
-      }
-
-      /* Schedule table */
-      .schedule-row {
-        border-bottom: 0.5pt solid #ddd !important;
-        padding: 6pt 0 !important;
-        page-break-inside: avoid;
-      }
-      .schedule-time {
-        font-size: 9pt !important;
-        color: #111 !important;
-        min-width: 54pt !important;
-        font-weight: 700 !important;
-      }
-      .schedule-label {
-        font-size: 10.5pt !important;
-        color: #111 !important;
-        font-weight: 700 !important;
-      }
-      .schedule-desc {
-        font-size: 9pt !important;
-        color: #555 !important;
-      }
-
-      /* Location card — stays visible, simpler */
-      .card[style*="text-align:center"] {
-        border-top: 1pt solid #ccc !important;
-        text-align: left !important;
-        margin-top: 6pt !important;
-      }
-
-      /* Force content to show even if still "display:none" from the loader */
+      /* Force content visible if still hidden from loader */
       #content { display: block !important; }
 
-      /* Print-only footer with site URL */
+      /* ---- PRINT HANDOUT HEADER (full-bleed teal) ---- */
+      .print-handout-header {
+        display: block !important;
+        background: #145A5E !important;
+        padding: 0.38in 0.55in 0.3in !important;
+        position: relative;
+        overflow: hidden;
+      }
+      /* Decorative circles in the corner */
+      .print-handout-header::before {
+        content: '';
+        position: absolute;
+        top: -60pt;
+        right: -60pt;
+        width: 180pt;
+        height: 180pt;
+        border-radius: 50%;
+        background: rgba(42, 171, 179, 0.25);
+        pointer-events: none;
+      }
+      .print-handout-header::after {
+        content: '';
+        position: absolute;
+        bottom: -40pt;
+        right: 80pt;
+        width: 110pt;
+        height: 110pt;
+        border-radius: 50%;
+        background: rgba(42, 171, 179, 0.15);
+        pointer-events: none;
+      }
+      .print-handout-top {
+        display: flex !important;
+        align-items: center;
+        gap: 14pt;
+        margin-bottom: 14pt;
+      }
+      .print-handout-logo {
+        width: 44pt !important;
+        height: 44pt !important;
+        border-radius: 10pt;
+        background: white;
+        padding: 4pt;
+        flex-shrink: 0;
+        display: block !important;
+      }
+      .print-handout-org {
+        flex: 1;
+      }
+      .print-handout-name {
+        font-family: 'Rubik', Georgia, serif;
+        font-size: 13pt;
+        font-weight: 800;
+        color: white !important;
+        letter-spacing: 0.3pt;
+      }
+      .print-handout-sub {
+        font-size: 8pt;
+        color: rgba(255,255,255,0.65) !important;
+        margin-top: 2pt;
+        font-weight: 600;
+      }
+      .print-handout-date {
+        font-size: 9pt;
+        font-weight: 700;
+        color: rgba(255,255,255,0.7) !important;
+        text-align: right;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .print-handout-topic {
+        font-family: 'Rubik', Georgia, serif;
+        font-size: 26pt;
+        font-weight: 800;
+        color: white !important;
+        line-height: 1.1;
+        margin-bottom: 6pt;
+      }
+      .print-handout-scripture {
+        font-size: 10pt;
+        color: rgba(255,255,255,0.75) !important;
+        font-style: italic;
+      }
+
+      /* Pink accent bar between header and body */
+      .print-handout-header + .container::before {
+        content: '';
+        display: block;
+        height: 5pt;
+        background: #E88CA0 !important;
+        margin: 0;
+      }
+
+      /* ---- CONTAINER / BODY ---- */
+      .container {
+        max-width: 100% !important;
+        padding: 0.38in 0.55in 0.35in !important;
+        margin: 0 !important;
+      }
+
+      /* ---- ICEBREAKER ---- */
+      .icebreaker-card {
+        background: #f0fafa !important;
+        border: 1.2pt solid #2AABB3 !important;
+        border-radius: 8pt !important;
+        padding: 12pt 14pt !important;
+        margin-bottom: 18pt !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+      .icebreaker-card .card-label {
+        color: #1B7A80 !important;
+        font-size: 7.5pt !important;
+        font-weight: 800;
+        letter-spacing: 1.5pt;
+        text-transform: uppercase;
+        margin-bottom: 6pt !important;
+      }
+      .icebreaker-card p {
+        font-size: 11pt !important;
+        color: #111 !important;
+        font-style: italic;
+        line-height: 1.45;
+        margin: 0 !important;
+      }
+      .icebreaker-q {
+        color: #111 !important;
+        font-size: 11pt;
+        font-style: italic;
+        padding: 8pt 0;
+        border-bottom: 0.8pt solid rgba(42,171,179,0.3) !important;
+        line-height: 1.4;
+      }
+      .icebreaker-q:first-child { padding-top: 0; }
+      .icebreaker-q:last-child { padding-bottom: 0; border-bottom: none !important; }
+      .icebreaker-q-num {
+        font-size: 7pt !important;
+        color: #1B7A80 !important;
+        font-weight: 800;
+        letter-spacing: 1pt;
+        text-transform: uppercase;
+        margin-bottom: 3pt;
+        font-style: normal;
+      }
+
+      /* ---- QUESTIONS ---- */
+      #questionsCard {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+      }
+      #questionsCard .card-label {
+        color: #1B7A80 !important;
+        font-size: 7.5pt !important;
+        font-weight: 800;
+        letter-spacing: 1.5pt;
+        text-transform: uppercase;
+        margin-bottom: 12pt !important;
+        padding-bottom: 6pt;
+        border-bottom: 1.5pt solid #145A5E !important;
+      }
+      .questions-list {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0 !important;
+      }
+      .question-item {
+        display: flex !important;
+        align-items: flex-start;
+        gap: 12pt !important;
+        padding: 10pt 0 !important;
+        border-bottom: 0.6pt solid #e0e8ea !important;
+        page-break-inside: avoid;
+      }
+      .question-item:last-child { border-bottom: none !important; }
+      .question-num {
+        width: 22pt !important;
+        height: 22pt !important;
+        min-width: 22pt !important;
+        border-radius: 50% !important;
+        background: #145A5E !important;
+        color: white !important;
+        font-size: 9pt !important;
+        font-weight: 800;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1pt;
+      }
+      .question-text {
+        font-size: 11.5pt !important;
+        color: #111 !important;
+        line-height: 1.45 !important;
+        flex: 1;
+      }
+
+      /* ---- FOOTER ---- */
       .print-footer {
         display: block !important;
-        margin-top: 14pt;
+        margin-top: 18pt;
         padding-top: 8pt;
-        border-top: 1pt solid #ccc;
+        border-top: 1pt solid #d0dde0;
         font-size: 8pt;
-        color: #666;
+        color: #888;
         text-align: center;
+        letter-spacing: 0.3pt;
       }
     }
-
-    /* Print-only footer — hidden on screen, shown on print */
-    .print-footer { display: none; }
   </style>
 </head>
 <body>
@@ -852,6 +1184,14 @@
       </svg>
     </div>
 
+    <!-- Page-level tab bar (shown when notes exist) -->
+    <div class="page-tab-bar" id="pageTabBar">
+      <div class="page-tab-bar-inner">
+        <button class="page-tab-btn active" id="pageTabBtnThis" onclick="switchPageTab('this')">This Week</button>
+        <button class="page-tab-btn" id="pageTabBtnNotes" onclick="switchPageTab('notes')">Message Notes</button>
+      </div>
+    </div>
+
     <!-- Print button (screen only, above the content) -->
     <div class="print-btn-wrap">
       <button class="print-btn" onclick="window.print()" aria-label="Print this week">
@@ -862,6 +1202,20 @@
         </svg>
         Print This Week
       </button>
+    </div>
+
+    <!-- PRINT-ONLY designed handout header (hidden on screen) -->
+    <div class="print-handout-header" id="printHeader">
+      <div class="print-handout-top">
+        <img class="print-handout-logo" src="assets/spbs-icon.png" alt="SPBS">
+        <div class="print-handout-org">
+          <div class="print-handout-name">St. Pete Bible Study</div>
+          <div class="print-handout-sub">Grace Family Church Campus Launch · Thursdays 6:30pm</div>
+        </div>
+        <div class="print-handout-date" id="printDate"></div>
+      </div>
+      <div class="print-handout-topic" id="printTopic"></div>
+      <div class="print-handout-scripture" id="printScripture"></div>
     </div>
 
     <!-- Main content -->
@@ -876,7 +1230,13 @@
       <!-- Icebreaker -->
       <div class="card icebreaker-card" id="icebreakerCard" style="display:none;">
         <div class="card-label">Icebreaker</div>
-        <p id="icebreakerText"></p>
+        <div id="icebreakerText"></div>
+      </div>
+
+      <!-- Message Notes (shown only in Notes tab) -->
+      <div class="card" id="messageNotesCard" style="display:none;">
+        <div class="card-label">Message Notes</div>
+        <div id="messageNotesText"></div>
       </div>
 
       <!-- Discussion Questions -->
@@ -885,46 +1245,10 @@
         <div class="questions-list" id="questionsList"></div>
       </div>
 
-      <!-- Tonight's Schedule -->
-      <div class="card">
-        <div class="card-label">Tonight's Schedule</div>
-        <div class="schedule">
-          <div class="schedule-row">
-            <div class="schedule-time">6:30</div>
-            <div>
-              <div class="schedule-label">Connection Time</div>
-              <div class="schedule-desc">Food + icebreaker</div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="schedule-time">6:50</div>
-            <div>
-              <div class="schedule-label">Teaching</div>
-              <div class="schedule-desc" id="scheduleTeaching">This week's topic</div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="schedule-time">7:05</div>
-            <div>
-              <div class="schedule-label">Table Discussion</div>
-              <div class="schedule-desc">Small group questions</div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="schedule-time">7:45</div>
-            <div>
-              <div class="schedule-label">Ownership Moment</div>
-              <div class="schedule-desc" id="scheduleCTA">Next step</div>
-            </div>
-          </div>
-          <div class="schedule-row">
-            <div class="schedule-time">8:00</div>
-            <div>
-              <div class="schedule-label">Hang Around</div>
-              <div class="schedule-desc">Stick around, connect</div>
-            </div>
-          </div>
-        </div>
+      <!-- Tonight's Schedule (dynamic from weekly_prep.flow) -->
+      <div class="card" id="scheduleCard">
+        <div class="card-label" id="scheduleLabel">Tonight's Schedule</div>
+        <div class="schedule" id="scheduleList"></div>
       </div>
 
       <!-- CTA -->
@@ -943,6 +1267,19 @@
       <div class="gameplan-section" id="gameplanSection" style="display:none;">
         <div class="card-label">The Game Plan · What's Coming Up</div>
         <div id="upcomingWeeksList"></div>
+      </div>
+
+      <!-- Self Check-In -->
+      <div class="checkin-card" id="checkinCard" style="display:none;">
+        <div class="card-label">You're Here!</div>
+        <h2>Check yourself in tonight</h2>
+        <p>Let us know you made it so we can keep track of who's here.</p>
+        <div id="checkinAction">
+          <button class="checkin-btn" onclick="openCheckinModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Check Me In
+          </button>
+        </div>
       </div>
 
       <!-- WhatsApp Group Invitation -->
@@ -1016,6 +1353,7 @@
         }
 
         document.getElementById('content').style.display = '';
+        initCheckin();
 
         // Hero
         document.getElementById('heroTitle').textContent = wp.topic;
@@ -1027,9 +1365,28 @@
           document.getElementById('takeawayCard').style.display = '';
         }
 
-        // Icebreaker
+        // Message Notes tab
+        if (wp.message_notes && wp.message_notes.trim()) {
+          document.getElementById('messageNotesText').innerHTML = renderNotes(wp.message_notes);
+          document.getElementById('pageTabBar').style.display = 'block';
+        }
+
+        // Icebreaker — parse "1. … 2. …" numbered questions into stacked items
         if (wp.icebreaker) {
-          document.getElementById('icebreakerText').textContent = `"${wp.icebreaker}"`;
+          const raw = wp.icebreaker;
+          const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          // Split on patterns like "1.", "2.", "3." at start or after whitespace
+          const parts = raw.split(/(?=\s*\d+\.\s)/).map(s => s.replace(/^\s*\d+\.\s*/, '').trim()).filter(Boolean);
+          const el = document.getElementById('icebreakerText');
+          if (parts.length > 1) {
+            el.innerHTML = parts.map((q, i) => `
+              <div class="icebreaker-q">
+                <div class="icebreaker-q-num">Question ${i + 1}</div>
+                <div>"${esc(q)}"</div>
+              </div>`).join('');
+          } else {
+            el.innerHTML = `<p>"${esc(raw)}"</p>`;
+          }
           document.getElementById('icebreakerCard').style.display = '';
         }
 
@@ -1045,9 +1402,21 @@
           document.getElementById('questionsCard').style.display = '';
         }
 
-        // Schedule details
-        if (wp.topic) document.getElementById('scheduleTeaching').textContent = wp.topic;
-        if (wp.cta) document.getElementById('scheduleCTA').textContent = wp.cta;
+        // Schedule — render saved flow from weekly_prep.flow
+        renderSchedule(wp.flow);
+
+        // Night type label on the schedule card
+        if (wp.night_type) {
+          const pretty = {
+            community: 'Community Night',
+            growth: 'Growth Night',
+            groups: 'Groups Night',
+            invite: 'Invite / Fun Night',
+            serve: 'Serve Project'
+          }[wp.night_type] || 'Tonight';
+          const schedLabel = document.getElementById('scheduleLabel');
+          if (schedLabel) schedLabel.textContent = `${pretty} Schedule`;
+        }
 
         // CTA card
         if (wp.cta) {
@@ -1055,13 +1424,139 @@
           document.getElementById('ctaCard').style.display = '';
         }
 
+        // Reorder cards based on saved card_order
+        applyCardOrder(wp.card_order);
+
         // Page title
         document.title = `${wp.topic} | St. Pete Bible Study`;
+
+        // Populate print-only header
+        const printTopic = document.getElementById('printTopic');
+        const printScripture = document.getElementById('printScripture');
+        const printDate = document.getElementById('printDate');
+        if (printTopic) printTopic.textContent = wp.topic || '';
+        if (printScripture) printScripture.textContent = wp.scripture || '';
+        if (printDate) {
+          const d = new Date();
+          // Snap to the nearest/current Thursday
+          const day = d.getDay();
+          const diff = (4 - day + 7) % 7;
+          const thu = new Date(d);
+          thu.setDate(d.getDate() + (day === 4 ? 0 : diff));
+          printDate.textContent = thu.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
 
       } catch (err) {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('empty').style.display = '';
       }
+    }
+
+    const THIS_WEEK_ELS = ['takeawayCard','icebreakerCard','questionsCard','scheduleCard','ctaCard','publicPollsSection','gameplanSection'];
+
+    function switchPageTab(tab) {
+      const onNotes = tab === 'notes';
+      document.getElementById('pageTabBtnThis').classList.toggle('active', !onNotes);
+      document.getElementById('pageTabBtnNotes').classList.toggle('active', onNotes);
+
+      const notesCard = document.getElementById('messageNotesCard');
+
+      if (onNotes) {
+        // Save each visible card's display value, then hide it
+        THIS_WEEK_ELS.forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.dataset.savedDisplay = el.style.display;
+          el.style.display = 'none';
+        });
+        if (notesCard) notesCard.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // Restore each card to what it was before
+        THIS_WEEK_ELS.forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.style.display = el.dataset.savedDisplay || '';
+        });
+        if (notesCard) notesCard.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Map card id -> element id
+    const CARD_EL = {
+      icebreaker: 'icebreakerCard',
+      questions:  'questionsCard',
+      schedule:   'scheduleCard',
+      cta:        'ctaCard',
+    };
+
+    function applyCardOrder(order) {
+      const defaults = ['icebreaker', 'questions', 'schedule', 'cta'];
+      const ordered = Array.isArray(order) && order.length
+        ? [...order.filter(k => defaults.includes(k))]
+        : [...defaults];
+      // Add any missing defaults at end
+      defaults.forEach(k => { if (!ordered.includes(k)) ordered.push(k); });
+
+      // Find anchor: the takeaway card (always sits just before the orderable block)
+      const takeawayCard = document.getElementById('takeawayCard');
+      if (!takeawayCard) return;
+
+      // Detach all orderable cards (they may be hidden, that's fine)
+      const container = takeawayCard.parentElement;
+      const cardEls = ordered.map(id => document.getElementById(CARD_EL[id])).filter(Boolean);
+      cardEls.forEach(el => el.remove());
+
+      // Re-insert after takeawayCard in the chosen order
+      let anchor = takeawayCard;
+      cardEls.forEach(el => {
+        anchor.after(el);
+        anchor = el;
+      });
+    }
+
+    function renderSchedule(flow) {
+      const list = document.getElementById('scheduleList');
+      const card = document.getElementById('scheduleCard');
+      if (!list || !card) return;
+      const rows = Array.isArray(flow) ? flow.filter(r => r && (r.time || r.desc)) : [];
+      if (rows.length === 0) {
+        // No flow saved — hide the schedule card rather than showing a generic placeholder
+        card.style.display = 'none';
+        return;
+      }
+      card.style.display = '';
+      const esc = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      list.innerHTML = rows.map(r => `
+        <div class="schedule-row">
+          <div class="schedule-time">${esc(r.time) || '&nbsp;'}</div>
+          <div>
+            <div class="schedule-label">${esc(r.desc)}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderNotes(raw) {
+      const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      return lines.map(line => {
+        const content = line.replace(/^-\s*/, '').trim();
+        // Scripture: "Book ch:v (VERSION) — text" or "Book ch:v (VERSION) - text"
+        const scriptureMatch = /^(\d?\s*[A-Za-z]+\.?\s+\d+:\d+(?:[–\-]\d+)?\s*\([A-Z]+\))\s*[—\-]+\s*(.+)$/.exec(content);
+        if (scriptureMatch) {
+          const ref = scriptureMatch[1].trim();
+          const text = scriptureMatch[2].replace(/^[""]|[""]$/g, '').trim();
+          return `<div class="notes-scripture"><div class="notes-scripture-ref">${esc(ref)}</div><div class="notes-scripture-text">"${esc(text)}"</div></div>`;
+        }
+        // Pull quote: starts with a quote character
+        if (/^[""\u201C]/.test(content)) {
+          return `<div class="notes-quote">${esc(content)}</div>`;
+        }
+        // Section heading
+        return `<div class="notes-heading">${esc(content)}</div>`;
+      }).join('');
     }
 
     load();
@@ -1313,6 +1808,25 @@
     loadPublicPolls();
   </script>
 
+  <!-- Check-In Modal -->
+  <div class="checkin-modal-overlay" id="checkinModal">
+    <div class="checkin-modal">
+      <button class="checkin-modal-close" onclick="closeCheckinModal()">&times;</button>
+      <div class="checkin-modal-title">Hey, what's your name?</div>
+      <div class="checkin-modal-sub">Search for your name below to check in tonight.</div>
+      <input class="checkin-search" id="checkinSearch" type="text" placeholder="Start typing your name..." autocomplete="off" oninput="searchCheckin(this.value)">
+      <div class="checkin-results" id="checkinResults"></div>
+      <button class="checkin-new-btn" id="checkinNewBtn" style="display:none;" onclick="showNewPersonForm()">I'm new — add me!</button>
+      <div id="checkinNewForm" style="display:none;margin-top:16px;">
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <input type="text" id="checkinFirstName" placeholder="First name" class="checkin-search" style="margin:0;">
+          <input type="text" id="checkinLastName" placeholder="Last name" class="checkin-search" style="margin:0;">
+        </div>
+        <button class="checkin-btn" style="background:var(--teal);color:white;width:100%;justify-content:center;" onclick="checkinNewPerson()">Check In as New Guest</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     function openNav() {
       document.getElementById('navDrawer').classList.add('open');
@@ -1322,7 +1836,134 @@
       document.getElementById('navDrawer').classList.remove('open');
       document.getElementById('navOverlay').classList.remove('show');
     }
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { closeNav(); closeCheckinModal(); }
+    });
+
+    // ---- SELF CHECK-IN ----
+    let _checkinPeople = null;
+    let _checkinTodayRecord = null;
+    const _checkinToday = new Date().toISOString().split('T')[0];
+
+    // Show check-in card once page content is loaded (called from load())
+    function initCheckin() {
+      document.getElementById('checkinCard').style.display = '';
+      // Pre-fetch people list in background
+      fetch(`${SUPABASE_URL}/rest/v1/people?select=id,first_name,last_name,attendance_count,status&order=first_name.asc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      }).then(r => r.json()).then(rows => { _checkinPeople = rows; }).catch(() => {});
+      // Load today's attendance record
+      fetch(`${SUPABASE_URL}/rest/v1/attendance?date=eq.${_checkinToday}&limit=1`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+      }).then(r => r.json()).then(rows => { _checkinTodayRecord = rows[0] || null; }).catch(() => {});
+    }
+
+    function openCheckinModal() {
+      document.getElementById('checkinModal').classList.add('show');
+      document.getElementById('checkinSearch').value = '';
+      document.getElementById('checkinResults').innerHTML = '';
+      document.getElementById('checkinNewBtn').style.display = 'none';
+      document.getElementById('checkinNewForm').style.display = 'none';
+      setTimeout(() => document.getElementById('checkinSearch').focus(), 100);
+    }
+    function closeCheckinModal() {
+      document.getElementById('checkinModal').classList.remove('show');
+    }
+    document.getElementById('checkinModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('checkinModal')) closeCheckinModal();
+    });
+
+    function searchCheckin(query) {
+      const q = query.trim().toLowerCase();
+      const results = document.getElementById('checkinResults');
+      const newBtn = document.getElementById('checkinNewBtn');
+      if (!q) { results.innerHTML = ''; newBtn.style.display = 'none'; return; }
+      const people = _checkinPeople || [];
+      const matches = people.filter(p => {
+        const name = `${p.first_name||''} ${p.last_name||''}`.toLowerCase();
+        return name.includes(q);
+      }).slice(0, 6);
+      newBtn.style.display = q.length >= 2 ? '' : 'none';
+      if (!matches.length) {
+        results.innerHTML = `<div style="text-align:center;padding:16px;color:var(--gray-500);font-size:0.88rem;">No matches — use the button below if you're new!</div>`;
+        return;
+      }
+      results.innerHTML = matches.map(p => {
+        const initials = `${(p.first_name||'')[0]||''}${(p.last_name||'')[0]||''}`.toUpperCase();
+        const sub = p.attendance_count ? `${p.attendance_count} visit${p.attendance_count===1?'':'s'}` : 'First time!';
+        return `<button class="checkin-result-btn" onclick="confirmCheckin('${p.id}','${escapeHtml(p.first_name||'')}','${escapeHtml(p.last_name||'')}')">
+          <div class="checkin-result-avatar">${initials||'?'}</div>
+          <div><div class="checkin-result-name">${escapeHtml(p.first_name||'')} ${escapeHtml(p.last_name||'')}</div><div class="checkin-result-sub">${sub}</div></div>
+        </button>`;
+      }).join('');
+    }
+
+    function showNewPersonForm() {
+      document.getElementById('checkinNewForm').style.display = '';
+      document.getElementById('checkinFirstName').focus();
+    }
+
+    async function confirmCheckin(personId, firstName, lastName) {
+      closeCheckinModal();
+      await _recordCheckin(personId, false);
+      showCheckinSuccess(`${firstName} ${lastName}`);
+    }
+
+    async function checkinNewPerson() {
+      const first = document.getElementById('checkinFirstName').value.trim();
+      const last = document.getElementById('checkinLastName').value.trim();
+      if (!first) { alert('Please enter your first name.'); return; }
+      // Create person record
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/people`, {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+        body: JSON.stringify({ first_name: first, last_name: last, status: 'new', stage: 'attending', attendance_count: 1, last_attended: _checkinToday, needs_followup: true, notes: 'Self check-in from weekly page' })
+      });
+      const [newPerson] = await res.json();
+      closeCheckinModal();
+      await _recordCheckin(newPerson.id, true);
+      showCheckinSuccess(`${first} ${last}`);
+    }
+
+    async function _recordCheckin(personId, isNew) {
+      // Update person's attendance
+      const person = (_checkinPeople||[]).find(p => p.id === personId);
+      const newCount = ((person?.attendance_count)||0) + 1;
+      await fetch(`${SUPABASE_URL}/rest/v1/people?id=eq.${personId}`, {
+        method: 'PATCH',
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ attendance_count: newCount, last_attended: _checkinToday })
+      });
+      // Upsert today's attendance record
+      const existing = _checkinTodayRecord;
+      const checkedIn = existing ? [...(existing.checked_in||[])] : [];
+      if (!checkedIn.includes(personId)) checkedIn.push(personId);
+      const newPeople = (existing?.new_people||0) + (isNew ? 1 : 0);
+      if (existing) {
+        await fetch(`${SUPABASE_URL}/rest/v1/attendance?date=eq.${_checkinToday}`, {
+          method: 'PATCH',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ checked_in: checkedIn, total: checkedIn.length, new_people: newPeople })
+        });
+        _checkinTodayRecord = { ..._checkinTodayRecord, checked_in: checkedIn, total: checkedIn.length, new_people: newPeople };
+      } else {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/attendance`, {
+          method: 'POST',
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          body: JSON.stringify({ date: _checkinToday, checked_in: checkedIn, total: checkedIn.length, new_people: isNew ? 1 : 0 })
+        });
+        const [rec] = await res.json();
+        _checkinTodayRecord = rec;
+      }
+    }
+
+    function showCheckinSuccess(name) {
+      document.getElementById('checkinAction').innerHTML = `
+        <div class="checkin-success">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          You're checked in, ${escapeHtml(name.trim())}! 🎉
+        </div>`;
+    }
   </script>
 </body>
 </html>

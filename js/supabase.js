@@ -204,6 +204,9 @@ const db = {
         icebreaker: prep.icebreaker || '',
         questions: prep.questions || [],
         message_notes: prep.message_notes || '',
+        night_type: prep.night_type || 'community',
+        flow: prep.flow || [],
+        card_order: prep.card_order || ['icebreaker', 'questions', 'schedule', 'cta'],
         is_current: true,
         is_published: prep.is_published || false
       },
