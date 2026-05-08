@@ -725,11 +725,9 @@
 
     /* ---- PRINT BUTTON (screen) ---- */
     .print-btn-wrap {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 20px 20px 0;
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
+      padding: 8px 0 4px;
     }
     .print-btn {
       display: inline-flex;
@@ -1243,18 +1241,6 @@
       </div>
     </div>
 
-    <!-- Print button (screen only, above the content) -->
-    <div class="print-btn-wrap">
-      <button class="print-btn" onclick="window.print()" aria-label="Print this week">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <polyline points="6 9 6 2 18 2 18 9"/>
-          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-          <rect x="6" y="14" width="12" height="8"/>
-        </svg>
-        Print This Week
-      </button>
-    </div>
-
     <!-- PRINT-ONLY designed handout header (hidden on screen) -->
     <div class="print-handout-header" id="printHeader">
       <div class="print-handout-top">
@@ -1362,6 +1348,18 @@
         <div class="card-label">Location</div>
         <h2 style="font-size:1.1rem;">3845 Gateway Centre Blvd</h2>
         <p style="font-size:0.88rem; color:var(--gray-500);">Pinellas Park, FL 33782 · Thursdays 6:30pm</p>
+      </div>
+
+      <!-- Print button (screen only) -->
+      <div class="print-btn-wrap">
+        <button class="print-btn" onclick="window.print()" aria-label="Print this week">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print This Week
+        </button>
       </div>
 
       <!-- Print-only footer -->
