@@ -911,16 +911,13 @@
     @media print {
       @page { size: letter; margin: 0; }
 
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-
       html, body {
         margin: 0 !important; padding: 0 !important;
         background: white !important;
         font-family: 'Karla', Georgia, serif;
         font-size: 11pt; color: #111 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       /* ===== HIDE EVERYTHING SCREEN-ONLY ===== */
@@ -940,7 +937,9 @@
       .print-handout-header {
         display: block !important;
         background: #145A5E !important;
-        padding: 0.38in 0.55in 0.3in !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 0.35in 0.5in 0.28in !important;
         position: relative; overflow: hidden;
       }
       .print-handout-header::before {
@@ -957,45 +956,48 @@
       }
       .print-handout-top {
         display: flex !important; align-items: center;
-        gap: 14pt; margin-bottom: 14pt;
+        gap: 12pt; margin-bottom: 12pt;
       }
       .print-handout-logo {
-        width: 44pt !important; height: 44pt !important;
+        width: 40pt !important; height: 40pt !important;
         border-radius: 10pt; background: white; padding: 4pt;
         flex-shrink: 0; display: block !important;
       }
       .print-handout-org { flex: 1; }
       .print-handout-name {
-        font-family: 'Rubik', Georgia, serif; font-size: 13pt;
+        font-family: 'Rubik', Georgia, serif; font-size: 12pt;
         font-weight: 800; color: white !important; letter-spacing: 0.3pt;
       }
       .print-handout-sub {
-        font-size: 8pt; color: rgba(255,255,255,0.65) !important;
+        font-size: 7.5pt; color: rgba(255,255,255,0.65) !important;
         margin-top: 2pt; font-weight: 600;
       }
       .print-handout-date {
-        font-size: 9pt; font-weight: 700;
+        font-size: 8.5pt; font-weight: 700;
         color: rgba(255,255,255,0.7) !important;
         text-align: right; white-space: nowrap; flex-shrink: 0;
       }
       .print-handout-topic {
-        font-family: 'Rubik', Georgia, serif; font-size: 26pt;
+        font-family: 'Rubik', Georgia, serif; font-size: 24pt;
         font-weight: 800; color: white !important;
-        line-height: 1.1; margin-bottom: 6pt;
+        line-height: 1.1; margin-bottom: 5pt;
       }
       .print-handout-scripture {
-        font-size: 10pt; color: rgba(255,255,255,0.75) !important;
+        font-size: 9.5pt; color: rgba(255,255,255,0.75) !important;
         font-style: italic;
       }
       .print-handout-header + .container::before {
-        content: ''; display: block; height: 5pt;
-        background: #E88CA0 !important; margin: 0;
+        content: ''; display: block; height: 4pt;
+        background: #E88CA0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        margin: 0;
       }
 
       /* ===== CONTAINER ===== */
       .container {
         max-width: 100% !important;
-        padding: 0.32in 0.55in 0.3in !important;
+        padding: 0.28in 0.5in 0.25in !important;
         margin: 0 !important;
       }
 
@@ -1007,31 +1009,33 @@
       /* ===== ICEBREAKER ===== */
       .icebreaker-card {
         background: #f0fafa !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
         border: 1.2pt solid #2AABB3 !important;
-        border-radius: 8pt !important; padding: 12pt 14pt !important;
-        margin-bottom: 18pt !important; box-shadow: none !important;
+        border-radius: 8pt !important; padding: 10pt 13pt !important;
+        margin-bottom: 14pt !important; box-shadow: none !important;
         page-break-inside: avoid;
       }
       .icebreaker-card .card-label {
-        color: #1B7A80 !important; font-size: 7.5pt !important;
+        color: #1B7A80 !important; font-size: 7pt !important;
         font-weight: 800; letter-spacing: 1.5pt;
-        text-transform: uppercase; margin-bottom: 6pt !important;
+        text-transform: uppercase; margin-bottom: 5pt !important;
       }
       .icebreaker-card p, .icebreaker-q {
-        font-size: 11pt !important; color: #111 !important;
-        font-style: italic; line-height: 1.45; margin: 0 !important;
+        font-size: 10.5pt !important; color: #111 !important;
+        font-style: italic; line-height: 1.4; margin: 0 !important;
       }
       .icebreaker-q {
-        padding: 8pt 0;
+        padding: 6pt 0;
         border-bottom: 0.8pt solid rgba(42,171,179,0.3) !important;
-        line-height: 1.4;
+        line-height: 1.35;
       }
       .icebreaker-q:first-child { padding-top: 0; }
       .icebreaker-q:last-child { padding-bottom: 0; border-bottom: none !important; }
       .icebreaker-q-num {
-        font-size: 7pt !important; color: #1B7A80 !important;
+        font-size: 6.5pt !important; color: #1B7A80 !important;
         font-weight: 800; letter-spacing: 1pt; text-transform: uppercase;
-        margin-bottom: 3pt; font-style: normal;
+        margin-bottom: 2pt; font-style: normal;
       }
 
       /* ===== DISCUSSION QUESTIONS ===== */
@@ -1041,57 +1045,73 @@
         margin: 0 !important; background: transparent !important;
       }
       #questionsCard .card-label {
-        color: #1B7A80 !important; font-size: 7.5pt !important;
+        color: #1B7A80 !important; font-size: 7pt !important;
         font-weight: 800; letter-spacing: 1.5pt; text-transform: uppercase;
-        margin-bottom: 12pt !important; padding-bottom: 6pt;
+        margin-bottom: 10pt !important; padding-bottom: 5pt;
         border-bottom: 1.5pt solid #145A5E !important;
       }
-      .questions-list { display: flex !important; flex-direction: column; gap: 0 !important; }
+
+      /* Use grid so ::after spans full width without flex-child issues */
+      .questions-list { display: block !important; }
       .question-item {
-        display: flex !important; align-items: flex-start;
-        gap: 12pt !important; padding: 10pt 0 4pt !important;
+        display: grid !important;
+        grid-template-columns: 20pt 1fr;
+        grid-template-rows: auto auto;
+        column-gap: 10pt;
+        row-gap: 0;
+        padding: 7pt 0 0 !important;
         border-bottom: none !important;
         page-break-inside: avoid;
       }
       .question-num {
-        width: 22pt !important; height: 22pt !important;
-        min-width: 22pt !important; border-radius: 50% !important;
-        background: #145A5E !important; color: white !important;
-        font-size: 9pt !important; font-weight: 800;
+        grid-column: 1; grid-row: 1;
+        width: 20pt !important; height: 20pt !important;
+        min-width: 20pt !important; border-radius: 50% !important;
+        background: #145A5E !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color: white !important;
+        font-size: 8.5pt !important; font-weight: 800;
         display: flex !important; align-items: center;
         justify-content: center; flex-shrink: 0; margin-top: 1pt;
       }
       .question-text {
-        font-size: 11.5pt !important; color: #111 !important;
-        line-height: 1.45 !important; flex: 1; padding-top: 2pt;
+        grid-column: 2; grid-row: 1;
+        font-size: 10.5pt !important; color: #111 !important;
+        line-height: 1.4 !important; padding-top: 1pt;
       }
-      /* Write-in lines after each question for physical use */
+      /* Write-in lines — grid row 2, span both columns */
       .question-item::after {
         content: ''; display: block;
-        grid-column: 2; width: calc(100% - 34pt);
-        margin-left: 34pt; margin-top: 6pt; margin-bottom: 10pt;
-        height: 40pt;
+        grid-column: 1 / -1;
+        margin-top: 5pt; margin-bottom: 6pt;
+        height: 26pt;
         background: repeating-linear-gradient(
           to bottom,
-          transparent, transparent 12.5pt,
-          #d8e8ea 12.5pt, #d8e8ea 13pt
+          transparent, transparent 12pt,
+          #d0e4e6 12pt, #d0e4e6 12.5pt
         );
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       /* ===== PAGE BREAK BEFORE NOTES ===== */
       #questionsCard.has-notes-page {
         page-break-after: always;
+        break-after: page;
       }
 
       /* ===== PAGE 2: NOTES MINI HEADER ===== */
       .print-notes-header {
-        display: none; /* hidden by default, shown when notes exist */
+        display: none;
       }
       #questionsCard.has-notes-page ~ .print-notes-header,
       .print-notes-header.has-notes {
         display: block !important;
         background: #145A5E !important;
-        padding: 0.2in 0.55in 0.18in !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 0.18in 0.5in 0.16in !important;
         position: relative; overflow: hidden;
       }
       .print-notes-header::before {
@@ -1101,96 +1121,91 @@
       }
       .print-notes-header-top {
         display: flex !important; align-items: center;
-        justify-content: space-between; margin-bottom: 10pt;
+        justify-content: space-between; margin-bottom: 8pt;
       }
       .print-notes-header-brand {
-        display: flex !important; align-items: center; gap: 8pt;
-        font-family: 'Rubik', Georgia, serif; font-size: 10pt;
+        display: flex !important; align-items: center; gap: 7pt;
+        font-family: 'Rubik', Georgia, serif; font-size: 9.5pt;
         font-weight: 800; color: rgba(255,255,255,0.85) !important;
       }
       .print-notes-header-logo {
-        width: 24pt !important; height: 24pt !important;
-        border-radius: 6pt; background: white; padding: 2pt;
+        width: 22pt !important; height: 22pt !important;
+        border-radius: 5pt; background: white; padding: 2pt;
         flex-shrink: 0; display: block !important;
       }
       .print-notes-header-date {
-        font-size: 8pt; color: rgba(255,255,255,0.6) !important;
+        font-size: 7.5pt; color: rgba(255,255,255,0.6) !important;
         font-weight: 600; text-align: right;
       }
       .print-notes-header-label {
-        font-size: 7.5pt; font-weight: 800; letter-spacing: 2pt;
+        font-size: 7pt; font-weight: 800; letter-spacing: 2pt;
         text-transform: uppercase; color: #2AABB3 !important;
-        margin-bottom: 4pt;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        margin-bottom: 3pt;
       }
       .print-notes-header-topic {
-        font-family: 'Rubik', Georgia, serif; font-size: 18pt;
+        font-family: 'Rubik', Georgia, serif; font-size: 17pt;
         font-weight: 800; color: white !important; line-height: 1.1;
         margin-bottom: 4pt;
       }
       .print-notes-header-takeaway {
-        font-size: 9.5pt; font-style: italic;
-        color: rgba(255,255,255,0.7) !important; line-height: 1.4;
+        font-size: 9pt; font-style: italic;
+        color: rgba(255,255,255,0.7) !important; line-height: 1.35;
       }
-      /* Pink accent bar under notes header */
       .print-notes-header + #messageNotesCard::before,
       .print-notes-header.has-notes + #messageNotesCard::before {
         content: ''; display: block; height: 4pt;
-        background: #E88CA0 !important; margin: 0 -0.55in;
+        background: #E88CA0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        margin: 0 -0.5in;
       }
 
       /* ===== PAGE 2: MESSAGE NOTES CARD ===== */
       #messageNotesCard.has-notes {
         display: block !important;
         border: none !important; border-radius: 0 !important;
-        box-shadow: none !important; padding: 0.28in 0.55in 0.3in !important;
+        box-shadow: none !important; padding: 0.22in 0.5in 0.3in !important;
         margin: 0 !important; background: transparent !important;
       }
       /* Main Point */
       .notes-main-point {
         font-family: 'Rubik', Georgia, serif !important;
-        font-size: 15pt !important; font-weight: 800 !important;
+        font-size: 14pt !important; font-weight: 800 !important;
         color: #145A5E !important; line-height: 1.2;
-        margin: 14pt 0 6pt !important;
-        padding: 0 !important;
+        margin: 12pt 0 5pt !important;
+        padding-bottom: 5pt !important;
         border-bottom: 1pt solid #d0e8ea !important;
-        padding-bottom: 6pt !important;
         display: block !important;
       }
       .notes-main-point::before { display: none !important; }
-      /* Scripture — full red */
+      /* Scripture — red block */
       .notes-scripture {
-        margin: 8pt 0 !important;
-        padding: 10pt 14pt !important;
+        margin: 7pt 0 !important;
+        padding: 9pt 12pt !important;
         background: rgba(192,57,43,0.05) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
         border-left: 2.5pt solid #c0392b !important;
         border-radius: 0 6pt 6pt 0 !important;
         font-size: 10pt !important; font-style: italic;
-        color: #c0392b !important; line-height: 1.6;
+        color: #c0392b !important; line-height: 1.55;
         page-break-inside: avoid;
       }
       /* Body text */
       .notes-body {
-        font-size: 11pt !important; color: #222 !important;
-        line-height: 1.55; margin: 6pt 0 0 !important;
+        font-size: 10.5pt !important; color: #222 !important;
+        line-height: 1.5; margin: 5pt 0 0 !important;
         padding: 0 !important;
-      }
-      /* Write-in lines after body blocks for physical note-taking */
-      .notes-body::after {
-        content: ''; display: block; margin-top: 6pt; margin-bottom: 10pt;
-        height: 40pt;
-        background: repeating-linear-gradient(
-          to bottom,
-          transparent, transparent 12.5pt,
-          #dde8ea 12.5pt, #dde8ea 13pt
-        );
       }
 
       /* ===== SHARED FOOTER ===== */
       .print-footer {
         display: block !important;
-        margin-top: 20pt; padding-top: 8pt;
+        margin-top: 18pt; padding-top: 7pt;
         border-top: 0.8pt solid #ccd8da;
-        font-size: 7.5pt; color: #999;
+        font-size: 7pt; color: #999;
         text-align: center; letter-spacing: 0.3pt;
       }
     }
