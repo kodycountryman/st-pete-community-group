@@ -259,12 +259,6 @@
               <input type="text" id="contactName" placeholder="Your name" required>
             </div>
             <div class="form-group">
-              <input type="tel" id="contactPhone" placeholder="Phone number (optional)">
-            </div>
-            <div class="form-group">
-              <input type="email" id="contactEmail" placeholder="Email (optional)">
-            </div>
-            <div class="form-group">
               <textarea id="contactMessage" rows="4" placeholder="What's on your mind?" required></textarea>
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;">Send Message</button>
@@ -334,8 +328,6 @@
       const name = document.getElementById('contactName').value;
       const msg = {
         name,
-        phone: document.getElementById('contactPhone').value,
-        email: document.getElementById('contactEmail').value,
         message: document.getElementById('contactMessage').value,
         website: document.getElementById('contactWebsite')?.value || '' // honeypot
       };
@@ -362,7 +354,7 @@
               'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml0Z3lhdHNocHZ3eHFtZmh4Z3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NTU0MzMsImV4cCI6MjA5MTMzMTQzM30.tt3KNvdaccTVflvYSuHK2Fvq-ObAbYrFhF9LGV5RpUk',
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name: msg.name, phone: msg.phone, email: msg.email, message: msg.message })
+            body: JSON.stringify({ name: msg.name, message: msg.message })
           });
         } catch (err) { console.error(err); }
       }

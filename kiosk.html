@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" type="image/png" href="assets/spbs-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Check In | St. Pete Bible Study</title>
@@ -80,17 +81,17 @@
       gap: 14px;
     }
     .kiosk-logo {
-      width: 40px;
-      height: 40px;
-      background: rgba(255,255,255,0.15);
+      width: 44px;
+      height: 44px;
       border-radius: 10px;
+      background: rgba(255,255,255,0.95);
+      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 0.8rem;
-      color: white;
+      overflow: hidden;
     }
+    .kiosk-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .kiosk-title { color: white; font-size: 1.2rem; font-weight: 700; }
     .kiosk-subtitle { color: rgba(255,255,255,0.6); font-size: 0.8rem; font-weight: 500; }
     .kiosk-header-right { display: flex; align-items: center; gap: 12px; }
@@ -259,53 +260,59 @@
       font-size: clamp(1.05rem, 2vw, 1.5rem);
     }
 
-    /* ---- VIEW CHECKED-IN TOGGLE ---- */
+    /* ---- VIEW CHECKED-IN TOGGLE (floating icon square) ---- */
     .kiosk-view-checked-btn {
-      margin-top: clamp(20px, 3vh, 36px);
-      background: rgba(42, 171, 179, 0.08);
-      border: 2px solid rgba(42, 171, 179, 0.2);
+      position: fixed;
+      top: 96px;
+      left: 20px;
+      z-index: 70;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      background: white;
+      border: 2px solid rgba(42, 171, 179, 0.25);
       color: var(--teal-dark);
-      font-size: clamp(1rem, 2vw, 1.5rem);
-      font-weight: 600;
       cursor: pointer;
       font-family: inherit;
       display: flex;
       align-items: center;
-      gap: clamp(8px, 1vw, 14px);
-      padding: clamp(12px, 1.8vh, 22px) clamp(20px, 2.5vw, 36px);
-      border-radius: clamp(12px, 1.5vw, 20px);
-      transition: opacity 0.15s, background 0.15s;
+      justify-content: center;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(20, 90, 94, 0.12);
+      transition: background 0.15s, transform 0.1s, border-color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .kiosk-view-checked-btn:hover { background: rgba(42, 171, 179, 0.14); }
-    .kiosk-welcome.has-results .kiosk-view-checked-btn { display: none; }
+    .kiosk-view-checked-btn:hover { background: rgba(42, 171, 179, 0.08); }
+    .kiosk-view-checked-btn:active { transform: scale(0.95); }
+    .kiosk-view-checked-btn.is-active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: white;
+    }
+    .kiosk-view-checked-btn svg { width: 24px; height: 24px; }
+    .kiosk-view-checked-label { display: none; }
 
-    /* ---- FAMILY MODE ---- */
-    .kiosk-family-toggle {
-      margin-top: clamp(10px, 1.2vh, 16px);
-      display: inline-flex;
+    /* ---- BRAND MARK (welcome area) ---- */
+    .kiosk-brand-mark {
+      display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 10px;
-      padding: clamp(10px, 1.4vh, 16px) clamp(18px, 2.2vw, 28px);
-      background: white;
-      border: 2px dashed var(--gold);
-      color: var(--teal-dark);
-      border-radius: clamp(12px, 1.5vw, 18px);
-      font-family: inherit;
-      font-size: clamp(0.9rem, 1.6vw, 1.2rem);
+      margin-bottom: clamp(18px, 3vh, 32px);
+    }
+    .kiosk-brand-mark-logo {
+      width: clamp(160px, 22vw, 260px);
+      height: auto;
+      display: block;
+    }
+    .kiosk-brand-mark-tag {
+      font-size: clamp(0.72rem, 1.1vw, 0.92rem);
       font-weight: 700;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      color: var(--gray-500);
+      letter-spacing: 2px;
+      text-transform: uppercase;
     }
-    .kiosk-family-toggle.active {
-      background: var(--gold);
-      color: var(--slate);
-      border-style: solid;
-    }
-    .kiosk-family-toggle:hover { background: rgba(232,184,75,0.15); }
-    .kiosk-family-toggle.active:hover { background: var(--gold); }
-    .kiosk-welcome.has-results .kiosk-family-toggle { display: none; }
+    .kiosk-welcome.has-results .kiosk-brand-mark { display: none; }
 
     /* Family mode: selected state on person row */
     .kiosk-person.is-staged {
@@ -596,7 +603,7 @@
   <div id="kioskApp" class="kiosk-app">
     <div class="kiosk-header">
       <div class="kiosk-brand">
-        <div class="kiosk-logo">SP</div>
+        <div class="kiosk-logo"><img src="assets/spbs-logo-light.png" alt="SPBS"></div>
         <div>
           <div class="kiosk-title">St. Pete Bible Study</div>
           <div class="kiosk-subtitle" id="kioskDate"></div>
@@ -613,21 +620,23 @@
 
     <div class="kiosk-body">
       <div class="kiosk-welcome" id="kioskWelcome">
+        <div class="kiosk-brand-mark">
+          <img class="kiosk-brand-mark-logo" src="assets/spbs-logo-light.png" alt="St. Pete Bible Study">
+          <div class="kiosk-brand-mark-tag">Grace Family Church Campus Launch</div>
+        </div>
         <h1 class="kiosk-welcome-title">Welcome! Check In Below</h1>
-        <p class="kiosk-welcome-sub">Start typing your name to find yourself</p>
+        <p class="kiosk-welcome-sub">Tap everyone in your group to sign in</p>
         <div class="kiosk-search-wrap">
           <input type="text" class="kiosk-search-input" id="kioskSearch" placeholder="Type your name..." oninput="onSearch()" autocomplete="off">
           <button class="kiosk-new-btn" onclick="openNewModal()">I'm New!</button>
         </div>
-        <button class="kiosk-view-checked-btn" id="viewCheckedBtn" onclick="toggleCheckedInView()">
-          <svg style="width:clamp(18px,2.5vw,28px);height:clamp(18px,2.5vw,28px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
-          <span id="viewCheckedLabel">View Checked In</span>
-        </button>
-        <button class="kiosk-family-toggle" id="familyToggleBtn" onclick="toggleFamilyMode()">
-          <svg style="width:clamp(18px,2.5vw,26px);height:clamp(18px,2.5vw,26px)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><circle cx="17" cy="7" r="3"/><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><path d="M22 21v-2a3 3 0 0 0-2-2.83"/></svg>
-          <span id="familyToggleLabel">Family Sign In</span>
-        </button>
       </div>
+
+      <!-- Floating Checked-In toggle (top-left square) -->
+      <button class="kiosk-view-checked-btn" id="viewCheckedBtn" onclick="toggleCheckedInView()" aria-label="View checked in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+        <span class="kiosk-view-checked-label" id="viewCheckedLabel">View Checked In</span>
+      </button>
       <div class="kiosk-results" id="kioskResults"></div>
     </div>
   </div>
@@ -675,10 +684,6 @@
         <input type="text" id="newLast" placeholder="Your last name">
       </div>
       <div class="kiosk-form-group">
-        <label>Phone (optional)</label>
-        <input type="tel" id="newPhone" placeholder="Your phone number">
-      </div>
-      <div class="kiosk-form-group">
         <label>Who invited you?</label>
         <input type="text" id="newConnector" placeholder="A friend's name (optional)">
       </div>
@@ -697,7 +702,7 @@
     let checkedIn = new Set();
     let today = '';
     let showingCheckedIn = false;
-    let familyMode = false;
+    const familyMode = true; // Always on — every sign-in uses multi-select staging
     let familyStaging = new Set(); // ids staged but not yet saved
 
     // ---- AUTH CHECK ----
@@ -747,7 +752,6 @@
         id: r.id,
         firstName: r.first_name,
         lastName: r.last_name || '',
-        phone: r.phone || '',
         status: r.status || 'new'
       }));
 
@@ -824,22 +828,7 @@
         }).join('');
     }
 
-    // ---- FAMILY MODE ----
-    function toggleFamilyMode() {
-      familyMode = !familyMode;
-      const btn = document.getElementById('familyToggleBtn');
-      const label = document.getElementById('familyToggleLabel');
-      if (familyMode) {
-        btn.classList.add('active');
-        label.textContent = 'Family Mode: ON';
-      } else {
-        btn.classList.remove('active');
-        label.textContent = 'Family Sign In';
-        clearFamilyStaging();
-      }
-      onSearch();
-    }
-
+    // ---- FAMILY MODE (always on) ----
     function toggleFamilyStage(id) {
       if (familyStaging.has(id)) {
         familyStaging.delete(id);
@@ -892,14 +881,19 @@
       const welcome = document.getElementById('kioskWelcome');
       const results = document.getElementById('kioskResults');
       const label = document.getElementById('viewCheckedLabel');
+      const btn = document.getElementById('viewCheckedBtn');
 
       if (showingCheckedIn) {
         label.textContent = 'Hide Checked In';
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-label', 'Hide checked in');
         document.getElementById('kioskSearch').value = '';
         welcome.classList.add('has-results');
         renderCheckedInList();
       } else {
         label.textContent = 'View Checked In';
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-label', 'View checked in');
         welcome.classList.remove('has-results');
         results.innerHTML = '';
       }
@@ -943,6 +937,7 @@
       if (checkedIn.size === 0) {
         showingCheckedIn = false;
         document.getElementById('viewCheckedLabel').textContent = 'View Checked In';
+        document.getElementById('viewCheckedBtn').classList.remove('is-active');
         document.getElementById('kioskWelcome').classList.remove('has-results');
         document.getElementById('kioskResults').innerHTML = '';
       } else {
@@ -1028,7 +1023,6 @@
     function openNewModal() {
       document.getElementById('newFirst').value = '';
       document.getElementById('newLast').value = '';
-      document.getElementById('newPhone').value = '';
       document.getElementById('newConnector').value = '';
       document.getElementById('newModal').classList.add('show');
       setTimeout(() => document.getElementById('newFirst').focus(), 200);
@@ -1053,15 +1047,12 @@
 
       const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
       const lastName = document.getElementById('newLast').value.trim();
-      const phone = document.getElementById('newPhone').value.trim();
       const connector = document.getElementById('newConnector').value.trim();
 
       const dbRow = {
         id,
         first_name: firstName,
         last_name: lastName,
-        phone: phone,
-        email: '',
         status: 'new',
         stage: 'attending',
         connector: connector,
@@ -1087,7 +1078,6 @@
         id,
         firstName,
         lastName,
-        phone,
         status: 'new'
       });
       people.sort((a, b) => a.firstName.localeCompare(b.firstName));
@@ -1105,7 +1095,7 @@
       // and a Supabase row in `messages` so other devices get notified on next refresh.
       try {
         localStorage.setItem('stpete_new_guest', JSON.stringify({
-          id, firstName, lastName, connector, phone, at: new Date().toISOString()
+          id, firstName, lastName, connector, at: new Date().toISOString()
         }));
       } catch (e) {}
 
@@ -1114,8 +1104,6 @@
           method: 'POST',
           body: {
             name: `🆕 ${firstName} ${lastName || ''}`.trim(),
-            phone,
-            email: '',
             message: `First-time check-in on kiosk${connector ? ' — invited by ' + connector : ''}`
           }
         });
@@ -1128,7 +1116,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            firstName, lastName, phone, connector, source: 'kiosk'
+            firstName, lastName, connector, source: 'kiosk'
           })
         }).catch(() => {});
       } catch (e) { /* non-fatal */ }

@@ -48,8 +48,6 @@ const db = {
       id: person.id,
       first_name: person.firstName,
       last_name: person.lastName || '',
-      phone: person.phone || '',
-      email: person.email || '',
       status: person.status || 'new',
       stage: person.stage || 'attending',
       connector: person.connector || '',
@@ -79,7 +77,7 @@ const db = {
     // Convert camelCase to snake_case
     const row = {};
     const map = {
-      firstName: 'first_name', lastName: 'last_name', phone: 'phone', email: 'email',
+      firstName: 'first_name', lastName: 'last_name',
       status: 'status', stage: 'stage', connector: 'connector', notes: 'notes',
       lastAttended: 'last_attended', needsFollowup: 'needs_followup',
       followupDone: 'followup_done', followupAssignedTo: 'followup_assigned_to',
@@ -100,8 +98,6 @@ const db = {
       id: p.id,
       first_name: p.firstName,
       last_name: p.lastName || '',
-      phone: p.phone || '',
-      email: p.email || '',
       status: p.status || 'new',
       stage: p.stage || 'attending',
       connector: p.connector || '',
@@ -360,8 +356,6 @@ const db = {
       id: row.id,
       firstName: row.first_name,
       lastName: row.last_name || '',
-      phone: row.phone || '',
-      email: row.email || '',
       status: row.status || 'new',
       stage: row.stage || 'attending',
       connector: row.connector || '',

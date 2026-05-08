@@ -133,12 +133,10 @@ const app = {
     const alertEl = document.createElement('div');
     alertEl.className = 'guest-alert';
     const invitedBy = person.connector ? ` · invited by <strong>${this.escapeHtml(person.connector)}</strong>` : '';
-    const phoneHint = person.phone ? `<div class="guest-alert-sub">📱 ${this.escapeHtml(person.phone)}</div>` : '';
     alertEl.innerHTML = `
       <div class="guest-alert-badge">🆕 First Time</div>
       <div class="guest-alert-name">${this.escapeHtml(person.firstName)} ${this.escapeHtml(person.lastName || '')}</div>
       <div class="guest-alert-meta">Just checked in${invitedBy}</div>
-      ${phoneHint}
       <div class="guest-alert-actions">
         <button class="guest-alert-btn" onclick="app.navigate('followup'); this.closest('.guest-alert').remove();">Follow Up</button>
         <button class="guest-alert-dismiss" onclick="this.closest('.guest-alert').remove()">Dismiss</button>
@@ -388,8 +386,6 @@ const app = {
       document.getElementById('personId').value = person.id;
       document.getElementById('personFirst').value = person.firstName;
       document.getElementById('personLast').value = person.lastName || '';
-      document.getElementById('personPhone').value = person.phone || '';
-      document.getElementById('personEmail').value = person.email || '';
       document.getElementById('personStatus').value = person.status;
       document.getElementById('personStage').value = person.stage;
       document.getElementById('personConnector').value = person.connector || '';
@@ -399,8 +395,6 @@ const app = {
       document.getElementById('personId').value = '';
       document.getElementById('personFirst').value = '';
       document.getElementById('personLast').value = '';
-      document.getElementById('personPhone').value = '';
-      document.getElementById('personEmail').value = '';
       document.getElementById('personStatus').value = 'new';
       document.getElementById('personStage').value = 'attending';
       document.getElementById('personConnector').value = '';
@@ -418,8 +412,6 @@ const app = {
       id: id || Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
       firstName,
       lastName: document.getElementById('personLast').value.trim(),
-      phone: document.getElementById('personPhone').value.trim(),
-      email: document.getElementById('personEmail').value.trim(),
       status: document.getElementById('personStatus').value,
       stage: document.getElementById('personStage').value,
       connector: document.getElementById('personConnector').value.trim(),
@@ -449,7 +441,7 @@ const app = {
 
     if (people.length === 0) {
       tbody.innerHTML = `
-        <tr class="empty-row"><td colspan="8">
+        <tr class="empty-row"><td colspan="7">
           <div class="empty-state-large">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
             <p>No people found</p>
@@ -462,14 +454,6 @@ const app = {
     tbody.innerHTML = people.map(p => `
       <tr>
         <td><strong>${p.firstName} ${p.lastName || ''}</strong></td>
-        <td>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <span>${p.phone || '—'}</span>
-            ${p.phone ? `<a class="sms-btn" href="sms:${p.phone.replace(/\D/g,'')}" title="Text ${p.firstName}">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </a>` : ''}
-          </div>
-        </td>
         <td><span class="status-badge status-${p.status}">${this.capitalize(p.status)}</span></td>
         <td><span class="stage-badge">${this.capitalize(p.stage)}</span></td>
         <td>${p.connector || '—'}</td>
@@ -503,7 +487,6 @@ const app = {
     if (search) {
       people = people.filter(p =>
         `${p.firstName} ${p.lastName}`.toLowerCase().includes(search) ||
-        (p.phone && p.phone.includes(search)) ||
         (p.connector && p.connector.toLowerCase().includes(search))
       );
     }
@@ -569,19 +552,6 @@ const app = {
       `<option value="${m}">${m}</option>`
     ).join('');
 
-    const sendTextBtn = (p) => {
-      if (!p.phone) {
-        return `<button class="followup-text-btn disabled" title="No phone number on file" onclick="app.toast('No phone number on file for ${p.firstName.replace(/'/g,"\\'")}.')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          No #
-        </button>`;
-      }
-      return `<button class="followup-text-btn" onclick="app.sendFollowupText('${p.id}')" title="Opens your SMS app with a pre-written message">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Send Text
-      </button>`;
-    };
-
     // Main followup page
     const mainList = document.getElementById('followupList');
     if (mainList) {
@@ -592,14 +562,13 @@ const app = {
           <div class="followup-item">
             <div class="followup-item-info">
               <span class="followup-item-name">${p.firstName} ${p.lastName || ''}</span>
-              <span class="followup-item-reason">${p.status === 'new' ? 'New person — follow up within 24hrs' : 'Needs check-in'}${p.phone ? ' · ' + p.phone : ''}</span>
+              <span class="followup-item-reason">${p.status === 'new' ? 'New person — follow up within 24hrs' : 'Needs check-in'}</span>
             </div>
             <div class="followup-item-actions">
               <select class="followup-assign" onchange="app.assignFollowup('${p.id}', this.value)" title="Assign to">
                 <option value="">Assign to...</option>
                 ${assignOptions}
               </select>
-              ${sendTextBtn(p)}
               <button class="followup-done-btn" onclick="app.markFollowedUp('${p.id}')">Done</button>
             </div>
           </div>
@@ -628,48 +597,12 @@ const app = {
               <span class="followup-item-reason">${p.followupAssignedTo ? '<strong>' + p.followupAssignedTo + '</strong> · ' : ''}${p.status === 'new' ? 'New — 24hr follow-up' : 'Check-in'}</span>
             </div>
             <div class="followup-item-actions">
-              ${sendTextBtn(p)}
               <button class="followup-done-btn" onclick="app.markFollowedUp('${p.id}')">Done</button>
             </div>
           </div>
         `).join('');
       }
     }
-  },
-
-  // Send a pre-written follow-up text via the native SMS app
-  sendFollowupText(id) {
-    const person = this.data.people.find(p => p.id === id);
-    if (!person) return;
-    if (!person.phone) {
-      this.toast(`No phone number on file for ${person.firstName}.`);
-      return;
-    }
-
-    // Pick template based on person status
-    const type = person.status === 'new' ? 'new' : 'checkin';
-    const body = Generators.getText(type, person.firstName);
-
-    // Native SMS URL scheme — works on iOS/Android, and on macOS via Messages app.
-    // iOS wants `&body=`, Android wants `?body=`. Using `?` is the safest for both.
-    const phone = person.phone.replace(/[^\d+]/g, '');
-    const url = `sms:${phone}?&body=${encodeURIComponent(body)}`;
-
-    // Open SMS app
-    window.location.href = url;
-
-    // Optimistically mark the follow-up as reached out so the list shrinks.
-    // Also drop a record on the `_reachedOut` map for audit.
-    this._reachedOut[id] = {
-      at: new Date().toISOString(),
-      method: 'sms',
-      body
-    };
-    try { localStorage.setItem('stpete_reached_out', JSON.stringify(this._reachedOut)); } catch (e) {}
-
-    // Mark followed up in DB + state
-    this.markFollowedUp(id);
-    this.toast(`Text drafted for ${person.firstName}. Hit send in your Messages app.`);
   },
 
   async assignFollowup(personId, assignee) {
@@ -2042,8 +1975,6 @@ const app = {
       id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
       firstName,
       lastName: document.getElementById('quickLast').value.trim(),
-      phone: document.getElementById('quickPhone').value.trim(),
-      email: '',
       status: 'new',
       stage: 'attending',
       connector: document.getElementById('quickConnector').value.trim(),
@@ -2059,7 +1990,6 @@ const app = {
 
     document.getElementById('quickFirst').value = '';
     document.getElementById('quickLast').value = '';
-    document.getElementById('quickPhone').value = '';
     document.getElementById('quickConnector').value = '';
 
     await this.refresh();
@@ -2116,8 +2046,6 @@ const app = {
     const map = {};
     const firstNameAliases = ['first name', 'first_name', 'firstname', 'first', 'name', 'fname'];
     const lastNameAliases = ['last name', 'last_name', 'lastname', 'last', 'lname', 'surname'];
-    const phoneAliases = ['phone', 'mobile', 'cell', 'number', 'phone number', 'phone_number'];
-    const emailAliases = ['email', 'e-mail', 'email address', 'email_address'];
     const statusAliases = ['status', 'type', 'category'];
     const connectorAliases = ['connected to', 'connected_to', 'connector', 'invited by', 'invited_by', 'brought by'];
     const notesAliases = ['notes', 'note', 'comments', 'comment'];
@@ -2125,8 +2053,6 @@ const app = {
     headers.forEach((h, i) => {
       if (firstNameAliases.includes(h)) map.firstName = i;
       else if (lastNameAliases.includes(h)) map.lastName = i;
-      else if (phoneAliases.includes(h)) map.phone = i;
-      else if (emailAliases.includes(h)) map.email = i;
       else if (statusAliases.includes(h)) map.status = i;
       else if (connectorAliases.includes(h)) map.connector = i;
       else if (notesAliases.includes(h)) map.notes = i;
@@ -2164,8 +2090,6 @@ const app = {
       this.csvParsedData.push({
         firstName,
         lastName,
-        phone: map.phone !== undefined ? (cols[map.phone] || '').trim().replace(/['"]/g, '') : '',
-        email: map.email !== undefined ? (cols[map.email] || '').trim().replace(/['"]/g, '') : '',
         status,
         connector: map.connector !== undefined ? (cols[map.connector] || '').trim().replace(/['"]/g, '') : '',
         notes: map.notes !== undefined ? (cols[map.notes] || '').trim().replace(/['"]/g, '') : ''
@@ -2207,20 +2131,18 @@ const app = {
     table.innerHTML = `
       <table>
         <thead>
-          <tr><th>First</th><th>Last</th><th>Phone</th><th>Email</th><th>Status</th><th>Connected To</th></tr>
+          <tr><th>First</th><th>Last</th><th>Status</th><th>Connected To</th></tr>
         </thead>
         <tbody>
           ${this.csvParsedData.slice(0, 50).map(p => `
             <tr>
               <td>${p.firstName}</td>
               <td>${p.lastName}</td>
-              <td>${p.phone}</td>
-              <td>${p.email}</td>
               <td>${p.status}</td>
               <td>${p.connector}</td>
             </tr>
           `).join('')}
-          ${this.csvParsedData.length > 50 ? '<tr><td colspan="6" style="text-align:center; color:var(--gray-400);">...and ' + (this.csvParsedData.length - 50) + ' more</td></tr>' : ''}
+          ${this.csvParsedData.length > 50 ? '<tr><td colspan="4" style="text-align:center; color:var(--gray-400);">...and ' + (this.csvParsedData.length - 50) + ' more</td></tr>' : ''}
         </tbody>
       </table>
     `;
@@ -2252,8 +2174,6 @@ const app = {
         id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5) + i,
         firstName: p.firstName,
         lastName: p.lastName,
-        phone: p.phone,
-        email: p.email,
         status: p.status,
         stage: 'attending',
         connector: p.connector,
@@ -2753,7 +2673,6 @@ const app = {
         id: p.id,
         name: `${p.firstName} ${p.lastName || ''}`.trim(),
         firstName: p.firstName,
-        phone: p.phone || '',
         attendedWeeks: attendedRecent.length,
         lastAttended,
         score,
@@ -2806,7 +2725,6 @@ const app = {
         id: p.id,
         name: `${p.firstName} ${p.lastName || ''}`.trim(),
         firstName: p.firstName,
-        phone: p.phone || '',
         streak: maxRun,
         lastAttended,
         daysGone
@@ -2920,10 +2838,6 @@ const app = {
         badge = '<span class="retention-row-badge urgent">Ghosted</span>';
       }
 
-      const canText = r.phone && r.phone.length >= 7;
-      const textBtn = canText
-        ? `<button class="retention-action-btn primary" onclick="app.openRetentionText('${r.id}', '${variant}')">Text</button>`
-        : `<button class="retention-action-btn ghost" disabled title="No phone number">No phone</button>`;
       const followBtn = `<button class="retention-action-btn ghost" onclick="app.flagForFollowup('${r.id}')">Flag</button>`;
 
       return `
@@ -2935,7 +2849,6 @@ const app = {
           </div>
           ${badge}
           <div class="retention-row-actions">
-            ${textBtn}
             ${followBtn}
           </div>
         </div>
@@ -3090,29 +3003,6 @@ const app = {
     });
   },
 
-  // ---- Retention actions ----
-  openRetentionText(personId, variant) {
-    const person = this.data.people.find(p => p.id === personId);
-    if (!person) { this.toast('Person not found'); return; }
-
-    const firstName = person.firstName;
-    let message;
-    if (variant === 'ghosted') {
-      message = `Hey ${firstName}! Noticed we haven't seen you at Bible study in a couple weeks. We've missed you — everything okay? No pressure, just wanted you to know the seat's still yours.`;
-    } else {
-      message = `Hey ${firstName}! Just wrapping up at St. Pete Bible Study tonight and realized you weren't here. Everything good? Would love to see you next Thursday!`;
-    }
-
-    // Prefer SMS link on mobile, fallback to clipboard copy
-    const phone = (person.phone || '').replace(/[^+\d]/g, '');
-    if (phone) {
-      const smsUrl = `sms:${phone}${/iphone|ipad|mac/i.test(navigator.userAgent) ? '&' : '?'}body=${encodeURIComponent(message)}`;
-      window.open(smsUrl, '_blank');
-    }
-
-    navigator.clipboard?.writeText(message).then(() => this.toast('Message copied — opening SMS')).catch(() => {});
-  },
-
   flagForFollowup(personId) {
     const person = this.data.people.find(p => p.id === personId);
     if (!person) return;
@@ -3125,7 +3015,7 @@ const app = {
     const missing = this.getMissingTonightList();
     if (missing.length === 0) { this.toast('No one missing tonight'); return; }
     const text = missing
-      .map(r => `${r.name}${r.phone ? ' — ' + r.phone : ''} (${r.attendedWeeks} of last 3)`)
+      .map(r => `${r.name} (${r.attendedWeeks} of last 3)`)
       .join('\n');
     navigator.clipboard?.writeText(text)
       .then(() => this.toast(`Copied ${missing.length} names`))

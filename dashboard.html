@@ -339,7 +339,7 @@
               <div class="csv-drop-zone" id="csvDropZone">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 <p><strong>Drop your CSV here</strong> or click to browse</p>
-                <p class="csv-hint">Expected columns: First Name, Last Name, Phone, Email, Status, Connected To</p>
+                <p class="csv-hint">Expected columns: First Name, Last Name, Status, Connected To, Notes</p>
                 <input type="file" id="csvFileInput" accept=".csv,.tsv,.txt" onchange="app.handleCSVFile(this.files[0])" style="display:none;">
               </div>
               <div class="csv-preview" id="csvPreview" style="display:none;">
@@ -359,8 +359,6 @@
                   <table class="format-table">
                     <tr><td><strong>First Name</strong> *</td><td>first_name, firstName, first, name</td></tr>
                     <tr><td><strong>Last Name</strong></td><td>last_name, lastName, last</td></tr>
-                    <tr><td><strong>Phone</strong></td><td>phone, mobile, cell, number</td></tr>
-                    <tr><td><strong>Email</strong></td><td>email, e-mail</td></tr>
                     <tr><td><strong>Status</strong></td><td>status (new, returning, consistent, core, leader)</td></tr>
                     <tr><td><strong>Connected To</strong></td><td>connected_to, connector, invited_by</td></tr>
                     <tr><td><strong>Notes</strong></td><td>notes, note, comments</td></tr>
@@ -376,7 +374,6 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Phone</th>
                 <th>Status</th>
                 <th>Pipeline Stage</th>
                 <th>Connected To</th>
@@ -387,7 +384,7 @@
             </thead>
             <tbody id="peopleTableBody">
               <tr class="empty-row">
-                <td colspan="8">
+                <td colspan="7">
                   <div class="empty-state-large">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                     <p>No people added yet</p>
@@ -437,7 +434,6 @@
             <div class="quick-add-row">
               <input type="text" id="quickFirst" placeholder="First Name *" class="quick-input">
               <input type="text" id="quickLast" placeholder="Last Name" class="quick-input">
-              <input type="tel" id="quickPhone" placeholder="Phone" class="quick-input">
               <input type="text" id="quickConnector" placeholder="Who brought them?" class="quick-input">
               <button class="btn-primary-sm" onclick="app.quickAddPerson()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1043,16 +1039,6 @@
           <div class="form-group">
             <label>Last Name</label>
             <input type="text" id="personLast" placeholder="Last name">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="tel" id="personPhone" placeholder="(555) 123-4567">
-          </div>
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="personEmail" placeholder="email@example.com">
           </div>
         </div>
         <div class="form-row">

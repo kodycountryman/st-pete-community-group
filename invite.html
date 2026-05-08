@@ -458,16 +458,13 @@
     <!-- PRE SIGN IN / I'M INTERESTED -->
     <div class="invite-presignin" id="preSignIn">
       <h2>I'm interested — save my seat</h2>
-      <p class="sub">Give us your name and number and we'll send a quick text so you know where to park, what to expect, and that we're actually expecting you.</p>
+      <p class="sub">Let us know you're coming and we'll save you a spot.</p>
       <form onsubmit="submitPreSignIn(event)">
         <div class="invite-ps-row">
           <input type="text" id="psFirst" placeholder="First name" required autocomplete="given-name">
         </div>
         <div class="invite-ps-row">
           <input type="text" id="psLast" placeholder="Last name (optional)" autocomplete="family-name">
-        </div>
-        <div class="invite-ps-row">
-          <input type="tel" id="psPhone" placeholder="Mobile number" required autocomplete="tel" inputmode="tel">
         </div>
         <div class="invite-ps-row">
           <input type="text" id="psConnector" placeholder="Who invited you? (optional)">
@@ -575,16 +572,15 @@
       e.preventDefault();
       const firstName = document.getElementById('psFirst').value.trim();
       const lastName = document.getElementById('psLast').value.trim();
-      const phone = document.getElementById('psPhone').value.trim();
       const connector = document.getElementById('psConnector').value.trim();
       const msg = document.getElementById('psMsg');
       const btn = document.getElementById('psSubmitBtn');
       msg.className = 'invite-ps-msg';
       msg.textContent = '';
 
-      if (!firstName || !phone) {
+      if (!firstName) {
         msg.classList.add('err');
-        msg.textContent = 'Please enter your name and phone.';
+        msg.textContent = 'Please enter your first name.';
         return;
       }
 
@@ -596,8 +592,6 @@
         id,
         first_name: firstName,
         last_name: lastName,
-        phone,
-        email: '',
         status: 'new',
         stage: 'interested',
         connector,
@@ -627,7 +621,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            firstName, lastName, phone, connector, source: 'invite'
+            firstName, lastName, connector, source: 'invite'
           })
         }).catch(() => {});
 
@@ -641,8 +635,6 @@
           },
           body: JSON.stringify({
             name: '✋ ' + (firstName + ' ' + lastName).trim(),
-            phone,
-            email: '',
             message: 'Pre sign-in from invite page' + (connector ? ' — invited by ' + connector : '')
           })
         }).catch(() => {});
