@@ -907,6 +907,7 @@
     .print-handout-header  { display: none; }
     .print-notes-header    { display: none; }
     .print-footer          { display: none; }
+    .print-page-notes      { display: none; }
 
     @media print {
       @page { size: letter; margin: 0; }
@@ -930,6 +931,8 @@
       #pageTabBar,
       footer,
       .card[style*="text-align:center"] { display: none !important; }
+
+      .print-page-notes { display: none; }
 
       #content { display: block !important; }
 
@@ -989,7 +992,7 @@
       /* Full-bleed pink accent bar */
       .print-handout-header + .container::before {
         content: ''; display: block; height: 4pt;
-        background: #E07090 !important;
+        background: #D4607A !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         margin: 0 -0.5in;
@@ -998,7 +1001,7 @@
       /* ===== CONTAINER ===== */
       .container {
         max-width: 100% !important;
-        padding: 0.16in 0.5in 0.18in !important;
+        padding: 0.18in 0.5in 0.18in !important;
         margin: 0 !important;
       }
 
@@ -1048,25 +1051,21 @@
       #questionsCard .card-label {
         color: #1B7A80 !important; font-size: 6.5pt !important;
         font-weight: 800; letter-spacing: 1.5pt; text-transform: uppercase;
-        margin-bottom: 6pt !important; padding-bottom: 4pt;
+        margin-bottom: 7pt !important; padding-bottom: 5pt;
         border-bottom: 1.5pt solid #145A5E !important;
       }
-
       .questions-list { display: block !important; }
-
-      /* Grid layout so ::after spans full width (no flex child issue) */
       .question-item {
         display: grid !important;
         grid-template-columns: 19pt 1fr;
-        grid-template-rows: auto auto;
         column-gap: 9pt;
-        row-gap: 0;
-        padding: 3pt 0 0 !important;
-        border-bottom: none !important;
+        padding: 4pt 0 !important;
+        border-bottom: 0.5pt solid #e0eaec !important;
         page-break-inside: avoid;
+        margin: 0 !important;
       }
+      .question-item:last-child { border-bottom: none !important; }
       .question-num {
-        grid-column: 1; grid-row: 1;
         width: 19pt !important; height: 19pt !important;
         min-width: 19pt !important; border-radius: 50% !important;
         background: #145A5E !important;
@@ -1078,23 +1077,9 @@
         justify-content: center; flex-shrink: 0; margin-top: 1pt;
       }
       .question-text {
-        grid-column: 2; grid-row: 1;
         font-size: 10pt !important; color: #111 !important;
-        line-height: 1.38 !important; padding-top: 1.5pt;
-      }
-      /* Write-in lines spanning full grid width */
-      .question-item::after {
-        content: ''; display: block;
-        grid-column: 1 / -1;
-        margin-top: 4pt; margin-bottom: 4pt;
-        height: 18pt;
-        background: repeating-linear-gradient(
-          to bottom,
-          transparent, transparent 8.5pt,
-          #cde0e3 8.5pt, #cde0e3 9pt
-        );
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        line-height: 1.4 !important; padding-top: 1.5pt;
+        padding-bottom: 3pt;
       }
 
       /* ===== PAGE BREAK BEFORE NOTES ===== */
@@ -1103,17 +1088,45 @@
         break-after: page;
       }
 
-      /* ===== PAGE 2: NOTES MINI HEADER ===== */
-      .print-notes-header {
-        display: none;
+      /* ===== PERSONAL NOTES FILL — Page 1 bottom ===== */
+      #questionsPageNotes {
+        display: block !important;
+        margin-top: 12pt;
+        page-break-inside: avoid;
       }
+      /* ===== PERSONAL NOTES FILL — Page 2 bottom ===== */
+      #notesPageNotes {
+        display: block !important;
+        margin-top: 14pt;
+        page-break-inside: avoid;
+      }
+      .print-page-notes-label {
+        font-size: 6.5pt !important; font-weight: 800;
+        letter-spacing: 1.8pt; text-transform: uppercase;
+        color: #1B7A80 !important; margin-bottom: 7pt;
+        padding-bottom: 5pt;
+        border-bottom: 1.5pt solid #145A5E !important;
+      }
+      .print-page-notes-lines {
+        height: 240pt;
+        background: repeating-linear-gradient(
+          to bottom,
+          transparent, transparent 20pt,
+          #d4e8eb 20pt, #d4e8eb 20.5pt
+        );
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* ===== PAGE 2: NOTES MINI HEADER ===== */
+      .print-notes-header { display: none; }
       #questionsCard.has-notes-page ~ .print-notes-header,
       .print-notes-header.has-notes {
         display: block !important;
         background: #145A5E !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        padding: 0.17in 0.5in 0.15in !important;
+        padding: 0.17in 0.5in 0.14in !important;
         position: relative; overflow: hidden;
       }
       .print-notes-header::before {
@@ -1155,11 +1168,10 @@
         font-size: 9pt; font-style: italic;
         color: rgba(255,255,255,0.7) !important; line-height: 1.35;
       }
-      /* Pink accent bar under notes header */
       .print-notes-header + #messageNotesCard::before,
       .print-notes-header.has-notes + #messageNotesCard::before {
         content: ''; display: block; height: 4pt;
-        background: #E07090 !important;
+        background: #D4607A !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         margin: 0 -0.5in;
@@ -1169,26 +1181,22 @@
       #messageNotesCard.has-notes {
         display: block !important;
         border: none !important; border-radius: 0 !important;
-        box-shadow: none !important; padding: 0.2in 0.5in 0.25in !important;
+        box-shadow: none !important; padding: 0.2in 0.5in 0 !important;
         margin: 0 !important; background: transparent !important;
       }
-
-      /* Main Point */
       .notes-main-point {
         font-family: 'Rubik', Georgia, serif !important;
         font-size: 13.5pt !important; font-weight: 800 !important;
         color: #145A5E !important; line-height: 1.2;
-        margin: 14pt 0 4pt !important;
+        margin: 13pt 0 4pt !important;
         padding-bottom: 5pt !important;
         border-bottom: 1pt solid #c8dfe2 !important;
         display: block !important;
       }
       .notes-main-point:first-child { margin-top: 0 !important; }
       .notes-main-point::before { display: none !important; }
-
-      /* Scripture — red left-border block */
       .notes-scripture {
-        margin: 6pt 0 6pt 0 !important;
+        margin: 5pt 0 !important;
         padding: 8pt 12pt !important;
         background: rgba(192,57,43,0.04) !important;
         -webkit-print-color-adjust: exact !important;
@@ -1199,8 +1207,6 @@
         color: #b03020 !important; line-height: 1.55;
         page-break-inside: avoid;
       }
-
-      /* Body text */
       .notes-body {
         font-size: 10pt !important; color: #222 !important;
         line-height: 1.5; margin: 4pt 0 0 !important;
@@ -1210,7 +1216,7 @@
       /* ===== SHARED FOOTER ===== */
       .print-footer {
         display: block !important;
-        margin-top: 16pt; padding-top: 7pt;
+        margin-top: 14pt; padding-top: 6pt;
         border-top: 0.7pt solid #c8d8da;
         font-size: 7pt; color: #aaa;
         text-align: center; letter-spacing: 0.3pt;
@@ -1325,6 +1331,12 @@
         <div class="questions-list" id="questionsList"></div>
       </div>
 
+      <!-- Print-only personal notes fill (page 1 bottom) -->
+      <div class="print-page-notes" id="questionsPageNotes">
+        <div class="print-page-notes-label">Personal Notes</div>
+        <div class="print-page-notes-lines"></div>
+      </div>
+
       <!-- Print-only Page 2 header (hidden on screen) -->
       <div class="print-notes-header" id="printNotesHeader">
         <div class="print-notes-header-top">
@@ -1342,6 +1354,12 @@
       <!-- Message Notes (shown only in Notes tab on screen, Page 2 in print) -->
       <div class="card" id="messageNotesCard" style="display:none;">
         <div id="messageNotesText"></div>
+      </div>
+
+      <!-- Print-only personal notes fill (page 2 bottom) -->
+      <div class="print-page-notes" id="notesPageNotes">
+        <div class="print-page-notes-label">Personal Notes</div>
+        <div class="print-page-notes-lines"></div>
       </div>
 
       <!-- Tonight's Schedule (dynamic from weekly_prep.flow) -->
