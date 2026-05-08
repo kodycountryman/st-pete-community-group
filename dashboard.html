@@ -706,7 +706,21 @@
               </div>
               <div class="form-group">
                 <label>Message Notes</label>
-                <textarea id="weekMessageNotes" rows="5" placeholder="Outline, illustrations, personal stories, key points from your message..." oninput="app.saveWeeklyPrep()" style="resize:vertical;"></textarea>
+                <div id="notesBlockList" class="notes-block-list"></div>
+                <div class="notes-block-add">
+                  <button class="notes-add-btn notes-add-main" onclick="app.addNotesBlock('main-point')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Main Point
+                  </button>
+                  <button class="notes-add-btn notes-add-scripture" onclick="app.addNotesBlock('scripture')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Scripture
+                  </button>
+                  <button class="notes-add-btn notes-add-body" onclick="app.addNotesBlock('body')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Body Text
+                  </button>
+                </div>
               </div>
             </div>
           </div>

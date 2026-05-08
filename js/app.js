@@ -673,7 +673,7 @@ const app = {
       cta: document.getElementById('weekCTA')?.value || '',
       icebreaker,
       questions,
-      message_notes: document.getElementById('weekMessageNotes')?.value || '',
+      message_notes: JSON.stringify(this._notesBlocks || []),
       night_type: nightType,
       flow,
       card_order: cardOrder,
@@ -702,8 +702,14 @@ const app = {
     if (takeInput) takeInput.value = wp.takeaway || '';
     const ctaInput = document.getElementById('weekCTA');
     if (ctaInput) ctaInput.value = wp.cta || '';
-    const notesInput = document.getElementById('weekMessageNotes');
-    if (notesInput) notesInput.value = wp.message_notes || '';
+    // Load notes blocks
+    const rawNotes = wp.message_notes || '';
+    try {
+      this._notesBlocks = rawNotes.trim().startsWith('[') ? JSON.parse(rawNotes) : (rawNotes ? [{ type: 'body', content: rawNotes }] : []);
+    } catch(e) {
+      this._notesBlocks = rawNotes ? [{ type: 'body', content: rawNotes }] : [];
+    }
+    this.renderNotesBlockList();
 
     // Restore saved questions into textarea
     const qTA = document.getElementById('questionsTextarea');
@@ -763,6 +769,82 @@ const app = {
         pubBtn.classList.remove('published');
       }
     }
+  },
+
+  // ---- NOTES BLOCK BUILDER ----
+  _notesBlocks: [],
+
+  renderNotesBlockList() {
+    const list = document.getElementById('notesBlockList');
+    if (!list) return;
+    if (!this._notesBlocks.length) {
+      list.innerHTML = '<div class="notes-block-empty">No blocks yet — add a main point, scripture, or body text below.</div>';
+      return;
+    }
+    const LABELS = { 'main-point': 'Main Point', 'scripture': 'Scripture', 'body': 'Body Text' };
+    const PLACEHOLDERS = {
+      'main-point': 'e.g., 1. You Are Not Too Far',
+      'scripture': 'Paste the scripture text here... (1 Kings 19:1-4, NIV)',
+      'body': 'Supporting thought, illustration, story...'
+    };
+    list.innerHTML = this._notesBlocks.map((block, i) => `
+      <div class="notes-block">
+        <div class="notes-block-header type-${block.type}">
+          <span class="notes-block-type-badge type-${block.type}">${LABELS[block.type] || block.type}</span>
+          <select class="notes-block-type-select" onchange="app.changeNotesBlockType(${i}, this.value)">
+            <option value="main-point"${block.type==='main-point'?' selected':''}>Main Point</option>
+            <option value="scripture"${block.type==='scripture'?' selected':''}>Scripture</option>
+            <option value="body"${block.type==='body'?' selected':''}>Body Text</option>
+          </select>
+          <div class="notes-block-btns">
+            <button class="notes-block-btn" onclick="app.moveNotesBlock(${i},-1)" title="Move up" ${i===0?'disabled':''}>↑</button>
+            <button class="notes-block-btn" onclick="app.moveNotesBlock(${i},1)" title="Move down" ${i===this._notesBlocks.length-1?'disabled':''}>↓</button>
+            <button class="notes-block-btn del" onclick="app.deleteNotesBlock(${i})" title="Remove">✕</button>
+          </div>
+        </div>
+        <textarea class="notes-block-content" rows="${block.type==='scripture'?4:2}"
+          placeholder="${PLACEHOLDERS[block.type]||''}"
+          oninput="app.updateNotesBlock(${i},this.value)">${this.escapeHtml(block.content||'')}</textarea>
+      </div>
+    `).join('');
+  },
+
+  addNotesBlock(type) {
+    this._notesBlocks.push({ type, content: '' });
+    this.renderNotesBlockList();
+    // Focus the new textarea
+    const all = document.querySelectorAll('.notes-block-content');
+    if (all.length) all[all.length - 1].focus();
+    this.saveWeeklyPrep();
+  },
+
+  updateNotesBlock(index, value) {
+    if (this._notesBlocks[index]) {
+      this._notesBlocks[index].content = value;
+      this.saveWeeklyPrep();
+    }
+  },
+
+  changeNotesBlockType(index, type) {
+    if (this._notesBlocks[index]) {
+      this._notesBlocks[index].type = type;
+      this.renderNotesBlockList();
+      this.saveWeeklyPrep();
+    }
+  },
+
+  moveNotesBlock(index, dir) {
+    const newIdx = index + dir;
+    if (newIdx < 0 || newIdx >= this._notesBlocks.length) return;
+    [this._notesBlocks[index], this._notesBlocks[newIdx]] = [this._notesBlocks[newIdx], this._notesBlocks[index]];
+    this.renderNotesBlockList();
+    this.saveWeeklyPrep();
+  },
+
+  deleteNotesBlock(index) {
+    this._notesBlocks.splice(index, 1);
+    this.renderNotesBlockList();
+    this.saveWeeklyPrep();
   },
 
   // ---- WEEKLY FLOW EDITOR ----

@@ -634,6 +634,48 @@
     .page-tab-btn:hover:not(.active) { color: var(--slate); }
 
     /* notes-only view */
+    /* Main Point — large, bold, teal */
+    .notes-main-point {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 0 6px;
+      font-family: 'Rubik', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--teal-deep, #1a6b72);
+      line-height: 1.3;
+    }
+    .notes-main-point::before {
+      content: '';
+      display: block;
+      flex-shrink: 0;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--teal);
+      margin-top: 5px;
+    }
+    /* Scripture — full red */
+    .notes-scripture {
+      margin: 12px 0;
+      padding: 14px 16px;
+      background: rgba(192, 57, 43, 0.05);
+      border-left: 3px solid #c0392b;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.97rem;
+      font-style: italic;
+      color: #c0392b;
+      line-height: 1.65;
+    }
+    /* Body Text — normal */
+    .notes-body {
+      padding: 6px 0;
+      font-size: 0.97rem;
+      color: var(--slate);
+      line-height: 1.65;
+    }
+    /* Legacy fallback styles kept for old plain-text notes */
     .notes-heading {
       display: flex;
       align-items: flex-start;
@@ -665,13 +707,6 @@
       font-style: italic;
       color: var(--slate);
       line-height: 1.65;
-    }
-    .notes-scripture {
-      margin: 12px 0;
-      padding: 12px 16px;
-      background: rgba(232, 184, 75, 0.1);
-      border-left: 3px solid var(--gold);
-      border-radius: 0 10px 10px 0;
     }
     .notes-scripture-ref {
       font-size: 0.68rem;
@@ -1540,21 +1575,39 @@
 
     function renderNotes(raw) {
       const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+      // New: JSON block format from the block builder
+      if (raw.trim().startsWith('[')) {
+        try {
+          const blocks = JSON.parse(raw);
+          return blocks.map(block => {
+            const text = (block.content || '').trim();
+            if (!text) return '';
+            const htmlText = esc(text).replace(/\n/g, '<br>');
+            if (block.type === 'main-point') {
+              return `<div class="notes-main-point">${htmlText}</div>`;
+            } else if (block.type === 'scripture') {
+              return `<div class="notes-scripture">${htmlText}</div>`;
+            } else {
+              return `<div class="notes-body">${htmlText}</div>`;
+            }
+          }).filter(Boolean).join('');
+        } catch(e) { /* fall through to legacy parser */ }
+      }
+
+      // Legacy: plain-text line-by-line parser (backward compat)
       const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
       return lines.map(line => {
         const content = line.replace(/^-\s*/, '').trim();
-        // Scripture: "Book ch:v (VERSION) — text" or "Book ch:v (VERSION) - text"
-        const scriptureMatch = /^(\d?\s*[A-Za-z]+\.?\s+\d+:\d+(?:[–\-]\d+)?\s*\([A-Z]+\))\s*[—\-]+\s*(.+)$/.exec(content);
+        const scriptureMatch = /^(\d?\s*[A-Za-z]+\.?\s+\d+:\d+(?:[\u2013\-]\d+)?\s*\([A-Z]+\))\s*[\u2014\-]+\s*(.+)$/.exec(content);
         if (scriptureMatch) {
           const ref = scriptureMatch[1].trim();
-          const text = scriptureMatch[2].replace(/^[""]|[""]$/g, '').trim();
+          const text = scriptureMatch[2].replace(/^[\u201c\u201d]|[\u201c\u201d]$/g, '').trim();
           return `<div class="notes-scripture"><div class="notes-scripture-ref">${esc(ref)}</div><div class="notes-scripture-text">"${esc(text)}"</div></div>`;
         }
-        // Pull quote: starts with a quote character
-        if (/^[""\u201C]/.test(content)) {
+        if (/^[\u201c\u201d"]/.test(content)) {
           return `<div class="notes-quote">${esc(content)}</div>`;
         }
-        // Section heading
         return `<div class="notes-heading">${esc(content)}</div>`;
       }).join('');
     }
